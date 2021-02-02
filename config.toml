@@ -1,5 +1,13 @@
-[file]
-file_path = "./burnup time"
+[data_extraction]
+keys_of_row = ["10010   H1", "1112990 Pseudo"]
+[data_extraction.keys_of_column]
+id = "NucId"
+name = "Nuc_Name"
+
+
+[file_path]
+test_file_path = "./test"
+burnup_time_file_path = "./burnup time"
 
 [nuclide_list]
 # Np237 衰变链核素
