@@ -18,9 +18,25 @@ class Config:
         print("The config file doesn't exist!")
 
     @classmethod
+    def get_conf(cls, properties):
+        return cls.conf.get(properties)
+
+    @classmethod
     def get_file_path(cls):
         return Path(cls.conf.get("file").get("file_path"))
 
     @classmethod
-    def get_conf(cls, properties):
-        return cls.conf.get(properties)
+    def get_nuclide_list(cls, nuclide_name):
+        return cls.conf.get("nuclide_list").get(nuclide_name)
+
+    @classmethod
+    def get_decay_nuclide_list(cls):
+        return cls.conf.get("nuclide_list").get("decay")
+
+    @classmethod
+    def get_fission_light_nuclide_list(cls):
+        return cls.conf.get("nuclide_list").get("fission_light")
+
+    @classmethod
+    def get_short_lives_nuclide_list(cls):
+        return cls.conf.get("nuclide_list").get("short_lives")
