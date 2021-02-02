@@ -26,6 +26,10 @@ class Config:
         return cls.conf.get("data_extraction").get(properties)
 
     @classmethod
+    def get_file_path(cls, properties):
+        return Path(cls.conf.get("file_path").get(properties))
+
+    @classmethod
     def get_nuclide_list(cls, nuclide_name):
         return cls.conf.get("nuclide_list").get(nuclide_name)
 
