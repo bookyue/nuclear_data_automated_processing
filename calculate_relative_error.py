@@ -1,11 +1,9 @@
-from pathlib import Path
-
 from utils import configlib
 from utils.worksheet import get_column_index
 
 
 def main():
-    file_path = Path(configlib.Config.get_file_path("burnup_time_file_path"))
+    file_path = configlib.Config.get_file_path("burnup_time_file_pth")
     # file_path = Path(configlib.Config.get_conf("file").get("file_path"))
     #
     # filenames = file_path.glob('*.xlsx')
