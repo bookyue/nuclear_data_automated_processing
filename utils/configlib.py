@@ -31,7 +31,7 @@ class Config:
 
     @classmethod
     def get_nuclide_list(cls, nuclide_name):
-        return cls.conf.get("nuclide_list").get(nuclide_name)
+        return cls.conf.get("nuclide_list").get(nuclide_name, None)
 
     @classmethod
     def get_decay_nuclide_list(cls):
