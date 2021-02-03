@@ -30,12 +30,12 @@ def row_number_of_block(list_of_lines, keys_of_split):
     return row_numbers
 
 
-def extract_columns(data_rows, columns, all_step):
+def extract_columns(data_rows, step_numbers, all_step):
     """
     依据列号，抽取数据
     本操作应放在抽取数据行之后
     :param data_rows:数据行
-    :param columns:列号
+    :param step_numbers:列号
     :param all_step: bool, 提取全部列，or 最后一列，默认取最后一列
     :return:DataFrame，数据
     """
@@ -52,12 +52,13 @@ def extract_columns(data_rows, columns, all_step):
             steps.append(i + 3)
         # 更改列名
         # df_allstep.columns = list(np.arrange(1, 21))
-    elif len(columns):
+    elif len(step_numbers):
         # 修改列号与输出文件的数据结构对应
         # 第0，1列为key，第2列为初始核素密度
         # 因此，step 1对应第3列
-        for i in range(len(columns)):
-            steps.append(columns[i] + 2)
+        for i in range(len(step_numbers)):
+            # TODO fix this bug
+            steps.append(step_numbers[i] + 2)
     # 最终结果列
     steps.append(-1)
     df_all_step = data_rows.iloc[:, steps]
@@ -137,7 +138,7 @@ def filter_data(df_data, nuc_names):
     return df_output
 
 
-def preprocess(file_path, keys_of_row, nuclide_list, keys_of_column, all_step, columns):
+def preprocess(file_path, keys_of_row, nuclide_list, keys_of_column, all_step, step_numbers):
     """
     数据预处理，读取指定数据写入csv
     :param file_path: 数据文件所在路径
@@ -145,7 +146,7 @@ def preprocess(file_path, keys_of_row, nuclide_list, keys_of_column, all_step, c
     :param nuclide_list: 所需核素名称
     :param keys_of_column: 键所在列的列名，数据行的键值唯一，默认为id，name
     :param all_step: 是否读取全部中间结果数据列，默认只读取最终结果列
-    :param columns: 所属数据列号
+    :param step_numbers: 所属数据列号
     :return:
     """
     # 读取指定文件夹下的计算结果
@@ -158,7 +159,7 @@ def preprocess(file_path, keys_of_row, nuclide_list, keys_of_column, all_step, c
         df_nuclide_list = filter_data(df_rows, nuclide_list)
 
         # 提取数据列
-        df_columns = extract_columns(df_nuclide_list, columns, all_step=all_step)
+        df_columns = extract_columns(df_nuclide_list, step_numbers, all_step=all_step)
         # 修改列名
         # 读取列名
         columns = list(df_columns)
@@ -171,7 +172,7 @@ def preprocess(file_path, keys_of_row, nuclide_list, keys_of_column, all_step, c
                 columns[i + 2] = column_name + '_step_' + str(i + 1)
         elif len(columns) > 3:
             for i in range(len(columns) - 3):
-                columns[i + 2] = column_name + '_step_' + str(columns[i])
+                columns[i + 2] = column_name + '_step_' + str(step_numbers[i])
         # 修改key列
         # 修改列名，默认第一列为核素id，第二列为核素名称
         columns[0] = keys_of_column['id']
@@ -219,15 +220,15 @@ def construct_filename(file_name, post_name):
     return csv_name
 
 
-def main(file_path, nuclide_list=None, all_step=True, columns=None):
+def process(file_path, nuclide_list=None, all_step=True, step_numbers=None):
     """
-    :param columns: 数据列索引
+    :param step_numbers: 数据列索引
     :param file_path:文件所在路径，相对py
     :param nuclide_list:关键核素列表，None取全部核素
     :param all_step: 默认True，适用10step，False适用100step
     """
-    if columns is None:
-        columns = []
+    if step_numbers is None:
+        step_numbers = []
     # 核素ID和核素名对应的列名
     keys_of_column = configlib.Config.get_data_extraction_conf("keys_of_column")
     # 关键字，切分数据块
@@ -235,16 +236,20 @@ def main(file_path, nuclide_list=None, all_step=True, columns=None):
     # keys_of_split = ['NucID', 'Total']
 
     # step_numbers = []
-    preprocess(file_path, keys_of_row, nuclide_list, keys_of_column, all_step=all_step, columns=columns)
+    preprocess(file_path, keys_of_row, nuclide_list, keys_of_column, all_step=all_step, step_numbers=step_numbers)
 
     # 读取csv，合并结果
     merge_final_result(file_path)
 
 
-if __name__ == '__main__':
+def main():
     fission_light_nuclide_list = configlib.Config.get_nuclide_list("fission_light")
     test_file_path = configlib.Config.get_file_path("test_file_path")
     step_numbers = configlib.Config.get_data_extraction_conf("step_numbers")
+    print(step_numbers)
+    process(test_file_path, nuclide_list=fission_light_nuclide_list,
+            all_step=False, step_numbers=step_numbers)
 
-    main(test_file_path, nuclide_list=fission_light_nuclide_list,
-         all_step=False, columns=step_numbers)
+
+if __name__ == '__main__':
+    main()
