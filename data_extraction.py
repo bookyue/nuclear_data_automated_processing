@@ -1,7 +1,4 @@
-# coding=utf-8
-
 import codecs
-import os
 
 import numpy as np
 import pandas as pd
@@ -206,20 +203,6 @@ def merge_final_result(file_path, final_file_name='final'):
     df_final.to_excel(final_file_name + '.xlsx', encoding='utf-8', index=False)
 
 
-def construct_filename(file_name, post_name):
-    """
-    依据完整文件名以及后缀，构建文件名
-    :param post_name:
-    :param file_name:
-    :return:
-    """
-    f_path = os.path.dirname(file_name)
-    f_name = os.path.basename(file_name).split('.')[0]
-    f_extension = os.path.basename(file_name).split('.')[1]
-    csv_name = os.path.join(f_path, f_name + '_' + post_name + '.' + f_extension)
-    return csv_name
-
-
 def process(file_path, nuclide_list=None, all_step=True, step_numbers=None):
     """
     :param step_numbers: 数据列索引
@@ -246,7 +229,7 @@ def main():
     fission_light_nuclide_list = configlib.Config.get_nuclide_list("fission_light")
     test_file_path = configlib.Config.get_file_path("test_file_path")
     step_numbers = configlib.Config.get_data_extraction_conf("step_numbers")
-    print(step_numbers)
+
     process(test_file_path, nuclide_list=fission_light_nuclide_list,
             all_step=False, step_numbers=step_numbers)
 
