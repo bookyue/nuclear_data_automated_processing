@@ -1,6 +1,6 @@
 import codecs
+from decimal import Decimal
 
-import numpy as np
 import pandas as pd
 
 from utils import configlib
@@ -67,12 +67,15 @@ def filter_data(df_data, nuc_names):
         # data=data[data.apply(np.sum,axis=1)!=0] #data是pandas的DataFrame类型数据
         df_nuc = df_data.iloc[:, [0, 1]]
         df_density = df_data.iloc[:, 2:]
-        df_density = df_density.apply(pd.to_numeric)
-        df_filter = df_density[df_density.apply(np.sum, axis=1) != 0]
-        df_output = pd.merge(df_nuc, df_filter, "inner", left_index=True, right_index=True)
-        # df_output = df_data[df_data[:, 2:].apply(np.sum(), axis=1) != 0]
-        # df_output = df_data
+        df_density = df_density.applymap(Decimal)
 
+        # The two lines below, do the exact same thing here.
+        # Drop rows with all zeros. But the latter one is way much faster.
+
+        # df_filter = df_density.loc[df_density.apply(np.sum, axis=1).to_numpy().nonzero()]
+        df_filter = df_density.loc[df_density.any(axis=1).to_numpy().nonzero()]
+
+        df_output = pd.merge(df_nuc, df_filter, "inner", left_index=True, right_index=True)
     return df_output
 
 
