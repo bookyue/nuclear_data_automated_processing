@@ -6,24 +6,52 @@ import pandas as pd
 from utils import configlib
 
 
-def row_numbers_of_block(list_of_lines, keys_of_split):
+def row_numbers_of_block(list_of_lines, keys_of_rows):
     """
     依据字符串，获取所在行号
     :param list_of_lines: 文件行
-    :param keys_of_split: 关键字
+    :param keys_of_rows: 关键字
     :return: 关键字所在行号
     """
 
+    is_all = False
+    if len(keys_of_rows) > 2:
+        is_all = True
+
+    index_start = keys_of_rows[:-1]
+    index_end = keys_of_rows[-1]
+
+    is_gamma = False
+    if index_start == ['Gamma-ray']:
+        is_gamma = True
+
     row_numbers = []
+    i = 0
     # Open the file in read only mode
     # Read all lines in the file one by one
     for row_number, line in enumerate(list_of_lines):
         # For each line, check if line contains any string from the list of strings
-        for key in keys_of_split:
+        for key in index_start:
             if key in line:
                 # If any string is found in line, then append that line along with line number in list
                 row_numbers.append(row_number)
+                i += 1
+        if i % 2 != 0 or i != 0:
+            if index_end in line:
+                row_numbers.append(row_number)
+                if not is_all:
+                    break
     # Return list of tuples containing matched string, line numbers and lines where string is found
+
+    if is_all:
+        row_numbers = [row_numbers[num]-3 if num % 2 else row_numbers[num]+1 for num in range(len(row_numbers))]
+        row_numbers[-1] = row_numbers[-1] + 1
+    elif is_gamma:
+        row_numbers[0] = row_numbers[0] + 2
+        row_numbers[-1] = row_numbers[-1] - 2
+    else:
+        row_numbers[0] = row_numbers[0] + 7
+        row_numbers[-1] = row_numbers[-1] - 3
     return row_numbers
 
 
@@ -204,19 +232,20 @@ def merge_final_result(file_path, final_file_name='final'):
     df_final.to_excel(final_file_name + '.xlsx', encoding='utf-8', index=False)
 
 
-def process(file_path, nuclide_list=None, is_all_step=False, step_numbers=None):
+def process(file_path, physical_quantity, nuclide_list=None, step_numbers=None, is_all_step=False):
     """
-    :param step_numbers: 数据列索引
     :param file_path:文件所在路径，相对py
+    :param physical_quantity: 物理量类型
     :param nuclide_list:关键核素列表，None取全部核素
+    :param step_numbers: 数据列索引
     :param is_all_step: 默认False，适用10step，True适用100step
     """
 
     # 核素ID和核素名对应的列名
     keys_of_column = configlib.Config.get_data_extraction_conf("keys_of_column")
     # 关键字，切分数据块
-    keys_of_row = configlib.Config.get_data_extraction_conf("keys_of_row")
-    # keys_of_split = ['NucID', 'Total']
+    keys_of_row = configlib.Config.get_data_extraction_conf("keys_of_rows").get(physical_quantity)
+    # keys_of_split = ['NucID', 'Total', 'Energy']
 
     preprocess(file_path, keys_of_row, nuclide_list, keys_of_column, is_all_step=is_all_step, step_numbers=step_numbers)
 
@@ -228,6 +257,7 @@ def main():
     fission_light_nuclide_list = configlib.Config.get_nuclide_list("fission_light")
     test_file_path = configlib.Config.get_file_path("test_file_path")
     step_numbers = configlib.Config.get_data_extraction_conf("step_numbers")
+    physical_quantity = "isotope"
 
     if step_numbers:
         is_all_step = True
@@ -235,7 +265,7 @@ def main():
         is_all_step = False
 
     process(file_path=test_file_path, nuclide_list=fission_light_nuclide_list,
-            is_all_step=is_all_step, step_numbers=step_numbers)
+            is_all_step=is_all_step, step_numbers=step_numbers, physical_quantity=physical_quantity)
 
 
 if __name__ == '__main__':
