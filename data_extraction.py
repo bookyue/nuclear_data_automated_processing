@@ -59,7 +59,8 @@ def filter_data(df_data, nuc_names):
     :return: DataFrame，关键核素的计算结果
     """
     if (nuc_names is not None) and (len(nuc_names) > 1):
-        df_output = df_data[df_data[1].isin(nuc_names)]
+        df_is_in_nuc_names = df_data[1].isin(nuc_names)
+        df_output = df_data.loc[df_is_in_nuc_names]
     else:
         # Drop rows with all zeros in data.
 
