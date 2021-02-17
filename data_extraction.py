@@ -61,22 +61,27 @@ def filter_data(df_data, nuc_names):
     if (nuc_names is not None) and (len(nuc_names) > 1):
         df_output = df_data[df_data[1].isin(nuc_names)]
     else:
-        # 删除全为0的行
-        # df1.ix[(df1 == 0).all(axis=1), :]
-        # df1=df1[~df1['A'].isin([1])]
-        # data=data[data.apply(np.sum,axis=1)!=0] #data是pandas的DataFrame类型数据
+        # Drop rows with all zeros in data.
+
+        # The two lines below, does the exact same thing here.
+        # Drop rows with all zeros. But the latter one is way much faster.
+        # df_filter = df_density.iloc[df_density.apply(np.sum, axis=1).to_numpy().nonzero()]
+        # df_filter = df_density.iloc[df_density.any(axis=1).to_numpy().nonzero()]
+
         df_nuc = df_data.iloc[:, [0, 1]]
-        df_density = df_data.iloc[:, 2:]
+        df_density = df_data.iloc[:, [2, 3]]
         df_density = df_density.applymap(Decimal)
 
-        # The two lines below, do the exact same thing here.
-        # Drop rows with all zeros. But the latter one is way much faster.
+        # When only condition is provided,
+        # the numpy.where() function is a shorthand for np.asarray(condition).nonzero().
+        # Using nonzero directly should be preferred, as it behaves correctly for subclasses.
+        # The rest of this documentation covers only the case where all three arguments are provided.
+        # But to be clear, I leave the np.where() kind of function in this comment.
+        # df_is_not_zero = np.where(df_density.any(axis=1))
+        df_is_not_zero = df_density.any(axis=1).to_numpy().nonzero()
 
-        # df_filter = df_density.iloc[df_density.apply(np.sum, axis=1).to_numpy().nonzero()]
-        df_filter = df_density.iloc[df_density.any(axis=1).to_numpy().nonzero()]
-
-        # df_data.loc[]
-        df_output = pd.merge(df_nuc, df_filter, "inner", left_index=True, right_index=True)
+        df_output = pd.concat([df_nuc.iloc[df_is_not_zero], df_density.iloc[df_is_not_zero]], axis=1, copy=False)
+        # df_output = df_data.loc[(df_density != Decimal(0)).any(axis=1), :]
     return df_output
 
 
