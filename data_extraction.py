@@ -1,14 +1,14 @@
 import codecs
+from decimal import Decimal
 
-import numpy as np
 import pandas as pd
 
 from utils import configlib
 
 
-def row_number_of_block(list_of_lines, keys_of_split):
+def row_numbers_of_block(list_of_lines, keys_of_split):
     """
-    依据字符串，获取开始行号
+    依据字符串，获取所在行号
     :param list_of_lines: 文件行
     :param keys_of_split: 关键字
     :return: 关键字所在行号
@@ -27,13 +27,72 @@ def row_number_of_block(list_of_lines, keys_of_split):
     return row_numbers
 
 
-def extract_columns(data_rows, step_numbers, all_step):
+def extract_rows(file_name, keys_of_row):
+    """
+    依据行号，截取数据块
+    本操作应放在抽取数据列之前
+    :param file_name: 数据文件名
+    :param keys_of_row: 切割数据块所需行关键字
+    :return: DataFrame，数据行
+    """
+
+    with codecs.open(file_name, 'r', encoding='utf-8') as read_obj:
+        lines = read_obj.readlines()
+
+    # 依据文件名，获取数据块起止行号
+    row_numbers = row_numbers_of_block(lines, keys_of_row)
+    # 按行号读取数据块
+    row_start = row_numbers[0]
+    row_end = row_numbers[1]
+    lines_data = lines[row_start:row_end + 1]
+
+    df_data = pd.DataFrame([data.split() for data in lines_data])
+
+    return df_data
+
+
+def filter_data(df_data, nuc_names):
+    """
+    依据核素名称，筛选数据行
+    :param df_data: DataFrame, 计算结果
+    :param nuc_names: List, 关键核素，如果为none，则取不为0的全部核素
+    :return: DataFrame，关键核素的计算结果
+    """
+    if (nuc_names is not None) and (len(nuc_names) > 1):
+        df_is_in_nuc_names = df_data[1].isin(nuc_names)
+        df_output = df_data.loc[df_is_in_nuc_names]
+    else:
+        # Drop rows with all zeros in data.
+
+        # The two lines below, does the exact same thing here.
+        # Drop rows with all zeros. But the latter one is way much faster.
+        # df_filter = df_density.iloc[df_density.apply(np.sum, axis=1).to_numpy().nonzero()]
+        # df_filter = df_density.iloc[df_density.any(axis=1).to_numpy().nonzero()]
+
+        df_nuc = df_data.iloc[:, [0, 1]]
+        df_density = df_data.iloc[:, [2, 3]]
+        df_density = df_density.applymap(Decimal)
+
+        # When only condition is provided,
+        # the numpy.where() function is a shorthand for np.asarray(condition).nonzero().
+        # Using nonzero directly should be preferred, as it behaves correctly for subclasses.
+        # The rest of this documentation covers only the case where all three arguments are provided.
+        # But to be clear, I leave the np.where() kind of function in this comment.
+        # df_is_not_zero = np.where(df_density.any(axis=1))
+        df_is_not_zero = df_density.any(axis=1).to_numpy().nonzero()
+
+        df_output = pd.concat([df_nuc.iloc[df_is_not_zero], df_density.iloc[df_is_not_zero]], axis=1, copy=False)
+        # df_output = df_data.loc[(df_density != Decimal(0)).any(axis=1), :]
+    return df_output
+
+
+def extract_columns(data_columns, step_numbers, is_all_step):
     """
     依据列号，抽取数据
     本操作应放在抽取数据行之后
-    :param data_rows:数据行
+    :param data_columns:数据行
     :param step_numbers:列号
-    :param all_step: bool, 提取全部列，or 最后一列，默认取最后一列
+    :param is_all_step: bool, 提取全部列，or 最后一列，默认取最后一列
     :return:DataFrame，数据
     """
     # 第0-1列为核素编号、名称
@@ -43,13 +102,13 @@ def extract_columns(data_rows, step_numbers, all_step):
     steps = [0, 1]
 
     # 是否输出全部燃耗步结果
-    if all_step:
+    if is_all_step:
         # 第3 - 21列为全部燃耗步计算结果
-        for i in range(len(data_rows.columns) - 4):
+        for i in range(len(data_columns.columns) - 4):
             steps.append(i + 3)
         # 更改列名
         # df_allstep.columns = list(np.arrange(1, 21))
-    elif len(step_numbers):
+    elif step_numbers:
         # 修改列号与输出文件的数据结构对应
         # 第0，1列为key，第2列为初始核素密度
         # 因此，step 1对应第3列
@@ -58,12 +117,12 @@ def extract_columns(data_rows, step_numbers, all_step):
             steps.append(step_numbers[i] + 2)
     # 最终结果列
     steps.append(-1)
-    df_all_step = data_rows.iloc[:, steps]
+    df_all_step = data_columns.iloc[:, steps]
     return df_all_step
     #
     # # 取核素列与最终结果列
-    # df_nuc = data_rows.iloc[:, 0:2]
-    # df_final = pd.DataFrame(data_rows.iloc[:, -1])
+    # df_nuc = data_columns.iloc[:, 0:2]
+    # df_final = pd.DataFrame(data_columns.iloc[:, -1])
     # # 更改列名
     # # df_nuc.columns = ['NucId', 'NucName']
     # # df_final.columns = ['Final']
@@ -77,72 +136,14 @@ def extract_columns(data_rows, step_numbers, all_step):
     # result = pd.concat([result, df_final], axis=1)
 
 
-def extract_rows(file_name, keys_of_row):
-    """
-    依据行号，截取数据块
-    本操作应放在抽取数据列之前
-    :param file_name: 数据文件名
-    :param keys_of_row: 切割数据块所需行关键字
-    :return: DataFrame，数据行
-    """
-
-    # 打开文件，读取所有行
-    with codecs.open(file_name, 'r', encoding='utf-8') as read_obj:
-        # 读取完文件，关闭
-        lines = read_obj.readlines()
-        read_obj.close()
-
-    # 依据文件名，获取数据块起止行号
-    row_numbers = row_number_of_block(lines, keys_of_row)
-    # 按行号读取数据块
-    row_start = row_numbers[0]
-    row_end = row_numbers[1]
-    lines_data = lines[row_start:row_end + 1]
-    # 数据行转换为list
-    list_data = []
-    for line in lines_data:
-        # 因数据行使用空格分隔数据项，所以先移除前后空格，然后分离数据项
-        line = list(line.strip().split())
-        list_data.append(line)
-    # list转换为DataFrame
-    df_data = pd.DataFrame(list_data)
-
-    return df_data
-
-
-def filter_data(df_data, nuc_names):
-    """
-    依据核素名称，筛选数据行
-    :param df_data: DataFrame, 计算结果
-    :param nuc_names: List, 关键核素，如果为none，则取不为0的全部核素
-    :return: DataFrame，关键核素的计算结果
-    """
-    if (nuc_names is not None) and (len(nuc_names) > 1):
-        df_output = df_data[df_data[1].isin(nuc_names)]
-    else:
-        # 删除全为0的行
-        # df1.ix[(df1 == 0).all(axis=1), :]
-        # df1=df1[~df1['A'].isin([1])]
-        # data=data[data.apply(np.sum,axis=1)!=0] #data是pandas的DataFrame类型数据
-        df_nuc = df_data.iloc[:, [0, 1]]
-        df_density = df_data.iloc[:, 2:]
-        df_density = df_density.apply(pd.to_numeric)
-        df_filter = df_density[df_density.apply(np.sum, axis=1) != 0]
-        df_output = pd.merge(df_nuc, df_filter, "inner", left_index=True, right_index=True)
-        # df_output = df_data[df_data[:, 2:].apply(np.sum(), axis=1) != 0]
-        # df_output = df_data
-
-    return df_output
-
-
-def preprocess(file_path, keys_of_row, nuclide_list, keys_of_column, all_step, step_numbers):
+def preprocess(file_path, keys_of_row, nuclide_list, keys_of_column, is_all_step, step_numbers):
     """
     数据预处理，读取指定数据写入csv
     :param file_path: 数据文件所在路径
     :param keys_of_row: 数据行起止关键字
     :param nuclide_list: 所需核素名称
     :param keys_of_column: 键所在列的列名，数据行的键值唯一，默认为id，name
-    :param all_step: 是否读取全部中间结果数据列，默认只读取最终结果列
+    :param is_all_step: 是否读取全部中间结果数据列，默认只读取最终结果列
     :param step_numbers: 所属数据列号
     :return:
     """
@@ -156,7 +157,7 @@ def preprocess(file_path, keys_of_row, nuclide_list, keys_of_column, all_step, s
         df_nuclide_list = filter_data(df_rows, nuclide_list)
 
         # 提取数据列
-        df_columns = extract_columns(df_nuclide_list, step_numbers, all_step=all_step)
+        df_columns = extract_columns(df_nuclide_list, step_numbers, is_all_step=is_all_step)
         # 修改列名
         # 读取列名
         columns = list(df_columns)
@@ -164,7 +165,7 @@ def preprocess(file_path, keys_of_row, nuclide_list, keys_of_column, all_step, s
         column_name = file_name.stem.split('.')[0]
         columns[-1] = column_name + '_final'
         # 修改中间结果的列名
-        if all_step:
+        if is_all_step:
             for i in range(len(columns) - 3):
                 columns[i + 2] = column_name + '_step_' + str(i + 1)
         elif len(columns) > 3:
@@ -203,23 +204,21 @@ def merge_final_result(file_path, final_file_name='final'):
     df_final.to_excel(final_file_name + '.xlsx', encoding='utf-8', index=False)
 
 
-def process(file_path, nuclide_list=None, all_step=True, step_numbers=None):
+def process(file_path, nuclide_list=None, is_all_step=False, step_numbers=None):
     """
     :param step_numbers: 数据列索引
     :param file_path:文件所在路径，相对py
     :param nuclide_list:关键核素列表，None取全部核素
-    :param all_step: 默认True，适用10step，False适用100step
+    :param is_all_step: 默认False，适用10step，True适用100step
     """
-    if step_numbers is None:
-        step_numbers = []
+
     # 核素ID和核素名对应的列名
     keys_of_column = configlib.Config.get_data_extraction_conf("keys_of_column")
     # 关键字，切分数据块
     keys_of_row = configlib.Config.get_data_extraction_conf("keys_of_row")
     # keys_of_split = ['NucID', 'Total']
 
-    # step_numbers = []
-    preprocess(file_path, keys_of_row, nuclide_list, keys_of_column, all_step=all_step, step_numbers=step_numbers)
+    preprocess(file_path, keys_of_row, nuclide_list, keys_of_column, is_all_step=is_all_step, step_numbers=step_numbers)
 
     # 读取csv，合并结果
     merge_final_result(file_path)
@@ -230,8 +229,13 @@ def main():
     test_file_path = configlib.Config.get_file_path("test_file_path")
     step_numbers = configlib.Config.get_data_extraction_conf("step_numbers")
 
-    process(test_file_path, nuclide_list=fission_light_nuclide_list,
-            all_step=False, step_numbers=step_numbers)
+    if step_numbers:
+        is_all_step = True
+    else:
+        is_all_step = False
+
+    process(file_path=test_file_path, nuclide_list=fission_light_nuclide_list,
+            is_all_step=is_all_step, step_numbers=step_numbers)
 
 
 if __name__ == '__main__':
