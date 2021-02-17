@@ -108,7 +108,7 @@ def extract_columns(data_columns, step_numbers, is_all_step):
             steps.append(i + 3)
         # 更改列名
         # df_allstep.columns = list(np.arrange(1, 21))
-    elif len(step_numbers):
+    elif step_numbers:
         # 修改列号与输出文件的数据结构对应
         # 第0，1列为key，第2列为初始核素密度
         # 因此，step 1对应第3列
@@ -204,12 +204,12 @@ def merge_final_result(file_path, final_file_name='final'):
     df_final.to_excel(final_file_name + '.xlsx', encoding='utf-8', index=False)
 
 
-def process(file_path, nuclide_list=None, is_all_step=True, step_numbers=None):
+def process(file_path, nuclide_list=None, is_all_step=False, step_numbers=None):
     """
     :param step_numbers: 数据列索引
     :param file_path:文件所在路径，相对py
     :param nuclide_list:关键核素列表，None取全部核素
-    :param is_all_step: 默认True，适用10step，False适用100step
+    :param is_all_step: 默认False，适用10step，True适用100step
     """
 
     # 核素ID和核素名对应的列名
@@ -229,7 +229,7 @@ def main():
     test_file_path = configlib.Config.get_file_path("test_file_path")
     step_numbers = configlib.Config.get_data_extraction_conf("step_numbers")
 
-    if step_numbers == '[]':
+    if step_numbers:
         is_all_step = True
     else:
         is_all_step = False
