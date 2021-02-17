@@ -72,9 +72,10 @@ def filter_data(df_data, nuc_names):
         # The two lines below, do the exact same thing here.
         # Drop rows with all zeros. But the latter one is way much faster.
 
-        # df_filter = df_density.loc[df_density.apply(np.sum, axis=1).to_numpy().nonzero()]
-        df_filter = df_density.loc[df_density.any(axis=1).to_numpy().nonzero()]
+        # df_filter = df_density.iloc[df_density.apply(np.sum, axis=1).to_numpy().nonzero()]
+        df_filter = df_density.iloc[df_density.any(axis=1).to_numpy().nonzero()]
 
+        # df_data.loc[]
         df_output = pd.merge(df_nuc, df_filter, "inner", left_index=True, right_index=True)
     return df_output
 
