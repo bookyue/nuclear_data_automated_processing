@@ -86,11 +86,11 @@ def filter_data(df_data, nuc_names):
     return df_output
 
 
-def extract_columns(data_rows, step_numbers, is_all_step):
+def extract_columns(data_columns, step_numbers, is_all_step):
     """
     依据列号，抽取数据
     本操作应放在抽取数据行之后
-    :param data_rows:数据行
+    :param data_columns:数据行
     :param step_numbers:列号
     :param is_all_step: bool, 提取全部列，or 最后一列，默认取最后一列
     :return:DataFrame，数据
@@ -104,7 +104,7 @@ def extract_columns(data_rows, step_numbers, is_all_step):
     # 是否输出全部燃耗步结果
     if is_all_step:
         # 第3 - 21列为全部燃耗步计算结果
-        for i in range(len(data_rows.columns) - 4):
+        for i in range(len(data_columns.columns) - 4):
             steps.append(i + 3)
         # 更改列名
         # df_allstep.columns = list(np.arrange(1, 21))
@@ -117,12 +117,12 @@ def extract_columns(data_rows, step_numbers, is_all_step):
             steps.append(step_numbers[i] + 2)
     # 最终结果列
     steps.append(-1)
-    df_all_step = data_rows.iloc[:, steps]
+    df_all_step = data_columns.iloc[:, steps]
     return df_all_step
     #
     # # 取核素列与最终结果列
-    # df_nuc = data_rows.iloc[:, 0:2]
-    # df_final = pd.DataFrame(data_rows.iloc[:, -1])
+    # df_nuc = data_columns.iloc[:, 0:2]
+    # df_final = pd.DataFrame(data_columns.iloc[:, -1])
     # # 更改列名
     # # df_nuc.columns = ['NucId', 'NucName']
     # # df_final.columns = ['Final']
