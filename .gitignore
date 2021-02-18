@@ -1,6 +1,6 @@
 
-# Created by https://www.toptal.com/developers/gitignore/api/python,pycharm+all,venv
-# Edit at https://www.toptal.com/developers/gitignore?templates=python,pycharm+all,venv
+# Created by https://www.toptal.com/developers/gitignore/api/python,pycharm+all,venv,vscode
+# Edit at https://www.toptal.com/developers/gitignore?templates=python,pycharm+all,venv,vscode
 
 ### PyCharm+all ###
 # Covers JetBrains IDEs: IntelliJ, RubyMine, PhpStorm, AppCode, PyCharm, CLion, Android Studio, WebStorm and Rider
@@ -243,4 +243,12 @@ dmypy.json
 pyvenv.cfg
 pip-selfcheck.json
 
-# End of https://www.toptal.com/developers/gitignore/api/python,pycharm+all,venv
+### vscode ###
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+*.code-workspace
+
+# End of https://www.toptal.com/developers/gitignore/api/python,pycharm+all,venv,vscode
