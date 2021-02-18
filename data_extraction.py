@@ -2,10 +2,12 @@ import codecs
 from decimal import Decimal
 
 import pandas as pd
+from cyberbrain import trace
 
 from utils import configlib
 
 
+@trace
 def row_numbers_of_block(list_of_lines, keys_of_rows):
     """
     依据字符串，获取所在行号
@@ -44,7 +46,7 @@ def row_numbers_of_block(list_of_lines, keys_of_rows):
     # Return list of tuples containing matched string, line numbers and lines where string is found
 
     if is_all:
-        row_numbers = [row_numbers[num]-3 if num % 2 else row_numbers[num]+1 for num in range(len(row_numbers))]
+        row_numbers = [row_numbers[num] - 3 if num % 2 else row_numbers[num] + 1 for num in range(len(row_numbers))]
         row_numbers[-1] = row_numbers[-1] + 1
     elif is_gamma:
         row_numbers[0] = row_numbers[0] + 2
