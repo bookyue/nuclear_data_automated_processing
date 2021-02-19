@@ -45,13 +45,13 @@ def row_numbers_of_physical_quantity(file_name, physical_quantity_name):
     print(length_of_physical_quantity)
 
 
-def process(file_path, physical_quantity_all):
+def process(file_path, physical_quantity_name):
     # 核素ID和核素名对应的列名
     keys_of_column = configlib.Config.get_data_extraction_conf("keys_of_column")
 
     file_names = file_path.glob("*.out")
     for file_name in file_names:
-        row_numbers_of_physical_quantity(file_name, physical_quantity_all)
+        row_numbers_of_physical_quantity(file_name, physical_quantity_name)
 
 
 def main():
@@ -61,7 +61,7 @@ def main():
     physical_quantity_name = "all"
     is_all_step = False
 
-    process(file_path=test_file_path, physical_quantity_all=physical_quantity_name)
+    process(file_path=test_file_path, physical_quantity_name=physical_quantity_name)
 
 
 if __name__ == '__main__':
