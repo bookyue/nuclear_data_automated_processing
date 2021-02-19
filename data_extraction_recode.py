@@ -1,19 +1,21 @@
+import pandas as pd
+
 from utils import configlib
 from utils.input_xml_file import InputXmlFile
 
 
 def extract_rows(xml_file):
-    # text = []
-    # for key in physical_quantity_list:
-    #     row_start = row_numbers[key][0]
-    #     row_end = row_numbers[key][1]
-    #     text.append(file_lines[row_start:row_end + 1])
-    # test = {key: value for key, value in zip(physical_quantity_list, text)}
-    # print(test)
-    # print(file_name)
-    text = []
-    for key in xml_file.chosen_physical_quantity:
-        pass
+    df_data = []
+    with xml_file.path.open(encoding='UTF-8') as file:
+        file_lines = file.readlines()
+
+        for key in xml_file.chosen_physical_quantity:
+            row_start = xml_file.length_of_physical_quantity[key][0]
+            row_end = xml_file.length_of_physical_quantity[key][1]
+            text = file_lines[row_start:row_end + 1]
+            df_data.append(pd.DataFrame([data.split() for data in text]))
+
+    return df_data
 
 
 def process(file_path, physical_quantity_name):
@@ -23,18 +25,18 @@ def process(file_path, physical_quantity_name):
     file_names = file_path.glob("*.out")
     for file_name in file_names:
         xml_file = InputXmlFile(file_name, physical_quantity_name)
-        print(xml_file.name)
-        print(xml_file.chosen_physical_quantity)
-        print(xml_file.unfetched_physical_quantity)
-        print(xml_file.length_of_physical_quantity)
-        extract_rows(xml_file)
+        # print(xml_file.name)
+        # print(xml_file.chosen_physical_quantity)
+        # print(xml_file.unfetched_physical_quantity)
+        # print(xml_file.length_of_physical_quantity)
+        df_data = extract_rows(xml_file)
 
 
 def main():
     fission_light_nuclide_list = configlib.Config.get_nuclide_list("fission_light")
     test_file_path = configlib.Config.get_file_path("test_file_path")
     step_numbers = configlib.Config.get_data_extraction_conf("step_numbers")
-    physical_quantity_name = "gamma_spectra"
+    physical_quantity_name = "all"
     is_all_step = False
 
     process(file_path=test_file_path, physical_quantity_name=physical_quantity_name)
