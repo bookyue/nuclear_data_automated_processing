@@ -7,12 +7,13 @@ import pandas as pd
 from utils import configlib
 
 
-def get_physical_quantity_key_from_value(value_to_search):
-    physical_quantity_dict = configlib.Config.get_data_extraction_conf("keys_of_rows")
-    return next((key for key, value in physical_quantity_dict.items() if value == value_to_search), None)
+# def get_physical_quantity_key_from_value(value_to_search):
+#     physical_quantity_dict = configlib.Config.get_data_extraction_conf("keys_of_rows")
+#     return next((key for key, value in physical_quantity_dict.items() if value == value_to_search), None)
 
 
-def row_numbers_of_physical_quantity(file_name, list_of_strings_to_search):
+def row_numbers_of_physical_quantity(file_name, physical_quantity_list):
+    list_of_strings_to_search = configlib.Config.get_data_extraction_conf("keys_of_rows").get(physical_quantity_list)
     is_all = False
     if len(list_of_strings_to_search) > 2:
         is_all = True
@@ -21,7 +22,7 @@ def row_numbers_of_physical_quantity(file_name, list_of_strings_to_search):
     index_end = list_of_strings_to_search[-1]
 
     is_gamma = False
-    if index_start == ['Gamma-ray']:
+    if physical_quantity_list == 'gamma_spectra':
         is_gamma = True
 
     # is_physical_quantity = {'isotope': False,
@@ -45,13 +46,15 @@ def row_numbers_of_physical_quantity(file_name, list_of_strings_to_search):
         for row_number, line in enumerate(file):
             for string_to_search in index_start:
                 if string_to_search in line:
-                    key = get_physical_quantity_key_from_value([string_to_search, index_end])
+                    # key = get_physical_quantity_key_from_value([string_to_search, index_end])
                     # is_physical_quantity[key] = True
-                    length_of_physical_quantity[key].append(row_number+7 if key != 'gamma_spectra' else row_number+2)
+                    length_of_physical_quantity[physical_quantity_list].append(
+                        row_number + 7 if physical_quantity_list != 'gamma_spectra ' else row_number + 2)
                     i += 1
             if i % 2 != 0 or i != 0:
                 if index_end in line:
-                    length_of_physical_quantity[key].append(row_number-3 if key != 'gamma_spectra' else row_number-2)
+                    length_of_physical_quantity[physical_quantity_list].append(
+                        row_number - 3 if physical_quantity_list != 'gamma_spectra' else row_number - 2)
                     if not is_all:
                         break
     print(file_name)
@@ -62,12 +65,10 @@ def row_numbers_of_physical_quantity(file_name, list_of_strings_to_search):
 def process(file_path, physical_quantity_list):
     # 核素ID和核素名对应的列名
     keys_of_column = configlib.Config.get_data_extraction_conf("keys_of_column")
-    # 关键字，切分数据块
-    keys_of_row = configlib.Config.get_data_extraction_conf("keys_of_rows").get(physical_quantity_list)
 
     file_names = file_path.glob("*.out")
     for file_name in file_names:
-        row_numbers_of_physical_quantity(file_name, keys_of_row)
+        row_numbers_of_physical_quantity(file_name, physical_quantity_list)
 
 
 def main():
