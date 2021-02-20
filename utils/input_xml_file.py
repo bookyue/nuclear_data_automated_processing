@@ -4,7 +4,7 @@ from utils import configlib
 from utils.physical_quantity_list_generator import physical_quantity_list_generator
 
 
-class InputXmlFile:
+class InputXmlFileReader:
     chosen_physical_quantity: list
     length_of_physical_quantity: dict
 
@@ -19,6 +19,13 @@ class InputXmlFile:
         self.chosen_physical_quantity = physical_quantity_list_generator(physical_quantity_name)
         self.length_of_physical_quantity = self.get_length_of_physical_quantity()
         self.unfetched_physical_quantity = self.get_unfetched_physical_quantity()
+
+    def __enter__(self):
+        self.file_object = self.path.open(mode='r', encoding='UTF-8')
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.file_object.close()
 
     def set_chosen_physical_quantity(self, physical_quantity_name):
         """
@@ -53,14 +60,12 @@ class InputXmlFile:
 
         length_of_physical_quantity = {key: [] for key in chosen_physical_quantity}
 
-        i = -1
         is_find_start_title = False
 
         for row_number, line in enumerate(self.path.open(encoding='UTF-8')):
             if not is_find_start_title:
-                for string_to_search in index_start:
+                for i, string_to_search in enumerate(index_start):
                     if string_to_search in line:
-                        i += 1
                         is_find_start_title = True
                         length_of_physical_quantity[chosen_physical_quantity[i]].append(
                             row_number + 7 if chosen_physical_quantity[i] != 'gamma_spectra' else row_number + 2)
