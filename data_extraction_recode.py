@@ -1,20 +1,17 @@
 import pandas as pd
 
 from utils import configlib
-from utils.input_xml_file import InputXmlFile
+from utils.input_xml_file import InputXmlFileReader
 
 
 def extract_rows(xml_file):
     df_data = []
-    with xml_file.path.open(encoding='UTF-8') as file:
-        file_lines = file.readlines()
-
-        for key in xml_file.chosen_physical_quantity:
-            row_start = xml_file.length_of_physical_quantity[key][0]
-            row_end = xml_file.length_of_physical_quantity[key][1]
-            text = file_lines[row_start:row_end + 1]
-            df_data.append(pd.DataFrame([data.split() for data in text]))
-
+    file_lines = xml_file.file_object.readlines()
+    for key in xml_file.chosen_physical_quantity:
+        row_start = xml_file.length_of_physical_quantity[key][0]
+        row_end = xml_file.length_of_physical_quantity[key][1]
+        text = file_lines[row_start:row_end + 1]
+        df_data.append(pd.DataFrame([data.split() for data in text]))
     return df_data
 
 
@@ -24,12 +21,12 @@ def process(file_path, physical_quantity_name):
 
     file_names = file_path.glob("*.out")
     for file_name in file_names:
-        xml_file = InputXmlFile(file_name, physical_quantity_name)
-        # print(xml_file.name)
-        # print(xml_file.chosen_physical_quantity)
-        # print(xml_file.unfetched_physical_quantity)
-        # print(xml_file.length_of_physical_quantity)
-        df_data = extract_rows(xml_file)
+        with InputXmlFileReader(file_name, physical_quantity_name) as xml_file:
+            print(xml_file.name)
+            print(xml_file.chosen_physical_quantity)
+            print(xml_file.unfetched_physical_quantity)
+            print(xml_file.length_of_physical_quantity)
+            df_data = extract_rows(xml_file)
 
 
 def main():
