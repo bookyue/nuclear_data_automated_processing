@@ -61,7 +61,7 @@ class InputXmlFileReader:
         length_of_physical_quantity = {key: [] for key in chosen_physical_quantity}
 
         is_find_start_title = True
-
+        i = 0
         for row_number, line in enumerate(self.path.open(encoding='UTF-8')):
             if is_find_start_title:
                 for i, string_to_search in enumerate(index_start):
