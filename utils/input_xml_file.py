@@ -19,6 +19,8 @@ class InputXmlFileReader:
         self.chosen_physical_quantity = physical_quantity_list_generator(physical_quantity_name)
         self.length_of_physical_quantity = self.get_length_of_physical_quantity()
         self.unfetched_physical_quantity = self.get_unfetched_physical_quantity()
+        self.file_object = self.path.open(mode='r', encoding='UTF-8')
+        self.table_of_physical_quantity = self.get_table_of_physical_quantity()
 
     def __enter__(self):
         self.file_object = self.path.open(mode='r', encoding='UTF-8')
@@ -26,6 +28,14 @@ class InputXmlFileReader:
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.file_object.close()
+
+    def __getitem__(self, physical_quantity_name):
+        tmp_dict = self.table_of_physical_quantity
+        if physical_quantity_name != 'all':
+            # return {key: tmp_dict.get(physical_quantity_name) for key in [physical_quantity_name]}
+            return {physical_quantity_name: tmp_dict.get(physical_quantity_name)}
+        else:
+            return self.table_of_physical_quantity
 
     def set_chosen_physical_quantity(self, physical_quantity_name):
         """
@@ -85,3 +95,16 @@ class InputXmlFileReader:
         unfetched_physical_quantity = [name for name in self.chosen_physical_quantity
                                        if not self.length_of_physical_quantity.get(name)]
         return unfetched_physical_quantity
+
+    def get_table_of_physical_quantity(self):
+        file = self.file_object
+        df_data = {}
+        file_lines = file.readlines()
+        for key in self.chosen_physical_quantity:
+            text = []
+            if key not in self.unfetched_physical_quantity:
+                row_start = self.length_of_physical_quantity[key][0]
+                row_end = self.length_of_physical_quantity[key][1]
+                text = file_lines[row_start:row_end + 1]
+            df_data[key] = text
+        return df_data
