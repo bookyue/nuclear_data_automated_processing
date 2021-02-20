@@ -6,19 +6,6 @@ from utils import configlib
 from utils.input_xml_file import InputXmlFileReader
 
 
-def extract_rows(xml_file):
-    df_data = {}
-    text = []
-    file_lines = xml_file.file_object.readlines()
-    for key in xml_file.chosen_physical_quantity:
-        if key not in xml_file.unfetched_physical_quantity:
-            row_start = xml_file.length_of_physical_quantity[key][0]
-            row_end = xml_file.length_of_physical_quantity[key][1]
-            text = file_lines[row_start:row_end + 1]
-        df_data[key] = pd.DataFrame([data.split() for data in text])
-    return df_data
-
-
 def filter_data(dict_text, nuclide_list):
     """
     依据核素名称，筛选数据行
