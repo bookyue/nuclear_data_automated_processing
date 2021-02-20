@@ -1,3 +1,4 @@
+import linecache
 from pathlib import Path
 
 from utils import configlib
@@ -19,7 +20,6 @@ class InputXmlFileReader:
         self.chosen_physical_quantity = physical_quantity_list_generator(physical_quantity_name)
         self.length_of_physical_quantity = self.get_length_of_physical_quantity()
         self.unfetched_physical_quantity = self.get_unfetched_physical_quantity()
-        self.file_object = self.path.open(mode='r', encoding='UTF-8')
         self.table_of_physical_quantity = self.get_table_of_physical_quantity()
 
     def __enter__(self):
@@ -97,14 +97,13 @@ class InputXmlFileReader:
         return unfetched_physical_quantity
 
     def get_table_of_physical_quantity(self):
-        file = self.file_object
         df_data = {}
-        file_lines = file.readlines()
         for key in self.chosen_physical_quantity:
             text = []
             if key not in self.unfetched_physical_quantity:
                 row_start = self.length_of_physical_quantity[key][0]
                 row_end = self.length_of_physical_quantity[key][1]
-                text = file_lines[row_start:row_end + 1]
+                text = linecache.getlines(str(self.path))[row_start:row_end + 1]
+
             df_data[key] = text
         return df_data
