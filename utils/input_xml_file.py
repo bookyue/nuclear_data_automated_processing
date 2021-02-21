@@ -1,10 +1,11 @@
+import linecache
 from pathlib import Path
 
 from utils import configlib
 from utils.physical_quantity_list_generator import physical_quantity_list_generator
 
 
-class InputXmlFile:
+class InputXmlFileReader:
     chosen_physical_quantity: list
     length_of_physical_quantity: dict
 
@@ -19,6 +20,22 @@ class InputXmlFile:
         self.chosen_physical_quantity = physical_quantity_list_generator(physical_quantity_name)
         self.length_of_physical_quantity = self.get_length_of_physical_quantity()
         self.unfetched_physical_quantity = self.get_unfetched_physical_quantity()
+        self.table_of_physical_quantity = self.get_table_of_physical_quantity()
+
+    def __enter__(self):
+        self.file_object = self.path.open(mode='r', encoding='UTF-8')
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.file_object.close()
+
+    def __getitem__(self, physical_quantity_name):
+        tmp_dict = self.table_of_physical_quantity
+        if physical_quantity_name != 'all':
+            # return {key: tmp_dict.get(physical_quantity_name) for key in [physical_quantity_name]}
+            return {physical_quantity_name: tmp_dict.get(physical_quantity_name)}
+        else:
+            return self.table_of_physical_quantity
 
     def set_chosen_physical_quantity(self, physical_quantity_name):
         """
@@ -53,23 +70,22 @@ class InputXmlFile:
 
         length_of_physical_quantity = {key: [] for key in chosen_physical_quantity}
 
-        i = -1
-        is_find_start_title = False
-
+        is_find_start_title = True
+        i = 0
         for row_number, line in enumerate(self.path.open(encoding='UTF-8')):
-            if not is_find_start_title:
-                for string_to_search in index_start:
+            if is_find_start_title:
+                for i, string_to_search in enumerate(index_start):
                     if string_to_search in line:
-                        i += 1
-                        is_find_start_title = True
                         length_of_physical_quantity[chosen_physical_quantity[i]].append(
                             row_number + 7 if chosen_physical_quantity[i] != 'gamma_spectra' else row_number + 2)
+                        is_find_start_title = False
+                        break
 
-            if is_find_start_title:
+            if not is_find_start_title:
                 if index_end in line:
-                    is_find_start_title = False
                     length_of_physical_quantity[chosen_physical_quantity[i]].append(
                         row_number - 3 if chosen_physical_quantity[i] != 'gamma_spectra' else row_number - 2)
+                    is_find_start_title = True
                     if physical_quantity_name != 'all':
                         break
 
@@ -79,3 +95,15 @@ class InputXmlFile:
         unfetched_physical_quantity = [name for name in self.chosen_physical_quantity
                                        if not self.length_of_physical_quantity.get(name)]
         return unfetched_physical_quantity
+
+    def get_table_of_physical_quantity(self):
+        df_data = {}
+        for key in self.chosen_physical_quantity:
+            text = []
+            if key not in self.unfetched_physical_quantity:
+                row_start = self.length_of_physical_quantity[key][0]
+                row_end = self.length_of_physical_quantity[key][1]
+                text = linecache.getlines(str(self.path))[row_start:row_end + 1]
+
+            df_data[key] = text
+        return df_data
