@@ -30,6 +30,10 @@ class Config:
         return Path(cls.conf.get("file_path").get(properties))
 
     @classmethod
+    def get_database_config(cls, properties):
+        return Path(cls.conf.get("database").get(properties))
+
+    @classmethod
     def get_nuclide_list(cls, nuclide_name):
         return cls.conf.get("nuclide_list").get(nuclide_name, None)
 

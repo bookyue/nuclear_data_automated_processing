@@ -26,6 +26,9 @@ name = "Nuc_Name"
 test_file_path = "./test"
 burnup_time_file_path = "./burnup time"
 
+[database]
+path = "./data.db"
+
 [nuclide_list]
 # Np237 衰变链核素
 decay = ['Np237', 'Pa233', 'U233', 'Th229', 'Ra225', 'Ac225', 'Fr221', 'At217', 'Bi213', 'Po213', 'Tl209', 'Pb209', 'Bi209', 'Tl205']
