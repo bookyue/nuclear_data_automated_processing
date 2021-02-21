@@ -22,7 +22,6 @@ def filter_data(dict_text, nuclide_list):
             if key == 'gamma_spectra':
                 continue
             dict_df_data[key]: pd.DataFrame = dict_df_data[key].loc[is_in_nuclide_list]
-            print(1)
     else:
         # Drop rows with all zeros in data.
 
@@ -33,17 +32,17 @@ def filter_data(dict_text, nuclide_list):
             df_data: pd.DataFrame = dict_df_data[key].iloc[:, [2, 3]]
             df_data = df_data.applymap(Decimal)
 
-        # The two lines below, does the exact same thing here.
-        # Drop rows with all zeros. But the latter one is way much faster.
-        # df_filter = df_data.iloc[df_data.apply(np.sum, axis=1).to_numpy().nonzero()]
-        # df_filter = df_data.iloc[df_data.any(axis=1).to_numpy().nonzero()]
+            # The two lines below, does the exact same thing here.
+            # Drop rows with all zeros. But the latter one is way much faster.
+            # df_filter = df_data.iloc[df_data.apply(np.sum, axis=1).to_numpy().nonzero()]
+            # df_filter = df_data.iloc[df_data.any(axis=1).to_numpy().nonzero()]
 
-        # When only condition is provided,
-        # the numpy.where() function is a shorthand for np.asarray(condition).nonzero().
-        # Using nonzero directly should be preferred, as it behaves correctly for subclasses.
-        # The rest of this documentation covers only the case where all three arguments are provided.
-        # But to be clear, I leave the np.where() kind of function in this comment.
-        # df_is_not_zero = np.where(df_density.any(axis=1))
+            # When only condition is provided,
+            # the numpy.where() function is a shorthand for np.asarray(condition).nonzero().
+            # Using nonzero directly should be preferred, as it behaves correctly for subclasses.
+            # The rest of this documentation covers only the case where all three arguments are provided.
+            # But to be clear, I leave the np.where() kind of function in this comment.
+            # df_is_not_zero = np.where(df_density.any(axis=1))
 
             df_is_not_zero = df_data.any(axis=1).to_numpy().nonzero()
             dict_df_data[key] = pd.concat([df_nuc.iloc[df_is_not_zero], df_data.iloc[df_is_not_zero]],
@@ -77,7 +76,7 @@ def main():
     is_all_step = False
 
     process(file_path=test_file_path, physical_quantity_name=physical_quantity_name,
-            nuclide_list=None)
+            nuclide_list=fission_light_nuclide_list)
 
 
 if __name__ == '__main__':
