@@ -14,17 +14,18 @@ files_physical_quantities_association = Table('files_physical_quantities_associa
                                                      ForeignKey('physical_quantities.id'))
                                               )
 
-nuc_data_physical_quantities_association = Table('nuc_data_physical_quantities_association', Base.metadata,
-                                                 Column('nuc_data_id', Integer, ForeignKey('nuc_data.id')),
-                                                 Column('physical_quantity_id', Integer,
-                                                        ForeignKey('physical_quantities.id'))
-                                                 )
+# nuc_data_physical_quantities_association = Table('nuc_data_physical_quantities_association', Base.metadata,
+#                                                  Column('nuc_data_id', Integer, ForeignKey('nuc_data.id')),
+#                                                  Column('physical_quantity_id', Integer,
+#                                                         ForeignKey('physical_quantities.id'))
+#                                                  )
 
 
 class Nuc(Base):
     __tablename__ = 'nuc'
     id = Column(Integer, primary_key=True)
     name = Column(String)
+
     data = relationship("NucData", backref='nuc')
 
 
@@ -33,19 +34,20 @@ class NucData(Base):
     id = Column(Integer, primary_key=True, autoincrement=True)
     nuc_id = Column(Integer, ForeignKey('nuc.id'))
     file_id = Column(Integer, ForeignKey('files.id'))
+    physical_quantity_id = Column(Integer, ForeignKey('physical_quantities.id'))
     data1 = Column(Numeric)
     data2 = Column(Numeric)
 
     # files = relationship('File', secondary=files_nuc_data_association)
-    physical_quantities = relationship('PhysicalQuantity', secondary=nuc_data_physical_quantities_association)
+    # physical_quantities = relationship('PhysicalQuantity', secondary=nuc_data_physical_quantities_association)
 
 
 class File(Base):
     __tablename__ = 'files'
     id = Column(Integer, primary_key=True, autoincrement=True)
     name = Column(String)
-    data = relationship("NucData", backref='files')
 
+    data = relationship("NucData", backref='file')
     # data = relationship('NucData', secondary=files_nuc_data_association)
     physical_quantities = relationship('PhysicalQuantity', secondary=files_physical_quantities_association)
 
@@ -55,5 +57,6 @@ class PhysicalQuantity(Base):
     id = Column(Integer, primary_key=True, autoincrement=True)
     name = Column(String)
 
-    data = relationship('NucData', secondary=nuc_data_physical_quantities_association)
+    data = relationship("NucData", backref='physical_quantity')
+    # data = relationship('NucData', secondary=nuc_data_physical_quantities_association)
     files = relationship('File', secondary=files_physical_quantities_association)
