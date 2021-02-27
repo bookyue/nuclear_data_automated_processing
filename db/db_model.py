@@ -24,7 +24,7 @@ files_physical_quantities_association = Table('files_physical_quantities_associa
 class Nuc(Base):
     __tablename__ = 'nuc'
     id = Column(Integer, primary_key=True)
-    name = Column(String)
+    name = Column(String(8))
 
     data = relationship("NucData", backref='nuc')
 
@@ -45,7 +45,7 @@ class NucData(Base):
 class File(Base):
     __tablename__ = 'files'
     id = Column(Integer, primary_key=True, autoincrement=True)
-    name = Column(String)
+    name = Column(String(32))
 
     data = relationship("NucData", backref='file')
     # data = relationship('NucData', secondary=files_nuc_data_association)
@@ -55,7 +55,7 @@ class File(Base):
 class PhysicalQuantity(Base):
     __tablename__ = 'physical_quantities'
     id = Column(Integer, primary_key=True, autoincrement=True)
-    name = Column(String)
+    name = Column(String(16))
 
     data = relationship("NucData", backref='physical_quantity')
     # data = relationship('NucData', secondary=nuc_data_physical_quantities_association)
