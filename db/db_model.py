@@ -24,14 +24,15 @@ files_physical_quantities_association = Table('files_physical_quantities_associa
 class Nuc(Base):
     __tablename__ = 'nuc'
     id = Column(Integer, primary_key=True)
-    name = Column(String(8))
+    nuc_ix = Column(Integer, unique=True, autoincrement=True)
+    name = Column(String(32))
 
     data = relationship("NucData", backref='nuc')
 
 
 class NucData(Base):
     __tablename__ = 'nuc_data'
-    id = Column(Integer, primary_key=True, autoincrement=True)
+    id = Column(Integer, primary_key=True)
     nuc_id = Column(Integer, ForeignKey('nuc.id'))
     file_id = Column(Integer, ForeignKey('files.id'))
     physical_quantity_id = Column(Integer, ForeignKey('physical_quantities.id'))
