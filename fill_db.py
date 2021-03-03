@@ -1,6 +1,6 @@
 from decimal import Decimal
 from multiprocessing.dummy import Pool as ThreadPool
-
+# from multiprocessing.dummy import Pool
 from sqlalchemy.orm import scoped_session
 
 from db.base import Base, engine, session_factory
@@ -74,15 +74,28 @@ def populate_database(session, xml_file):
     session_thread_local.close()
 
 
+def thread_worker(xml_file):
+    session = scoped_session(session_factory)
+    populate_database(session, xml_file)
+
+
+def work_parallel(xml_file_list, thread_number=4):
+    pool = ThreadPool(thread_number)
+    results = pool.map(thread_worker, xml_file_list)
+
+
 def main():
     test_file_path = configlib.Config.get_file_path('test_file_path')
     physical_quantity_name = 'all'
     init_db()
-    session = scoped_session(session_factory)
+
     file_names = test_file_path.glob('*.out')
+    xml_file_list = []
     for file_name in file_names:
         with InputXmlFileReader(file_name, physical_quantity_name) as xml_file:
-            populate_database(session, xml_file)
+            xml_file_list.append(xml_file)
+
+    work_parallel(xml_file_list, 4)
 
 
 if __name__ == '__main__':

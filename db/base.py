@@ -32,4 +32,4 @@ def _choose_db(db_type, debug=False):
 
 
 Base = declarative_base()
-engine, session_factory = _choose_db('sqlite', debug=True)
+engine, session_factory = _choose_db('mysql', debug=True)
