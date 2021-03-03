@@ -13,6 +13,9 @@ class Config:
     try:
         config_file_path = Path('.')
         file_path = Path.joinpath(config_file_path, 'config.toml')
+        if not file_path.exists():
+            config_file_path = Path('..')
+            file_path = Path.joinpath(config_file_path, 'config.toml')
         conf = toml.load(file_path)
     except FileNotFoundError:
         print("The config file doesn't exist!")
@@ -30,8 +33,8 @@ class Config:
         return Path(cls.conf.get("file_path").get(properties))
 
     @classmethod
-    def get_database_config(cls, properties):
-        return Path(cls.conf.get("database").get(properties))
+    def get_database_config(cls):
+        return cls.conf.get("database")
 
     @classmethod
     def get_nuclide_list(cls, nuclide_name):

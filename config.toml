@@ -22,12 +22,30 @@ all = ["Nuclide Density", "Radioactivity", "Absorption", "Fission", "Decay Heat"
 id = "NucId"
 name = "Nuc_Name"
 
+
 [file_path]
 test_file_path = "./test"
 burnup_time_file_path = "./burnup time"
 
+
 [database]
+[database.sqlite]
 path = "./data.db"
+
+[database.mysql]
+user = "user"
+password = "password"
+url = "localhost"
+port = 3306
+dbname = "db"
+
+[database.postgresql]
+user = "user"
+password = "password"
+url = "localhost"
+port = 5432
+dbname = "db"
+
 
 [nuclide_list]
 # Np237 衰变链核素
