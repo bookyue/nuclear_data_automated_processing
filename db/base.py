@@ -5,7 +5,7 @@ from sqlalchemy.orm import sessionmaker
 from utils import configlib
 
 
-def _choose_db(db_type):
+def _choose_db(db_type, debug=False):
     db_config = configlib.Config.get_database_config()
 
     if db_type not in db_config:
@@ -25,11 +25,11 @@ def _choose_db(db_type):
     else:
         connector_string = f'postgresql+psycopg2://{user}:{password}@{url}:{port}/{db_name}?client_encoding=utf8'
 
-    engine_tmp = create_engine(connector_string, echo=True)
+    engine_tmp = create_engine(connector_string, echo=debug)
     session_tmp = sessionmaker(bind=engine_tmp)
 
     return engine_tmp, session_tmp
 
 
 Base = declarative_base()
-engine, session_factory = _choose_db('sqlite')
+engine, session_factory = _choose_db('sqlite', debug=True)
