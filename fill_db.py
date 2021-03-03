@@ -1,5 +1,4 @@
 from decimal import Decimal
-from multiprocessing.dummy import Pool as ThreadPool
 
 from sqlalchemy.orm import scoped_session
 
