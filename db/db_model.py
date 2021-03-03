@@ -3,22 +3,12 @@ from sqlalchemy.orm import relationship
 
 from db.base import Base
 
-# files_nuc_data_association = Table('files_nuc_data_association', Base.metadata,
-#                                    Column('file_id', Integer, ForeignKey('files.id')),
-#                                    Column('nuc_data_id', Integer, ForeignKey('nuc_data.id'))
-#                                    )
 
 files_physical_quantities_association = Table('files_physical_quantities_association', Base.metadata,
                                               Column('file_id', Integer, ForeignKey('files.id')),
                                               Column('physical_quantity_id', Integer,
                                                      ForeignKey('physical_quantities.id'))
                                               )
-
-# nuc_data_physical_quantities_association = Table('nuc_data_physical_quantities_association', Base.metadata,
-#                                                  Column('nuc_data_id', Integer, ForeignKey('nuc_data.id')),
-#                                                  Column('physical_quantity_id', Integer,
-#                                                         ForeignKey('physical_quantities.id'))
-#                                                  )
 
 
 class Nuc(Base):
@@ -27,7 +17,7 @@ class Nuc(Base):
     nuc_ix = Column(Integer, unique=True, autoincrement=True)
     name = Column(String(32))
 
-    data = relationship("NucData", backref='nuc')
+    data = relationship('NucData', back_populates='nuc')
 
 
 class NucData(Base):
@@ -39,8 +29,9 @@ class NucData(Base):
     data1 = Column(Numeric)
     data2 = Column(Numeric)
 
-    # files = relationship('File', secondary=files_nuc_data_association)
-    # physical_quantities = relationship('PhysicalQuantity', secondary=nuc_data_physical_quantities_association)
+    nuc = relationship('Nuc', back_populates='data')
+    file = relationship('File', back_populates='data')
+    physical_quantity = relationship('PhysicalQuantity', back_populates='data')
 
 
 class File(Base):
@@ -48,8 +39,7 @@ class File(Base):
     id = Column(Integer, primary_key=True, autoincrement=True)
     name = Column(String(32))
 
-    data = relationship("NucData", backref='file')
-    # data = relationship('NucData', secondary=files_nuc_data_association)
+    data = relationship('NucData', back_populates='file')
     physical_quantities = relationship('PhysicalQuantity', secondary=files_physical_quantities_association)
 
 
@@ -58,6 +48,5 @@ class PhysicalQuantity(Base):
     id = Column(Integer, primary_key=True, autoincrement=True)
     name = Column(String(16))
 
-    data = relationship("NucData", backref='physical_quantity')
-    # data = relationship('NucData', secondary=nuc_data_physical_quantities_association)
+    data = relationship('NucData', back_populates='physical_quantity')
     files = relationship('File', secondary=files_physical_quantities_association)
