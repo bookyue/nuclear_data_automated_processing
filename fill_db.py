@@ -2,26 +2,36 @@ from decimal import Decimal
 
 import pandas as pd
 
-from sqlalchemy.dialects.mysql import insert
+from sqlalchemy.dialects.mysql import insert as mysql_insert
+from sqlalchemy.dialects.postgresql import insert as postgres_insert
 
-from db.base import Base, engine, Session
+from db.base import Base, Session
 from db.db_model import Nuc, NucData, File, PhysicalQuantity
 from utils import configlib
 from utils.input_xml_file import InputXmlFileReader
 
 
 def init_db():
-    Base.metadata.drop_all(engine)
-    Base.metadata.create_all(engine)
+    session = Session()
+    Base.metadata.drop_all(session.bind)
+    Base.metadata.create_all(session.bind)
 
 
 def _upsert(model, data, update_field):
     """
     on_duplicate_key_update for mysql
+    on_conflict_do_nothing for postgresql
     """
-    stmt = insert(model).values(data)
-    d = {f: getattr(stmt.inserted, f) for f in update_field}
-    return stmt.on_duplicate_key_update(**d)
+    session = Session()
+    if session.bind.dialect.name == 'mysql':
+        stmt = mysql_insert(model).values(data)
+        d = {f: getattr(stmt.inserted, f) for f in update_field}
+        return stmt.on_duplicate_key_update(**d)
+    elif session.bind.dialect.name == 'postgresql':
+        stmt = postgres_insert(model).values(data)
+        return stmt.on_conflict_do_nothing(index_elements=[update_field[0]])
+    else:
+        raise Exception(f"can't support {session.bind.dialect.name} dialect")
 
 
 def populate_database(xml_file):
