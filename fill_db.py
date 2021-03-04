@@ -1,7 +1,7 @@
 from decimal import Decimal
+
 import pandas as pd
 
-import pangres
 from sqlalchemy.dialects.mysql import insert
 
 from db.base import Base, engine, Session
@@ -38,8 +38,6 @@ def populate_database(xml_file):
 
     for key in xml_file.table_of_physical_quantity:
 
-        nuc_data = []
-
         # physical_quantity
         physical_quantity_tmp = (session.query(PhysicalQuantity)
                                  .filter(PhysicalQuantity.name == key)
@@ -63,30 +61,27 @@ def populate_database(xml_file):
         df_nuc_tmp.columns = ('nuc_ix', 'name')
         stmt = _upsert(Nuc, df_nuc_tmp.to_dict(orient='records'), update_field=df_nuc_tmp.columns.values.tolist())
         session.execute(stmt)
+        session.commit()
 
-        for line in xml_file.table_of_physical_quantity[key]:
-            elements = line.split()
+        df_data_tmp: pd.DataFrame = df_all_tmp.iloc[:, [-2, -1]]
+        df_data_tmp.applymap(Decimal)
+        df_data_tmp.columns = ('data1', 'data2')
 
-            # nuc
-            if key == 'gamma_spectra':
-                nuc_name = elements[0]
-            else:
-                nuc_name = elements[1]
-            nuc_tmp = (session.query(Nuc)
-                       .filter(Nuc.name == nuc_name)
-                       .one_or_none()
-                       )
+        if key == 'gamma_spectra':
+            start = session.query(Nuc.id).filter(Nuc.nuc_ix == 0).scalar()
+        else:
+            start = session.query(Nuc.id).filter(Nuc.nuc_ix == 10010).scalar()
 
-            # nuc_data
-            data_tmp = NucData(data1=Decimal(elements[-2]), data2=Decimal(elements[-1]))
+        df_data_prefix = pd.DataFrame({'nuc_id': range(start, len(df_nuc_tmp) + start),
+                                       'file_id': file_tmp.id,
+                                       'physical_quantity_id': physical_quantity_tmp.id})
+        df_data_all = pd.concat([df_data_prefix, df_data_tmp],
+                                axis=1, copy=False)
 
-            data_tmp.nuc = nuc_tmp
-            data_tmp.file = file_tmp
-            data_tmp.physical_quantity = physical_quantity_tmp
+        # df_data_all.to_sql(name='nuc_data', con=engine, if_exists='append', index=False)
+        session.execute(NucData.__table__.insert(), df_data_all.to_dict(orient='records'))
+        session.commit()
 
-            nuc_data.append(data_tmp)
-
-        session.add_all(nuc_data)
         session.commit()
     session.close()
 
