@@ -1,7 +1,6 @@
 from decimal import Decimal
 
 import pandas as pd
-
 from sqlalchemy.dialects.mysql import insert as mysql_insert
 from sqlalchemy.dialects.postgresql import insert as postgres_insert
 
@@ -47,6 +46,9 @@ def populate_database(xml_file):
         session.add(file_tmp)
 
     for key in xml_file.table_of_physical_quantity:
+
+        if not xml_file.table_of_physical_quantity[key]:
+            continue
 
         # physical_quantity
         physical_quantity_tmp = (session.query(PhysicalQuantity)
