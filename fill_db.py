@@ -47,6 +47,9 @@ def populate_database(xml_file):
 
     for key in xml_file.table_of_physical_quantity:
 
+        if not xml_file.table_of_physical_quantity[key]:
+            continue
+
         # physical_quantity
         physical_quantity_tmp = (session.query(PhysicalQuantity)
                                  .filter(PhysicalQuantity.name == key)
