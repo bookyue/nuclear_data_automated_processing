@@ -1,7 +1,6 @@
 from decimal import Decimal
 
 import pandas as pd
-
 from sqlalchemy.dialects.mysql import insert as mysql_insert
 from sqlalchemy.dialects.postgresql import insert as postgres_insert
 
