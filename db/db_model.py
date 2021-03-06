@@ -40,7 +40,8 @@ class File(Base):
     name = Column(String(32))
 
     data = relationship('NucData', back_populates='file')
-    physical_quantities = relationship('PhysicalQuantity', secondary=files_physical_quantities_association)
+    physical_quantities = relationship('PhysicalQuantity', secondary=files_physical_quantities_association,
+                                       back_populates='files')
 
 
 class PhysicalQuantity(Base):
@@ -49,4 +50,5 @@ class PhysicalQuantity(Base):
     name = Column(String(16))
 
     data = relationship('NucData', back_populates='physical_quantity')
-    files = relationship('File', secondary=files_physical_quantities_association)
+    files = relationship('File', secondary=files_physical_quantities_association,
+                         back_populates='physical_quantities')
