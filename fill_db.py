@@ -1,6 +1,7 @@
 from decimal import Decimal
 
 import pandas as pd
+from sqlalchemy import select
 from sqlalchemy.dialects.mysql import insert as mysql_insert
 from sqlalchemy.dialects.postgresql import insert as postgres_insert
 
@@ -36,11 +37,10 @@ def _upsert(model, data, update_field):
 def populate_database(xml_file):
     session = Session()
 
-    # file
-    file_tmp = (session.query(File)
-                .filter(File.name == xml_file.name)
-                .one_or_none()
-                )
+    file_stmt = (select(File)
+                 .where(File.name == xml_file.name)
+                 )
+    file_tmp = session.execute(file_stmt).scalar_one_or_none()
     if file_tmp is None:
         file_tmp = File(name=xml_file.name)
         session.add(file_tmp)
@@ -50,11 +50,10 @@ def populate_database(xml_file):
         if not xml_file.table_of_physical_quantity[key]:
             continue
 
-        # physical_quantity
-        physical_quantity_tmp = (session.query(PhysicalQuantity)
-                                 .filter(PhysicalQuantity.name == key)
-                                 .one_or_none()
-                                 )
+        physical_quantity_stmt = (select(PhysicalQuantity)
+                                  .where(PhysicalQuantity.name == key)
+                                  )
+        physical_quantity_tmp = session.execute(physical_quantity_stmt).scalar_one_or_none()
         if physical_quantity_tmp is None:
             physical_quantity_tmp = PhysicalQuantity(name=key)
             session.add(physical_quantity_tmp)
