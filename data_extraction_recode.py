@@ -2,7 +2,7 @@ from decimal import Decimal
 
 import pandas as pd
 
-from utils import configlib
+from utils.configlib import Config
 from db.fetch_data import fetch_all_filenames, fetch_data_by_filename
 
 
@@ -50,9 +50,57 @@ def filter_data(dict_df_data, nuclide_list):
     return dict_df_data
 
 
+# TODO wait for recoding
+def extract_columns(data_columns, step_numbers, is_all_step):
+    """
+    依据列号，抽取数据
+    本操作应放在抽取数据行之后
+    :param data_columns:数据行
+    :param step_numbers:列号
+    :param is_all_step: bool, 提取全部列，or 最后一列，默认取最后一列
+    :return:DataFrame，数据
+    """
+    # 第0-1列为核素编号、名称
+    # 第2列为初始核素信息
+    # 最后一列为最终结果
+    # 其他列为中间计算结果
+    steps = [0, 1]
+
+    # 是否输出全部燃耗步结果
+    if is_all_step:
+        # 第3 - 21列为全部燃耗步计算结果
+        for i in range(len(data_columns.columns) - 4):
+            steps.append(i + 3)
+        # 更改列名
+        # df_allstep.columns = list(np.arrange(1, 21))
+    elif step_numbers:
+        # 修改列号与输出文件的数据结构对应
+        # 第0，1列为key，第2列为初始核素密度
+        # 因此，step 1对应第3列
+        for i in range(len(step_numbers)):
+            steps.append(step_numbers[i] + 2)
+    # 最终结果列
+    steps.append(-1)
+    df_all_step = data_columns.iloc[:, steps]
+    return df_all_step
+    #
+    # # 取核素列与最终结果列
+    # df_nuc = data_columns.iloc[:, 0:2]
+    # df_final = pd.DataFrame(data_columns.iloc[:, -1])
+    # # 更改列名
+    # # df_nuc.columns = ['NucId', 'NucName']
+    # # df_final.columns = ['Final']
+    #
+    #
+    # # 如果没有中间结果
+    # if df_all_step is not None:
+    #     # 拼接核素名与中间结果
+    #     result = pd.concat([df_nuc, df_all_step], axis=1)
+    # # 横向合并，即列拼接
+    # result = pd.concat([result, df_final], axis=1)
+
+
 def process(physical_quantity_name, nuclide_list):
-    # 核素ID和核素名对应的列名
-    keys_of_column = configlib.Config.get_data_extraction_conf('keys_of_column')
     filenames = fetch_all_filenames()
     for filename in filenames:
         print(filename.name)
@@ -62,9 +110,9 @@ def process(physical_quantity_name, nuclide_list):
 
 
 def main():
-    fission_light_nuclide_list = configlib.Config.get_nuclide_list("fission_light")
+    fission_light_nuclide_list = Config.get_nuclide_list("fission_light")
 
-    step_numbers = configlib.Config.get_data_extraction_conf("step_numbers")
+    step_numbers = Config.get_data_extraction_conf("step_numbers")
     physical_quantity_name = "all"
     is_all_step = False
 
