@@ -3,18 +3,16 @@ from decimal import Decimal
 import pandas as pd
 
 from utils import configlib
-from utils.input_xml_file import InputXmlFileReader
+from db.fetch_data import fetch_all_filenames, fetch_data_by_filename
 
 
-def filter_data(dict_text, nuclide_list):
+def filter_data(dict_df_data, nuclide_list):
     """
     依据核素名称，筛选数据行
-    :param dict_text: dictionary
+    :param dict_df_data: dictionary
     :param nuclide_list: list, 关键核素，如果为None，则取不为0的全部核素
     :return: DataFrame，关键核素的计算结果
     """
-    dict_df_data = {key: pd.DataFrame([data.split() for data in dict_text[key]])
-                    for key in dict_text}
     if (nuclide_list is not None) and (len(nuclide_list) > 1):
         for key in dict_df_data:
             # dict_df_data[key] = dict_df_data[key]
@@ -26,8 +24,8 @@ def filter_data(dict_text, nuclide_list):
         # Drop rows with all zeros in data.
 
         for key in dict_df_data:
-            if key == 'gamma_spectra':
-                continue
+            # if key == 'gamma_spectra':
+            #     continue
             df_nuc: pd.DataFrame = dict_df_data[key].iloc[:, [0, 1]]
             df_data: pd.DataFrame = dict_df_data[key].iloc[:, [2, 3]]
             df_data = df_data.applymap(Decimal)
@@ -52,31 +50,25 @@ def filter_data(dict_text, nuclide_list):
     return dict_df_data
 
 
-def process(file_path, physical_quantity_name, nuclide_list):
+def process(physical_quantity_name, nuclide_list):
     # 核素ID和核素名对应的列名
     keys_of_column = configlib.Config.get_data_extraction_conf('keys_of_column')
-
-    file_names = file_path.glob('*.out')
-    for file_name in file_names:
-        with InputXmlFileReader(file_name, physical_quantity_name) as xml_file:
-            dict_text = xml_file['all']
-            df_nuclide_list = filter_data(dict_text, nuclide_list)
-
-            # print(xml_file.name)
-            # print(xml_file.chosen_physical_quantity)
-            # print(xml_file.unfetched_physical_quantity)
-            # print(xml_file.length_of_physical_quantity)
+    filenames = fetch_all_filenames()
+    for filename in filenames:
+        print(filename.name)
+        dict_df_data = fetch_data_by_filename(filename, physical_quantity_name)
+        df_nuclide_list = filter_data(dict_df_data, nuclide_list)
+        print(df_nuclide_list)
 
 
 def main():
     fission_light_nuclide_list = configlib.Config.get_nuclide_list("fission_light")
-    test_file_path = configlib.Config.get_file_path("test_file_path")
+
     step_numbers = configlib.Config.get_data_extraction_conf("step_numbers")
     physical_quantity_name = "all"
     is_all_step = False
 
-    process(file_path=test_file_path, physical_quantity_name=physical_quantity_name,
-            nuclide_list=fission_light_nuclide_list)
+    process(physical_quantity_name=physical_quantity_name, nuclide_list=fission_light_nuclide_list)
 
 
 if __name__ == '__main__':
