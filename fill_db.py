@@ -90,6 +90,8 @@ def populate_database(xml_file):
                                 axis=1, copy=False)
 
         # df_data_all.to_sql(name='nuc_data', con=engine, if_exists='append', index=False)
+        # almost twice as slow as __table__.insert
+        # session.execute(insert(NucData).values(df_data_all.to_dict(orient='records')))
         session.execute(NucData.__table__.insert(), df_data_all.to_dict(orient='records'))
         session.commit()
 
