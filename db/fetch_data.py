@@ -23,7 +23,7 @@ def fetch_physical_quantities_by_name(physical_quantities: str):
     return physical_quantities
 
 
-def fetch_data_by_filename(filename, physical_quantities):
+def fetch_data_by_filename(filename: File, physical_quantities):
     dict_df_data = {}
     with Session() as session:
         if isinstance(physical_quantities, str):
@@ -37,6 +37,7 @@ def fetch_data_by_filename(filename, physical_quantities):
                 .where(PhysicalQuantity.id == physical_quantity.id)
 
             nuc_data = pd.DataFrame(session.execute(stmt).all())
+            nuc_data.columns = ('nuc_ix', 'nuc_name', 'first_step', 'last_step')
 
             dict_df_data[physical_quantity.name] = nuc_data
 
