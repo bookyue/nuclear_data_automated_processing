@@ -36,8 +36,9 @@ def fetch_data_by_filename(filename: File, physical_quantities):
                 .where(NucData.file_id == filename.id) \
                 .where(PhysicalQuantity.id == physical_quantity.id)
 
-            nuc_data = pd.DataFrame(session.execute(stmt).all())
-            nuc_data.columns = ('nuc_ix', 'nuc_name', 'first_step', 'last_step')
+            nuc_data = pd.DataFrame(data=session.execute(stmt).all(),
+                                    columns=('nuc_ix', 'nuc_name', 'first_step', 'last_step'),
+                                    )
 
             dict_df_data[physical_quantity.name] = nuc_data
 
