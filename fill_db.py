@@ -76,7 +76,7 @@ def populate_database(xml_file):
 
         df_data_tmp: pd.DataFrame = df_all_tmp.iloc[:, [-2, -1]]
         df_data_tmp.applymap(Decimal)
-        df_data_tmp.columns = ('data1', 'data2')
+        df_data_tmp.columns = ('first_step', 'last_step')
 
         if key == 'gamma_spectra':
             start = session.query(Nuc.id).filter(Nuc.nuc_ix == 0).scalar()

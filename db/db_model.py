@@ -26,8 +26,8 @@ class NucData(Base):
     nuc_id = Column(Integer, ForeignKey('nuc.id'))
     file_id = Column(Integer, ForeignKey('files.id'))
     physical_quantity_id = Column(Integer, ForeignKey('physical_quantities.id'))
-    data1 = Column(Numeric(25))
-    data2 = Column(Numeric(25))
+    first_step = Column(Numeric(25))
+    last_step = Column(Numeric(25))
 
     nuc = relationship('Nuc', back_populates='data')
     file = relationship('File', back_populates='data')

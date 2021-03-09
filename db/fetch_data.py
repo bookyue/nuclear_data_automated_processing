@@ -30,7 +30,7 @@ def fetch_data_by_filename(filename, physical_quantities):
             physical_quantities = fetch_physical_quantities_by_name(physical_quantities)
 
         for physical_quantity in physical_quantities:
-            stmt = select(Nuc.nuc_ix, Nuc.name, NucData.data1, NucData.data2) \
+            stmt = select(Nuc.nuc_ix, Nuc.name, NucData.first_step, NucData.last_step) \
                 .join(Nuc, Nuc.id == NucData.nuc_id) \
                 .join(PhysicalQuantity, PhysicalQuantity.id == NucData.physical_quantity_id) \
                 .where(NucData.file_id == filename.id) \
