@@ -63,13 +63,21 @@ def fetch_data_by_filename_and_nuclide_list(filename: File, physical_quantities,
                         where(or_(NucData.first_step != 0, NucData.last_step != 0))
                         )
             else:
-                stmt = (select(Nuc.nuc_ix, Nuc.name, NucData.first_step, NucData.last_step).
-                        join(Nuc, Nuc.id == NucData.nuc_id).
-                        join(PhysicalQuantity, PhysicalQuantity.id == NucData.physical_quantity_id).
-                        where(NucData.file_id == filename.id,
-                              PhysicalQuantity.id == physical_quantity.id).
-                        where(Nuc.name.in_(nuclide_list))
-                        )
+                if physical_quantity.name != 'gamma_spectra':
+                    stmt = (select(Nuc.nuc_ix, Nuc.name, NucData.first_step, NucData.last_step).
+                            join(Nuc, Nuc.id == NucData.nuc_id).
+                            join(PhysicalQuantity, PhysicalQuantity.id == NucData.physical_quantity_id).
+                            where(NucData.file_id == filename.id,
+                                  PhysicalQuantity.id == physical_quantity.id).
+                            where(Nuc.name.in_(nuclide_list))
+                            )
+                else:
+                    stmt = (select(Nuc.nuc_ix, Nuc.name, NucData.first_step, NucData.last_step).
+                            join(Nuc, Nuc.id == NucData.nuc_id).
+                            join(PhysicalQuantity, PhysicalQuantity.id == NucData.physical_quantity_id).
+                            where(NucData.file_id == filename.id,
+                                  PhysicalQuantity.id == physical_quantity.id)
+                            )
 
             nuc_data = pd.DataFrame(data=session.execute(stmt).all(),
                                     columns=('nuc_ix', 'nuc_name', 'first_step', 'last_step')
