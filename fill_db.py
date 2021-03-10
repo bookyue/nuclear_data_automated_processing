@@ -76,7 +76,7 @@ def populate_database(xml_file):
 
         df_data_tmp: pd.DataFrame = df_all_tmp.iloc[:, [-2, -1]]
         df_data_tmp.applymap(Decimal)
-        df_data_tmp.columns = ('data1', 'data2')
+        df_data_tmp.columns = ('first_step', 'last_step')
 
         if key == 'gamma_spectra':
             start = session.query(Nuc.id).filter(Nuc.nuc_ix == 0).scalar()
@@ -90,6 +90,8 @@ def populate_database(xml_file):
                                 axis=1, copy=False)
 
         # df_data_all.to_sql(name='nuc_data', con=engine, if_exists='append', index=False)
+        # almost twice as slow as __table__.insert
+        # session.execute(insert(NucData).values(df_data_all.to_dict(orient='records')))
         session.execute(NucData.__table__.insert(), df_data_all.to_dict(orient='records'))
         session.commit()
 

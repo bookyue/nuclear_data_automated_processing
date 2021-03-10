@@ -1,7 +1,7 @@
 import linecache
 from pathlib import Path
 
-from utils import configlib
+from utils.configlib import Config
 from utils.physical_quantity_list_generator import physical_quantity_list_generator
 
 
@@ -62,7 +62,7 @@ class InputXmlFileReader:
             else:
                 physical_quantity_name = chosen_physical_quantity[0]
 
-        list_of_strings_to_search = configlib.Config.get_data_extraction_conf("keys_of_rows").get(
+        list_of_strings_to_search = Config.get_data_extraction_conf("keys_of_rows").get(
             physical_quantity_name)
 
         index_start = list_of_strings_to_search[:-1]
