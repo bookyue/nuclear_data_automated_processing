@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, Numeric, String, ForeignKey, Table
+from sqlalchemy import Column, Integer, Numeric, String, LargeBinary, ForeignKey, Table
 from sqlalchemy.orm import relationship
 
 from db.base import Base
@@ -28,6 +28,7 @@ class NucData(Base):
     physical_quantity_id = Column(Integer, ForeignKey('physical_quantities.id'))
     first_step = Column(Numeric(25))
     last_step = Column(Numeric(25))
+    middle_steps = Column(LargeBinary)
 
     nuc = relationship('Nuc', back_populates='data')
     file = relationship('File', back_populates='data')
@@ -37,7 +38,7 @@ class NucData(Base):
 class File(Base):
     __tablename__ = 'files'
     id = Column(Integer, primary_key=True, autoincrement=True)
-    name = Column(String(32))
+    name = Column(String(50))
 
     data = relationship('NucData', back_populates='file')
     physical_quantities = relationship('PhysicalQuantity', secondary=files_physical_quantities_association,
