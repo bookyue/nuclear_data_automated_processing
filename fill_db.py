@@ -1,5 +1,3 @@
-from decimal import Decimal
-
 import pandas as pd
 from sqlalchemy import select
 from sqlalchemy.dialects.mysql import insert as mysql_insert
@@ -9,6 +7,7 @@ from db.base import Base, Session
 from db.db_model import Nuc, NucData, File, PhysicalQuantity
 from utils import configlib
 from utils.input_xml_file import InputXmlFileReader
+from utils.middle_steps import serialization
 
 
 def init_db():
@@ -32,6 +31,17 @@ def _upsert(model, data, update_field):
         return stmt.on_conflict_do_nothing(index_elements=[update_field[0]])
     else:
         raise Exception(f"can't support {session.bind.dialect.name} dialect")
+
+
+def middle_steps_serialization(physical_quantity, data):
+    if len(data) < 10:
+        return data
+    if physical_quantity != 'gamma_spectra':
+        start = 3
+    else:
+        start = 2
+    middle_steps = serialization(data[start: -1])
+    return [*data[0:start], data[-1], middle_steps]
 
 
 def populate_database(xml_file):
@@ -61,7 +71,8 @@ def populate_database(xml_file):
         file_tmp.physical_quantities.append(physical_quantity_tmp)
         physical_quantity_tmp.files.append(file_tmp)
 
-        df_all_tmp = pd.DataFrame(data.split() for data in xml_file.table_of_physical_quantity[key])
+        df_all_tmp = pd.DataFrame(middle_steps_serialization(key, data.split())
+                                  for data in xml_file.table_of_physical_quantity[key])
 
         if key == 'gamma_spectra':
             df_nuc_tmp: pd.DataFrame = df_all_tmp.iloc[:, [0]]
@@ -74,9 +85,12 @@ def populate_database(xml_file):
         session.execute(stmt)
         session.commit()
 
-        df_data_tmp: pd.DataFrame = df_all_tmp.iloc[:, [-2, -1]]
-        df_data_tmp.applymap(Decimal)
-        df_data_tmp.columns = ('first_step', 'last_step')
+        if len(df_all_tmp.columns) != 5:
+            df_data_tmp: pd.DataFrame = df_all_tmp.iloc[:, [-2, -1]]
+            df_data_tmp.columns = ('first_step', 'last_step')
+        else:
+            df_data_tmp: pd.DataFrame = df_all_tmp.iloc[:, -3:]
+            df_data_tmp.columns = ('first_step', 'last_step', 'middle_steps')
 
         if key == 'gamma_spectra':
             start = session.query(Nuc.id).filter(Nuc.nuc_ix == 0).scalar()
@@ -95,7 +109,6 @@ def populate_database(xml_file):
         session.execute(NucData.__table__.insert(), df_data_all.to_dict(orient='records'))
         session.commit()
 
-        session.commit()
     session.close()
 
 
