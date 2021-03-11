@@ -1,0 +1,10 @@
+syntax = "proto3";
+
+message MiddleStep {
+  int32 id = 1;
+  string data = 2;
+}
+
+message MiddleSteps {
+  repeated MiddleStep middle_steps = 1;
+}
