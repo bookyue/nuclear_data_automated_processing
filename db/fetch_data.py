@@ -54,14 +54,15 @@ def fetch_data_by_filename_and_nuclide_list(filename: File, physical_quantities,
         if isinstance(physical_quantities, str):
             physical_quantities = fetch_physical_quantities_by_name(physical_quantities)
 
+        stmt = lambda_stmt(lambda: select(Nuc.nuc_ix, Nuc.name,
+                                          NucData.first_step, NucData.last_step, NucData.middle_steps))
+        stmt += lambda s: s.join(Nuc, Nuc.id == NucData.nuc_id)
+        stmt += lambda s: s.join(PhysicalQuantity, PhysicalQuantity.id == NucData.physical_quantity_id)
+
         for physical_quantity in physical_quantities:
             file_id = filename.id
             physical_quantity_id = physical_quantity.id
 
-            stmt = lambda_stmt(lambda: select(Nuc.nuc_ix, Nuc.name,
-                                              NucData.first_step, NucData.last_step, NucData.middle_steps))
-            stmt += lambda s: s.join(Nuc, Nuc.id == NucData.nuc_id)
-            stmt += lambda s: s.join(PhysicalQuantity, PhysicalQuantity.id == NucData.physical_quantity_id)
             stmt += lambda s: s.where(NucData.file_id == file_id,
                                       PhysicalQuantity.id == physical_quantity_id)
             if nuclide_list is None:
@@ -91,7 +92,7 @@ def fetch_data_by_filename_and_nuclide_list(filename: File, physical_quantities,
 def main():
     filenames = fetch_all_filenames()
     fission_light_nuclide_list = Config.get_nuclide_list("fission_light")
-    dict_df_data = fetch_data_by_filename_and_nuclide_list(filenames[1], 'all', None)
+    dict_df_data = fetch_data_by_filename_and_nuclide_list(filenames[1], 'all', fission_light_nuclide_list)
     print(dict_df_data)
 
 
