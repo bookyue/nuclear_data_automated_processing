@@ -7,7 +7,7 @@ from db.base import Base, Session
 from db.db_model import Nuc, NucData, File, PhysicalQuantity
 from utils import configlib
 from utils.input_xml_file import InputXmlFileReader
-from utils.middle_steps import serialization
+from utils.middle_steps import middle_steps_serialization
 
 
 def init_db():
@@ -31,17 +31,6 @@ def _upsert(model, data, update_field):
         return stmt.on_conflict_do_nothing(index_elements=[update_field[0]])
     else:
         raise Exception(f"can't support {session.bind.dialect.name} dialect")
-
-
-def middle_steps_serialization(physical_quantity, data):
-    if len(data) < 10:
-        return data
-    if physical_quantity != 'gamma_spectra':
-        start = 3
-    else:
-        start = 2
-    middle_steps = serialization(data[start: -1])
-    return [*data[0:start], data[-1], middle_steps]
 
 
 def populate_database(xml_file):
