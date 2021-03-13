@@ -17,15 +17,11 @@ def parsing(middle_steps_str):
     return (middle_step for middle_step in middle_steps.middle_steps)
 
 
-def middle_steps_serialization(physical_quantity, data):
+def middle_steps_serialization(data):
     if len(data) < 10:
         return data
-    if physical_quantity != 'gamma_spectra':
-        start = 3
-    else:
-        start = 2
-    middle_steps = serialization(data[start: -1])
-    return [*data[0:start], data[-1], middle_steps]
+    middle_steps = serialization(data[3: -1])
+    return [*data[0:3], data[-1], middle_steps]
 
 
 def middle_steps_parsing(data):

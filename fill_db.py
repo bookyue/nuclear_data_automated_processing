@@ -60,14 +60,13 @@ def populate_database(xml_file):
         file_tmp.physical_quantities.append(physical_quantity_tmp)
         physical_quantity_tmp.files.append(file_tmp)
 
-        df_all_tmp = pd.DataFrame(middle_steps_serialization(key, data.split())
-                                  for data in xml_file.table_of_physical_quantity[key])
+        df_all_tmp = pd.DataFrame(middle_steps_serialization(data.split())
+                                  if key != 'gamma_spectra'
+                                  else middle_steps_serialization([i, *data.split()])
+                                  for i, data in enumerate(xml_file.table_of_physical_quantity[key])
+                                  )
 
-        if key == 'gamma_spectra':
-            df_nuc_tmp: pd.DataFrame = df_all_tmp.iloc[:, [0]]
-            df_nuc_tmp.insert(0, 'nuc_ix', range(len(df_nuc_tmp)))
-        else:
-            df_nuc_tmp: pd.DataFrame = df_all_tmp.iloc[:, [0, 1]]
+        df_nuc_tmp: pd.DataFrame = df_all_tmp.iloc[:, [0, 1]]
 
         df_nuc_tmp.columns = ('nuc_ix', 'name')
         stmt = _upsert(Nuc, df_nuc_tmp.to_dict(orient='records'), update_field=df_nuc_tmp.columns.values.tolist())
