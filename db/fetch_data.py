@@ -48,14 +48,18 @@ def fetch_data_by_filename(filename: File, physical_quantities):
     return dict_df_data
 
 
-def fetch_data_by_filename_and_nuclide_list(filename: File, physical_quantities, nuclide_list):
+def fetch_data_by_filename_and_nuclide_list(filename: File, physical_quantities, nuclide_list, is_all_step):
     dict_df_data = {}
     with Session() as session:
         if isinstance(physical_quantities, str):
             physical_quantities = fetch_physical_quantities_by_name(physical_quantities)
 
-        stmt = lambda_stmt(lambda: select(Nuc.nuc_ix, Nuc.name,
-                                          NucData.first_step, NucData.last_step, NucData.middle_steps))
+        if not is_all_step:
+            stmt = lambda_stmt(lambda: select(Nuc.nuc_ix, Nuc.name, NucData.first_step, NucData.last_step))
+        else:
+            stmt = lambda_stmt(lambda: select(Nuc.nuc_ix, Nuc.name,
+                                              NucData.first_step, NucData.last_step, NucData.middle_steps))
+
         stmt += lambda s: s.join(Nuc, Nuc.id == NucData.nuc_id)
         stmt += lambda s: s.join(PhysicalQuantity, PhysicalQuantity.id == NucData.physical_quantity_id)
 
@@ -72,18 +76,24 @@ def fetch_data_by_filename_and_nuclide_list(filename: File, physical_quantities,
                 if physical_quantity.name != 'gamma_spectra':
                     stmt += lambda s: s.where(Nuc.name.in_(nuclide_list))
 
-            nuc_data = pd.DataFrame(data=session.execute(stmt).all(),
-                                    columns=('nuc_ix', 'nuc_name', 'first_step', 'last_step', 'middle_steps')
-                                    )
+            if not is_all_step:
+                nuc_data = pd.DataFrame(data=session.execute(stmt).all(),
+                                        columns=('nuc_ix', 'nuc_name', 'first_step', 'last_step')
+                                        )
+            else:
+                nuc_data = pd.DataFrame(data=session.execute(stmt).all(),
+                                        columns=('nuc_ix', 'nuc_name', 'first_step', 'last_step', 'middle_steps')
+                                        )
 
-            nuc_data_exclude_middle_steps = nuc_data.drop(columns='middle_steps', axis=1)
-            middle_steps = pd.DataFrame([middle_steps_parsing(middle_steps)
-                                         for middle_steps in nuc_data['middle_steps']
-                                         if middle_steps is not None
-                                         ])
+                nuc_data_exclude_middle_steps = nuc_data.drop(columns='middle_steps', axis=1)
+                middle_steps = pd.DataFrame([middle_steps_parsing(middle_steps)
+                                             for middle_steps in nuc_data['middle_steps']
+                                             if middle_steps is not None
+                                             ])
 
-            del nuc_data
-            nuc_data = pd.concat([nuc_data_exclude_middle_steps, middle_steps], axis=1, copy=False)
+                del nuc_data
+                nuc_data = pd.concat([nuc_data_exclude_middle_steps, middle_steps], axis=1, copy=False)
+
             dict_df_data[physical_quantity.name] = nuc_data
 
     return dict_df_data
@@ -92,7 +102,7 @@ def fetch_data_by_filename_and_nuclide_list(filename: File, physical_quantities,
 def main():
     filenames = fetch_all_filenames()
     fission_light_nuclide_list = Config.get_nuclide_list("fission_light")
-    dict_df_data = fetch_data_by_filename_and_nuclide_list(filenames[1], 'all', fission_light_nuclide_list)
+    dict_df_data = fetch_data_by_filename_and_nuclide_list(filenames[32], 'all', fission_light_nuclide_list, False)
     print(dict_df_data)
 
 
