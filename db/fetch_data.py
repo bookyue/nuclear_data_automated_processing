@@ -4,7 +4,7 @@ from sqlalchemy import select, lambda_stmt, or_
 from db.base import Session
 from db.db_model import File, NucData, Nuc, PhysicalQuantity
 from utils.configlib import Config
-from utils.middle_steps import middle_steps_parsing
+from utils.middle_steps import middle_steps_line_parsing
 from utils.physical_quantity_list_generator import physical_quantity_list_generator
 
 
@@ -54,19 +54,18 @@ def fetch_data_by_filename_and_nuclide_list(filename: File, physical_quantities,
         if isinstance(physical_quantities, str):
             physical_quantities = fetch_physical_quantities_by_name(physical_quantities)
 
-        if not is_all_step:
-            stmt = lambda_stmt(lambda: select(Nuc.nuc_ix, Nuc.name, NucData.first_step, NucData.last_step))
-        else:
-            stmt = lambda_stmt(lambda: select(Nuc.nuc_ix, Nuc.name,
-                                              NucData.first_step, NucData.last_step, NucData.middle_steps))
-
-        stmt += lambda s: s.join(Nuc, Nuc.id == NucData.nuc_id)
-        stmt += lambda s: s.join(PhysicalQuantity, PhysicalQuantity.id == NucData.physical_quantity_id)
-
         for physical_quantity in physical_quantities:
             file_id = filename.id
             physical_quantity_id = physical_quantity.id
 
+            if not is_all_step:
+                stmt = lambda_stmt(lambda: select(Nuc.nuc_ix, Nuc.name, NucData.first_step, NucData.last_step))
+            else:
+                stmt = lambda_stmt(lambda: select(Nuc.nuc_ix, Nuc.name,
+                                                  NucData.first_step, NucData.last_step, NucData.middle_steps))
+
+            stmt += lambda s: s.join(Nuc, Nuc.id == NucData.nuc_id)
+            stmt += lambda s: s.join(PhysicalQuantity, PhysicalQuantity.id == NucData.physical_quantity_id)
             stmt += lambda s: s.where(NucData.file_id == file_id,
                                       PhysicalQuantity.id == physical_quantity_id)
             if nuclide_list is None:
@@ -86,7 +85,7 @@ def fetch_data_by_filename_and_nuclide_list(filename: File, physical_quantities,
                                         )
 
                 nuc_data_exclude_middle_steps = nuc_data.drop(columns='middle_steps', axis=1)
-                middle_steps = pd.DataFrame([middle_steps_parsing(middle_steps)
+                middle_steps = pd.DataFrame([middle_steps_line_parsing(middle_steps)
                                              for middle_steps in nuc_data['middle_steps']
                                              if middle_steps is not None
                                              ])
