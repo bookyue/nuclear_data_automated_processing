@@ -82,9 +82,9 @@ def populate_database(xml_file):
             df_data_tmp.columns = ('first_step', 'last_step', 'middle_steps')
 
         if key == 'gamma_spectra':
-            start = session.query(Nuc.id).filter(Nuc.nuc_ix == 0).scalar()
+            start = session.execute(select(Nuc.id).where(Nuc.nuc_ix == 0)).scalar()
         else:
-            start = session.query(Nuc.id).filter(Nuc.nuc_ix == 10010).scalar()
+            start = session.execute(select(Nuc.id).where(Nuc.nuc_ix == 10010)).scalar()
 
         df_data_prefix = pd.DataFrame({'nuc_id': range(start, len(df_nuc_tmp) + start),
                                        'file_id': file_tmp.id,
