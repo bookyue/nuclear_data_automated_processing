@@ -5,10 +5,10 @@
 # 50steps
 # step_numbers = [5, 10, 15, 20, 25, 30, 35, 40, 45]
 # 10steps
-step_numbers = []
+#step_numbers = []
+is_all_step = true
 
 [data_extraction.keys_of_rows]
-#isotope = ["10010   H1", "1112990 Pseudo"]
 isotope = ["Nuclide Density", "Total  "]
 radioactivity = ["Radioactivity", "Total  "]
 absorption = ["Absorption", "Total  "]
