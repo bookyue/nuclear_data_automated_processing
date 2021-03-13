@@ -17,14 +17,14 @@ def parsing(middle_steps_str):
     return (middle_step for middle_step in middle_steps.middle_steps)
 
 
-def middle_steps_serialization(data):
+def middle_steps_line_serialization(data):
     if len(data) < 10:
         return data
     middle_steps = serialization(data[3: -1])
     return [*data[0:3], data[-1], middle_steps]
 
 
-def middle_steps_parsing(data):
+def middle_steps_line_parsing(data):
     if data is None:
         return {'middle_steps': None}
     else:
