@@ -3,7 +3,7 @@ from sqlalchemy import select, or_, insert
 from db.base import Session
 from db.db_model import File, Nuc, NucData, ExtractedData, PhysicalQuantity
 from db.fetch_data import fetch_physical_quantities_by_name
-from utils.physical_quantity_list_generator import is_in_physical_quantities
+from utils.physical_quantity_list_generator import is_it_all_str
 
 
 def save_extracted_data_to_db(filename, physical_quantities, nuclide_list):
@@ -20,7 +20,7 @@ def save_extracted_data_to_db(filename, physical_quantities, nuclide_list):
         核素list
     """
     with Session() as session:
-        if is_in_physical_quantities(physical_quantities):
+        if is_it_all_str(physical_quantities):
             physical_quantities = fetch_physical_quantities_by_name(physical_quantities)
 
         physical_quantity: PhysicalQuantity

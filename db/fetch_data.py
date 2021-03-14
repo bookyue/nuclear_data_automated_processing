@@ -5,7 +5,7 @@ from db.base import Session
 from db.db_model import File, NucData, Nuc, PhysicalQuantity
 from utils.configlib import Config
 from utils.middle_steps import middle_steps_line_parsing
-from utils.physical_quantity_list_generator import physical_quantity_list_generator, is_in_physical_quantities
+from utils.physical_quantity_list_generator import physical_quantity_list_generator, is_it_all_str
 
 
 def fetch_all_filenames():
@@ -67,7 +67,7 @@ def fetch_data_by_filename(filename, physical_quantities):
     """
     dict_df_data = {}
     with Session() as session:
-        if is_in_physical_quantities(physical_quantities):
+        if is_it_all_str(physical_quantities):
             physical_quantities = fetch_physical_quantities_by_name(physical_quantities)
 
         physical_quantity: PhysicalQuantity
@@ -110,7 +110,7 @@ def fetch_data_by_filename_and_nuclide_list(filename, physical_quantities, nucli
     """
     dict_df_data = {}
     with Session() as session:
-        if is_in_physical_quantities(physical_quantities):
+        if is_it_all_str(physical_quantities):
             physical_quantities = fetch_physical_quantities_by_name(physical_quantities)
 
         physical_quantity: PhysicalQuantity
