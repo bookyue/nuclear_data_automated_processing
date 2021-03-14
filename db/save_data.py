@@ -29,6 +29,7 @@ def save_extracted_data_to_db(filename, physical_quantities, nuclide_list):
             physical_quantity_id = physical_quantity.id
 
             if nuclide_list is None:
+                """核素列表为空则过滤first_step和last_step皆为0的records"""
                 stmt = (select(NucData.nuc_id, NucData.file_id, NucData.physical_quantity_id, NucData.last_step,
                                NucData.middle_steps).
                         where(NucData.file_id == file_id, NucData.physical_quantity_id == physical_quantity_id).
@@ -36,6 +37,7 @@ def save_extracted_data_to_db(filename, physical_quantities, nuclide_list):
                         )
             else:
                 if physical_quantity.name != 'gamma_spectra':
+                    """核素不为gamma时，依照核素列表过滤records，否则反之"""
                     stmt = (select(NucData.nuc_id, NucData.file_id, NucData.physical_quantity_id, NucData.last_step,
                                    NucData.middle_steps).
                             join(Nuc, Nuc.id == NucData.nuc_id).
@@ -47,7 +49,7 @@ def save_extracted_data_to_db(filename, physical_quantities, nuclide_list):
                                    NucData.middle_steps).
                             where(NucData.file_id == file_id, NucData.physical_quantity_id == physical_quantity_id)
                             )
-
+            # 用INSERT INTO FROM SELECT将数据插入ExtractedData table
             insert_stmt = insert(ExtractedData).from_select(
                 names=['nuc_id', 'file_id', 'physical_quantity_id', 'last_step',
                        'middle_steps'],
