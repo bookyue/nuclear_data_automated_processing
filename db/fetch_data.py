@@ -119,6 +119,7 @@ def fetch_data_by_filename_and_nuclide_list(filename, physical_quantities, nucli
             physical_quantity_id = physical_quantity.id
 
             if not is_all_step:
+                """不读取中间结果，所以不选择NucData.middle_steps，否则反之"""
                 stmt = lambda_stmt(lambda: select(Nuc.nuc_ix, Nuc.name, NucData.first_step, NucData.last_step))
             else:
                 stmt = lambda_stmt(lambda: select(Nuc.nuc_ix, Nuc.name,
@@ -129,10 +130,11 @@ def fetch_data_by_filename_and_nuclide_list(filename, physical_quantities, nucli
             stmt += lambda s: s.where(NucData.file_id == file_id,
                                       PhysicalQuantity.id == physical_quantity_id)
             if nuclide_list is None:
+                """核素列表为空则过滤first_step和last_step皆为0的records"""
                 stmt += lambda s: s.where(or_(NucData.first_step != 0, NucData.last_step != 0))
-
             else:
                 if physical_quantity.name != 'gamma_spectra':
+                    """核素不为gamma时，依照核素列表过滤records，否则反之"""
                     stmt += lambda s: s.where(Nuc.name.in_(nuclide_list))
 
             if not is_all_step:
