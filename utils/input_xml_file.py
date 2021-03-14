@@ -95,10 +95,13 @@ class InputXmlFileReader:
             else:
                 physical_quantity_name = chosen_physical_quantity[0]
 
+        # 从配置文件获取对应物理量的搜索关键字
         list_of_strings_to_search = Config.get_data_extraction_conf("keys_of_rows").get(
             physical_quantity_name)
 
+        # 开始搜索关键字
         index_start = list_of_strings_to_search[:-1]
+        # 结尾搜索关键字
         index_end = list_of_strings_to_search[-1]
 
         length_of_physical_quantity = {key: [] for key in chosen_physical_quantity}
