@@ -1,4 +1,6 @@
-from db.fetch_data import fetch_all_filenames, fetch_data_by_filename_and_nuclide_list
+from db.fetch_data import fetch_data_by_filename_and_nuclide_list, fetch_all_filenames, \
+    fetch_physical_quantities_by_name
+from db.save_data import save_extracted_data_to_db
 from utils.configlib import Config
 
 
@@ -42,12 +44,13 @@ def filter_data(filename, physical_quantity_name, nuclide_list, is_all_step):
     return dict_df_data
 
 
-def process(physical_quantity_name, nuclide_list, is_all_step):
+def process(physical_quantity_name, nuclide_list):
     filenames = fetch_all_filenames()
+    physical_quantities = fetch_physical_quantities_by_name(physical_quantity_name)
     for filename in filenames:
-        # print(filename.name)
-        df_nuclide_list = filter_data(filename, physical_quantity_name, nuclide_list, is_all_step)
-        print(df_nuclide_list)
+        # dict_df_data = fetch_data_by_filename_and_nuclide_list(filename, physical_quantities,
+        #                                                        nuclide_list, is_all_step)
+        save_extracted_data_to_db(filename, physical_quantities, nuclide_list)
 
 
 def main():
@@ -55,9 +58,8 @@ def main():
 
     # step_numbers = Config.get_data_extraction_conf("step_numbers")
     physical_quantity_name = 'all'
-    is_all_step = Config.get_data_extraction_conf('is_all_step')
 
-    process(physical_quantity_name=physical_quantity_name, nuclide_list=fission_light_nuclide_list, is_all_step=is_all_step)
+    process(physical_quantity_name=physical_quantity_name, nuclide_list=fission_light_nuclide_list)
 
 
 if __name__ == '__main__':

@@ -7,7 +7,7 @@ from db.base import Base, Session
 from db.db_model import Nuc, NucData, File, PhysicalQuantity
 from utils import configlib
 from utils.input_xml_file import InputXmlFileReader
-from utils.middle_steps import middle_steps_serialization
+from utils.middle_steps import middle_steps_line_serialization
 
 
 def init_db():
@@ -60,9 +60,9 @@ def populate_database(xml_file):
         file_tmp.physical_quantities.append(physical_quantity_tmp)
         physical_quantity_tmp.files.append(file_tmp)
 
-        df_all_tmp = pd.DataFrame(middle_steps_serialization(data.split())
+        df_all_tmp = pd.DataFrame(middle_steps_line_serialization(data.split())
                                   if key != 'gamma_spectra'
-                                  else middle_steps_serialization([i, *data.split()])
+                                  else middle_steps_line_serialization([i, *data.split()])
                                   for i, data in enumerate(xml_file.table_of_physical_quantity[key])
                                   )
 

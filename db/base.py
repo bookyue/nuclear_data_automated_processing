@@ -6,6 +6,20 @@ from utils import configlib
 
 
 def _choose_db(db_type, debug=False):
+    """
+    选择数据库（如Mysql, Postgresql），生成对应的Session和engine
+
+    Parameters
+    ----------
+    db_type : str
+        数据库类型
+    debug : bool, default False
+        是否开启echo
+    Returns
+    -------
+    tuple
+        返回对应数据裤的Session和engine
+    """
     db_config = configlib.Config.get_database_config()
 
     if db_type not in db_config:
