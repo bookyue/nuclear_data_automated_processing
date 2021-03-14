@@ -1,15 +1,29 @@
 from sqlalchemy import select, or_, insert
 
 from db.base import Session
-from db.db_model import File, Nuc, NucData, ExtractedData
+from db.db_model import File, Nuc, NucData, ExtractedData, PhysicalQuantity
 from db.fetch_data import fetch_physical_quantities_by_name
+from utils.physical_quantity_list_generator import is_in_physical_quantities
 
 
-def save_extracted_data_to_db(filename: File, physical_quantities, nuclide_list):
+def save_extracted_data_to_db(filename, physical_quantities, nuclide_list):
+    """
+    将数据存入到ExtractedData表里
+
+    Parameters
+    ----------
+    filename : File
+        File object
+    physical_quantities: list or str
+        核素名，可以是核素名的list或str，也可以是PhysicalQuantity list
+    nuclide_list : list
+        核素list
+    """
     with Session() as session:
-        if isinstance(physical_quantities, str):
+        if is_in_physical_quantities(physical_quantities):
             physical_quantities = fetch_physical_quantities_by_name(physical_quantities)
 
+        physical_quantity: PhysicalQuantity
         for physical_quantity in physical_quantities:
             file_id = filename.id
             physical_quantity_id = physical_quantity.id
