@@ -3,6 +3,32 @@ from sqlalchemy.orm import relationship
 
 from db.base import Base
 
+"""
+Database orm model
+
+                          ┌───────┐
+                          │       │
+     ┌───────────────────►│  nuc  │◄───────────────────┐
+     │                 one│       │one                 │
+     │                    └───────┘                    │
+     │                                                 │
+     │many                                         many│
+┌────┴─────┐             ┌─────────┐           ┌───────┴────────┐
+│          │many     one │         │one    many│                │
+│ nuc_data ├────────────►│  files  │◄──────────┤ extracted_data │
+│          │             │         │           │                │
+└────┬─────┘             └────┬────┘           └───────┬────────┘
+     │many                    │many                many│
+     │                        │                        │
+     │                        │                        │
+     │                        │many                    │
+     │             ┌──────────┴────────────┐           │
+     │          one│                       │one        │
+     └────────────►│  physical_quantities  │◄──────────┘
+                   │                       │
+                   └───────────────────────┘
+
+"""
 
 files_physical_quantities_association = Table('files_physical_quantities_association', Base.metadata,
                                               Column('file_id', Integer, ForeignKey('files.id')),
