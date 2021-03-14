@@ -6,14 +6,32 @@ from utils.physical_quantity_list_generator import physical_quantity_list_genera
 
 
 class InputXmlFileReader:
+    """
+    表示xml.out文件的类
+
+    Attributes
+    ----------
+    path : Path
+        xml.out文件路径
+    physical_quantity_name : str
+            核素名
+
+    """
     chosen_physical_quantity: list
     length_of_physical_quantity: dict
 
     def __init__(self, file_path, physical_quantity_name='all'):
         """
-        可以根据输入的文件路径和物理量自动计算得出选择的物理量chosen_physical_quantity和物理量对应的行号范围length_of_physical_quantity
-        :param file_path: 文件路径
-        :param physical_quantity_name: 物理量对应的名字，默认为all
+        可以根据输入的文件路径和物理量
+        自动计算得出选择的物理量chosen_physical_quantity和
+        物理量对应的行号范围length_of_physical_quantity
+
+        Parameters
+        ----------
+        file_path : Path
+            xml.out文件路径
+        physical_quantity_name : str
+            核素名
         """
         self.path = Path(file_path)
         self.name = Path(file_path).name
@@ -23,6 +41,12 @@ class InputXmlFileReader:
         self.table_of_physical_quantity = self.get_table_of_physical_quantity()
 
     def __enter__(self):
+        """
+        with statement
+        Returns
+        -------
+        InputXmlFileReader
+        """
         self.file_object = self.path.open(mode='r', encoding='UTF-8')
         return self
 
@@ -32,7 +56,6 @@ class InputXmlFileReader:
     def __getitem__(self, physical_quantity_name):
         tmp_dict = self.table_of_physical_quantity
         if physical_quantity_name != 'all':
-            # return {key: tmp_dict.get(physical_quantity_name) for key in [physical_quantity_name]}
             return {physical_quantity_name: tmp_dict.get(physical_quantity_name)}
         else:
             return self.table_of_physical_quantity
@@ -40,8 +63,13 @@ class InputXmlFileReader:
     def set_chosen_physical_quantity(self, physical_quantity_name):
         """
         输入选择的物理量，设置类的属性chosen_physical_quantity和length_of_physical_quantity
-        :param physical_quantity_name: 物理量对应的名字
-        :return: None
+        Parameters
+        ----------
+        physical_quantity_name : str
+            物理量名
+        Returns
+        -------
+
         """
         self.chosen_physical_quantity = physical_quantity_list_generator(physical_quantity_name)
         self.length_of_physical_quantity = self.get_length_of_physical_quantity()
@@ -50,8 +78,13 @@ class InputXmlFileReader:
         """
         获取对应物理量的行号范围，physical_quantity_name默认为None,设置则输出physical_quantity_name对应的行号的字典
         但是此只是临时返回一个物理量及行号范围的字典，不修改类的属性self.chosen_physical_quantity和self.length_of_physical_quantity
-        :param physical_quantity_name: 物理量对应的名字
-        :return: 返回一个物理量及行号范围的字典
+        Parameters
+        ----------
+        physical_quantity_name: str
+            物理量名
+        Returns
+        -------
+
         """
         chosen_physical_quantity = self.chosen_physical_quantity
         if physical_quantity_name:
@@ -90,11 +123,25 @@ class InputXmlFileReader:
         return length_of_physical_quantity
 
     def get_unfetched_physical_quantity(self):
+        """
+        获取在选取范围内却未能成功获取的物理量
+
+        Returns
+        -------
+
+        """
         unfetched_physical_quantity = [name for name in self.chosen_physical_quantity
                                        if not self.length_of_physical_quantity.get(name)]
         return unfetched_physical_quantity
 
     def get_table_of_physical_quantity(self):
+        """
+        依据选择的物理量和未能成功获取的物理量，以及对应物理量的行号范围
+        从xml.out文件中使用linecache.getlines获取文本内容
+        Returns
+        -------
+
+        """
         df_data = {}
         for key in self.chosen_physical_quantity:
             text = []
