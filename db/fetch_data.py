@@ -66,9 +66,11 @@ def fetch_data_by_filename(filename, physical_quantities):
         返回一个结果字典，key为物理量名(str)，value为对应物理量的数据(DataFrame)
     """
     dict_df_data = {}
+
+    if is_it_all_str(physical_quantities):
+        physical_quantities = fetch_physical_quantities_by_name(physical_quantities)
+
     with Session() as session:
-        if is_it_all_str(physical_quantities):
-            physical_quantities = fetch_physical_quantities_by_name(physical_quantities)
 
         physical_quantity: PhysicalQuantity
         for physical_quantity in physical_quantities:
@@ -109,10 +111,11 @@ def fetch_data_by_filename_and_nuclide_list(filename, physical_quantities, nucli
         返回一个结果字典，key为物理量名(str)，value为对应物理量的数据(DataFrame)
     """
     dict_df_data = {}
-    with Session() as session:
-        if is_it_all_str(physical_quantities):
-            physical_quantities = fetch_physical_quantities_by_name(physical_quantities)
 
+    if is_it_all_str(physical_quantities):
+        physical_quantities = fetch_physical_quantities_by_name(physical_quantities)
+
+    with Session() as session:
         physical_quantity: PhysicalQuantity
         for physical_quantity in physical_quantities:
             file_id = filename.id
