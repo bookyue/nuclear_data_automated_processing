@@ -80,7 +80,7 @@ def fetch_data_by_filename(filename, physical_quantities):
                     )
 
             nuc_data = pd.DataFrame(data=session.execute(stmt).all(),
-                                    columns=('nuc_ix', 'nuc_name', 'first_step', 'last_step'),
+                                    columns=tuple(column.name for column in list(stmt.selected_columns))
                                     )
 
             dict_df_data[physical_quantity.name] = nuc_data
@@ -137,15 +137,11 @@ def fetch_data_by_filename_and_nuclide_list(filename, physical_quantities, nucli
                     """核素不为gamma时，依照核素列表过滤records，否则反之"""
                     stmt += lambda s: s.where(Nuc.name.in_(nuclide_list))
 
-            if not is_all_step:
-                nuc_data = pd.DataFrame(data=session.execute(stmt).all(),
-                                        columns=('nuc_ix', 'nuc_name', 'first_step', 'last_step')
-                                        )
-            else:
-                nuc_data = pd.DataFrame(data=session.execute(stmt).all(),
-                                        columns=('nuc_ix', 'nuc_name', 'first_step', 'last_step', 'middle_steps')
-                                        )
+            nuc_data = pd.DataFrame(data=session.execute(stmt).all(),
+                                    columns=tuple(column.name for column in list(stmt.selected_columns))
+                                    )
 
+            if is_all_step:
                 nuc_data_exclude_middle_steps = nuc_data.drop(columns='middle_steps', axis=1)
                 middle_steps = pd.DataFrame([middle_steps_line_parsing(middle_steps)
                                              for middle_steps in nuc_data['middle_steps']
@@ -163,7 +159,7 @@ def main():
     filenames = fetch_all_filenames()
     fission_light_nuclide_list = Config.get_nuclide_list("fission_light")
     dict_df_data = fetch_data_by_filename_and_nuclide_list(filenames[32], ['isotope', 'radioactivity'],
-                                                           fission_light_nuclide_list, False)
+                                                           fission_light_nuclide_list, True)
     print(dict_df_data)
 
 
