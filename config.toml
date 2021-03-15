@@ -25,6 +25,7 @@ name = "Nuc_Name"
 
 [file_path]
 test_file_path = "./test"
+final_file_path = "./result/output.xlsx"
 burnup_time_file_path = "./burnup time"
 
 
