@@ -3,7 +3,7 @@ from sqlalchemy import select
 from sqlalchemy.dialects.mysql import insert as mysql_insert
 from sqlalchemy.dialects.postgresql import insert as postgres_insert
 
-from db.base import Base, Session
+from db.base import Session
 from db.db_model import Nuc, NucData, File, PhysicalQuantity
 from db.db_utils import init_db
 from utils import configlib

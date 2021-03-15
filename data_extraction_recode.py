@@ -2,7 +2,7 @@ from db.db_model import ExtractedData
 from db.db_utils import delete_all_from_table
 from db.fetch_data import fetch_data_by_filename_and_nuclide_list, fetch_all_filenames, \
     fetch_physical_quantities_by_name
-from db.save_data import save_extracted_data_to_db
+from db.save_data import save_extracted_data_to_db, save_save_extracted_data_to_exel
 from utils.configlib import Config
 
 
@@ -46,21 +46,26 @@ def filter_data(filename, physical_quantity_name, nuclide_list, is_all_step):
     return dict_df_data
 
 
-def process(physical_quantity_name, nuclide_list):
+def process(physical_quantity_name, nuclide_list, is_all_step):
     filenames = fetch_all_filenames()
     physical_quantities = fetch_physical_quantities_by_name(physical_quantity_name)
+
     delete_all_from_table(ExtractedData)
+
     for filename in filenames:
         save_extracted_data_to_db(filename, physical_quantities, nuclide_list)
+
+    save_save_extracted_data_to_exel(filenames, is_all_step)
 
 
 def main():
     fission_light_nuclide_list = Config.get_nuclide_list('fission_light')
-
-    # step_numbers = Config.get_data_extraction_conf("step_numbers")
+    is_all_step = Config.get_data_extraction_conf('is_all_step')
     physical_quantity_name = 'all'
 
-    process(physical_quantity_name=physical_quantity_name, nuclide_list=fission_light_nuclide_list)
+    process(physical_quantity_name=physical_quantity_name,
+            nuclide_list=fission_light_nuclide_list,
+            is_all_step=is_all_step)
 
 
 if __name__ == '__main__':
