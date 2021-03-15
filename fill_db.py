@@ -5,21 +5,10 @@ from sqlalchemy.dialects.postgresql import insert as postgres_insert
 
 from db.base import Base, Session
 from db.db_model import Nuc, NucData, File, PhysicalQuantity
+from db.db_utils import init_db
 from utils import configlib
 from utils.input_xml_file import InputXmlFileReader
 from utils.middle_steps import middle_steps_line_serialization
-
-
-def init_db():
-    """
-    初始化数据库
-    Returns
-    -------
-
-    """
-    session = Session()
-    Base.metadata.drop_all(session.bind)
-    Base.metadata.create_all(session.bind)
 
 
 def _upsert(model, data: list, update_field: list):
