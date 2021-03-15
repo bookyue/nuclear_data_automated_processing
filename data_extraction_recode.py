@@ -1,3 +1,5 @@
+from db.db_model import ExtractedData
+from db.db_utils import delete_all_from_table
 from db.fetch_data import fetch_data_by_filename_and_nuclide_list, fetch_all_filenames, \
     fetch_physical_quantities_by_name
 from db.save_data import save_extracted_data_to_db
@@ -47,9 +49,8 @@ def filter_data(filename, physical_quantity_name, nuclide_list, is_all_step):
 def process(physical_quantity_name, nuclide_list):
     filenames = fetch_all_filenames()
     physical_quantities = fetch_physical_quantities_by_name(physical_quantity_name)
+    delete_all_from_table(ExtractedData)
     for filename in filenames:
-        # dict_df_data = fetch_data_by_filename_and_nuclide_list(filename, physical_quantities,
-        #                                                        nuclide_list, is_all_step)
         save_extracted_data_to_db(filename, physical_quantities, nuclide_list)
 
 
