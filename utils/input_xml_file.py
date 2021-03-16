@@ -112,13 +112,19 @@ class InputXmlFileReader:
                 for i, string_to_search in enumerate(index_start):
                     if string_to_search in line:
                         length_of_physical_quantity[chosen_physical_quantity[i]].append(
-                            row_number + 7 if chosen_physical_quantity[i] != 'gamma_spectra' else row_number + 2)
+                            row_number + 7
+                            if chosen_physical_quantity[i] != 'gamma_spectra'
+                            else
+                            row_number + 2)
                         is_find_start_title = False
                         break
             else:
                 if index_end in line:
                     length_of_physical_quantity[chosen_physical_quantity[i]].append(
-                        row_number - 3 if chosen_physical_quantity[i] != 'gamma_spectra' else row_number - 2)
+                        row_number - 3
+                        if chosen_physical_quantity[i] != 'gamma_spectra'
+                        else
+                        row_number - 2)
                     is_find_start_title = True
                     if physical_quantity_name != 'all':
                         break

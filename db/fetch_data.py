@@ -82,7 +82,8 @@ def fetch_data_by_filename(filename, physical_quantities):
                     )
 
             nuc_data = pd.DataFrame(data=session.execute(stmt).all(),
-                                    columns=tuple(column.name for column in list(stmt.selected_columns))
+                                    columns=tuple(column.name
+                                                  for column in list(stmt.selected_columns))
                                     )
 
             dict_df_data[physical_quantity.name] = nuc_data
@@ -122,26 +123,31 @@ def fetch_data_by_filename_and_nuclide_list(filename, physical_quantities, nucli
             physical_quantity_id = physical_quantity.id
 
             if not is_all_step:
-                """不读取中间结果，所以不选择NucData.middle_steps，否则反之"""
-                stmt = lambda_stmt(lambda: select(Nuc.nuc_ix, Nuc.name, NucData.first_step, NucData.last_step))
+                # 不读取中间结果，所以不选择NucData.middle_steps，否则反之
+                stmt = lambda_stmt(lambda: select(Nuc.nuc_ix, Nuc.name,
+                                                  NucData.first_step, NucData.last_step))
             else:
                 stmt = lambda_stmt(lambda: select(Nuc.nuc_ix, Nuc.name,
-                                                  NucData.first_step, NucData.last_step, NucData.middle_steps))
+                                                  NucData.first_step, NucData.last_step,
+                                                  NucData.middle_steps))
 
-            stmt += lambda s: s.join(Nuc, Nuc.id == NucData.nuc_id)
-            stmt += lambda s: s.join(PhysicalQuantity, PhysicalQuantity.id == NucData.physical_quantity_id)
+            stmt += lambda s: s.join(Nuc,
+                                     Nuc.id == NucData.nuc_id)
+            stmt += lambda s: s.join(PhysicalQuantity,
+                                     PhysicalQuantity.id == NucData.physical_quantity_id)
             stmt += lambda s: s.where(NucData.file_id == file_id,
                                       PhysicalQuantity.id == physical_quantity_id)
             if nuclide_list is None:
-                """核素列表为空则过滤first_step和last_step皆为0的records"""
+                # 核素列表为空则过滤first_step和last_step皆为0的records
                 stmt += lambda s: s.where(or_(NucData.first_step != 0, NucData.last_step != 0))
             else:
                 if physical_quantity.name != 'gamma_spectra':
-                    """核素不为gamma时，依照核素列表过滤records，否则反之"""
+                    # 核素不为gamma时，依照核素列表过滤records，否则反之
                     stmt += lambda s: s.where(Nuc.name.in_(nuclide_list))
 
             nuc_data = pd.DataFrame(data=session.execute(stmt).all(),
-                                    columns=tuple(column.name for column in list(stmt.selected_columns))
+                                    columns=tuple(column.name for
+                                                  column in list(stmt.selected_columns))
                                     )
 
             if is_all_step:
@@ -151,7 +157,8 @@ def fetch_data_by_filename_and_nuclide_list(filename, physical_quantities, nucli
                                              if middle_steps is not None])
 
                 del nuc_data
-                nuc_data = pd.concat([nuc_data_exclude_middle_steps, middle_steps], axis=1, copy=False)
+                nuc_data = pd.concat([nuc_data_exclude_middle_steps, middle_steps],
+                                     axis=1, copy=False)
 
             dict_df_data[physical_quantity.name] = nuc_data
 

@@ -1,8 +1,3 @@
-from sqlalchemy import Column, Integer, Numeric, String, LargeBinary, ForeignKey, Table
-from sqlalchemy.orm import relationship
-
-from db.base import Base
-
 """
 Database orm model
 
@@ -29,6 +24,11 @@ Database orm model
                    └───────────────────────┘
 
 """
+
+from sqlalchemy import Column, Integer, Numeric, String, LargeBinary, ForeignKey, Table
+from sqlalchemy.orm import relationship
+
+from db.base import Base
 
 files_physical_quantities_association = Table('files_physical_quantities_association', Base.metadata,
                                               Column('file_id', Integer, ForeignKey('files.id')),
@@ -83,7 +83,8 @@ class File(Base):
 
     data = relationship('NucData', back_populates='file')
     extracted_data = relationship('ExtractedData', back_populates='file')
-    physical_quantities = relationship('PhysicalQuantity', secondary=files_physical_quantities_association,
+    physical_quantities = relationship('PhysicalQuantity',
+                                       secondary=files_physical_quantities_association,
                                        back_populates='files')
 
 
