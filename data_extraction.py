@@ -49,12 +49,13 @@ def filter_data(filename, physical_quantity_name, nuclide_list, is_all_step):
 def process(physical_quantity_name, nuclide_list, is_all_step):
     filenames = fetch_all_filenames()
     physical_quantities = fetch_physical_quantities_by_name(physical_quantity_name)
+    file_path = Config.get_file_path('final_file_path')
 
     delete_all_from_table(ExtractedData)
 
     save_extracted_data_to_db(filenames, physical_quantities, nuclide_list)
 
-    save_save_extracted_data_to_exel(filenames, is_all_step)
+    save_save_extracted_data_to_exel(filenames, is_all_step, file_path)
 
 
 def main():
