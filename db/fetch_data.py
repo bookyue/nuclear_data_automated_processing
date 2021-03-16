@@ -14,7 +14,7 @@ def fetch_all_filenames():
 
     Returns
     -------
-    list
+    list[File]
         File list
     """
     with Session() as session:
@@ -34,7 +34,7 @@ def fetch_physical_quantities_by_name(physical_quantities):
 
     Returns
     -------
-    list
+    list[PhysicalQuantity]
         PhysicalQuantity list
 
     See Also

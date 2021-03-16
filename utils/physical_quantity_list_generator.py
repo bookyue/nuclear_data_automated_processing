@@ -26,7 +26,7 @@ def physical_quantity_list_generator(physical_quantity_name):
 
     Returns
     -------
-    list
+    list[str]
     """
     if isinstance(physical_quantity_name, str):
         """如果输入的是str,则将其包装为list"""
