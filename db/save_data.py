@@ -10,49 +10,67 @@ from utils.physical_quantity_list_generator import is_it_all_str
 from utils.worksheet import append_df_to_excel
 
 
-def save_extracted_data_to_db(filename, physical_quantities, nuclide_list):
+def save_extracted_data_to_db(filenames=None, physical_quantities='all', nuclide_list=None):
     """
     将数据存入到ExtractedData表里
 
     Parameters
     ----------
-    filename : File
+    filenames : list[File] or File
         File object
-    physical_quantities: list or str
+    physical_quantities: list[str] or str or list[PhysicalQuantity]
         核素名，可以是核素名的list或str，也可以是PhysicalQuantity list
-    nuclide_list : list
+    nuclide_list : list[str]
         核素list
     """
-    with Session() as session:
-        if is_it_all_str(physical_quantities):
-            physical_quantities = fetch_physical_quantities_by_name(physical_quantities)
 
-        physical_quantity: PhysicalQuantity
-        for physical_quantity in physical_quantities:
+    if filenames is None:
+        filenames = fetch_all_filenames()
+    if not isinstance(filenames, list):
+        filenames = [filenames]
+
+    if is_it_all_str(physical_quantities):
+        physical_quantities = fetch_physical_quantities_by_name(physical_quantities)
+
+    with Session() as session:
+        for filename in filenames:
+            physical_quantities: list[PhysicalQuantity]
+            physical_quantities_id = [physical_quantity.id for physical_quantity in physical_quantities]
             file_id = filename.id
-            physical_quantity_id = physical_quantity.id
 
             if nuclide_list is None:
                 """核素列表为空则过滤first_step和last_step皆为0的records"""
                 stmt = (select(NucData.nuc_id, NucData.file_id, NucData.physical_quantity_id, NucData.last_step,
                                NucData.middle_steps).
-                        where(NucData.file_id == file_id, NucData.physical_quantity_id == physical_quantity_id).
+                        where(NucData.file_id == file_id, NucData.physical_quantity_id.in_(physical_quantities_id)).
                         where(or_(NucData.first_step != 0, NucData.last_step != 0))
                         )
             else:
-                if physical_quantity.name != 'gamma_spectra':
-                    """核素不为gamma时，依照核素列表过滤records，否则反之"""
-                    stmt = (select(NucData.nuc_id, NucData.file_id, NucData.physical_quantity_id, NucData.last_step,
-                                   NucData.middle_steps).
-                            join(Nuc, Nuc.id == NucData.nuc_id).
-                            where(NucData.file_id == file_id, NucData.physical_quantity_id == physical_quantity_id).
-                            where(Nuc.name.in_(nuclide_list))
-                            )
-                else:
-                    stmt = (select(NucData.nuc_id, NucData.file_id, NucData.physical_quantity_id, NucData.last_step,
-                                   NucData.middle_steps).
-                            where(NucData.file_id == file_id, NucData.physical_quantity_id == physical_quantity_id)
-                            )
+                """核素不为gamma时，依照核素列表过滤records，否则反之"""
+                for physical_quantity in physical_quantities:
+                    if physical_quantity.name == 'gamma_spectra':
+                        gamma_physical_quantity_id = physical_quantity.id
+
+                stmt = (select(NucData.nuc_id, NucData.file_id, NucData.physical_quantity_id, NucData.last_step,
+                               NucData.middle_steps).
+                        join(Nuc, Nuc.id == NucData.nuc_id).
+                        where(NucData.file_id == file_id,
+                              NucData.physical_quantity_id.in_(physical_quantities_id)).
+                        where(Nuc.name.in_(nuclide_list))
+                        )
+
+                gamma_stmt = (select(NucData.nuc_id, NucData.file_id, NucData.physical_quantity_id, NucData.last_step,
+                                     NucData.middle_steps).
+                              where(NucData.file_id == file_id,
+                                    NucData.physical_quantity_id == gamma_physical_quantity_id)
+                              )
+
+                gamma_insert_stmt = insert(ExtractedData).from_select(
+                    names=['nuc_id', 'file_id', 'physical_quantity_id', 'last_step',
+                           'middle_steps'],
+                    select=gamma_stmt)
+                session.execute(gamma_insert_stmt)
+
             # 用INSERT INTO FROM SELECT将数据插入ExtractedData table
             insert_stmt = insert(ExtractedData).from_select(
                 names=['nuc_id', 'file_id', 'physical_quantity_id', 'last_step',
@@ -70,7 +88,7 @@ def save_save_extracted_data_to_exel(filenames=None, is_all_step=False):
     如无filenames is None，则包含所有文件
     Parameters
     ----------
-    filenames : list or File
+    filenames : filenames : list[File] or File
     is_all_step : bool, default false
         是否读取全部中间结果数据列，默认只读取最终结果列
 

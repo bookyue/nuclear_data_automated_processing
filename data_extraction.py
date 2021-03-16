@@ -52,8 +52,7 @@ def process(physical_quantity_name, nuclide_list, is_all_step):
 
     delete_all_from_table(ExtractedData)
 
-    for filename in filenames:
-        save_extracted_data_to_db(filename, physical_quantities, nuclide_list)
+    save_extracted_data_to_db(filenames, physical_quantities, nuclide_list)
 
     save_save_extracted_data_to_exel(filenames, is_all_step)
 
