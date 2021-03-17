@@ -37,7 +37,7 @@ def _choose_db(db_type, debug=False):
         connector_string = f'postgresql+psycopg2://{user}:{password}@{url}:{port}/{db_name}?client_encoding=utf8'
         engine_tmp = create_engine(connector_string, future=True,
                                    executemany_mode='values',
-                                   executemany_values_page_size=3500,
+                                   executemany_values_page_size=10000,
                                    executemany_batch_page_size=500,
                                    echo=debug)
 
