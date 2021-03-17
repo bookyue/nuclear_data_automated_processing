@@ -1,3 +1,4 @@
+from decimal import Decimal
 from pathlib import Path
 
 import pandas as pd
@@ -19,8 +20,9 @@ def save_extracted_data_to_db(filenames=None, physical_quantities='all', nuclide
     ----------
     filenames : list[File] or File
         File object
-    physical_quantities: list[str] or str or list[PhysicalQuantity]
-        核素名，可以是核素名的list或str，也可以是PhysicalQuantity list
+    physical_quantities : list[str] or str or list[PhysicalQuantity] or PhysicalQuantity
+        物理量，可以是物理量名的list[str]或str，
+        也可以是PhysicalQuantity list也可以是list[PhysicalQuantity]或PhysicalQuantity
     nuclide_list : list[str]
         核素list
     """

@@ -58,8 +58,9 @@ def fetch_data_by_filename(filename, physical_quantities):
     ----------
     filename : File
         File object
-    physical_quantities: list[str] or str or PhysicalQuantity or list[PhysicalQuantity]
-        核素名，可以是核素名的list[str]或str，也可以是list[PhysicalQuantity]或PhysicalQuantity
+    physical_quantities : list[str] or str or list[PhysicalQuantity] or PhysicalQuantity
+        物理量，可以是物理量名的list[str]或str，
+        也可以是PhysicalQuantity list也可以是list[PhysicalQuantity]或PhysicalQuantity
     Returns
     -------
     dict[str, pd.DataFrame]
@@ -100,8 +101,9 @@ def fetch_data_by_filename_and_nuclide_list(filename, physical_quantities, nucli
     ----------
     filename : File
         File object
-    physical_quantities: list[str] or str or PhysicalQuantity or list[PhysicalQuantity]
-        核素名，可以是核素名的list[str]或str，也可以是list[PhysicalQuantity]或PhysicalQuantity
+    physical_quantities : list[str] or str or list[PhysicalQuantity] or PhysicalQuantity
+        物理量，可以是物理量名的list[str]或str，
+        也可以是PhysicalQuantity list也可以是list[PhysicalQuantity]或PhysicalQuantity
     nuclide_list : list[str]
         核素list
     is_all_step : bool, default false
@@ -173,8 +175,9 @@ def fetch_extracted_data_by_filename_and_physical_quantity(filename, physical_qu
     ----------
     filename : File
         File object
-    physical_quantities: list[str] or str or PhysicalQuantity or list[PhysicalQuantity]
-        核素名，可以是核素名的list[str]或str，也可以是list[PhysicalQuantity]或PhysicalQuantity
+    physical_quantities : list[str] or str or list[PhysicalQuantity] or PhysicalQuantity
+        物理量，可以是物理量名的list[str]或str，
+        也可以是PhysicalQuantity list也可以是list[PhysicalQuantity]或PhysicalQuantity
     is_all_step : bool, default = False
         是否读取全部中间结果数据列，默认只读取最终结果列
     Returns
