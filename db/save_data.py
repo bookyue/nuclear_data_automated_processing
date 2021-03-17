@@ -111,10 +111,10 @@ def save_save_extracted_data_to_exel(filenames=None, is_all_step=False, file_pat
         for physical_quantity in physical_quantities:
             df_left = pd.DataFrame(data=None, columns=['nuc_ix', 'name'])
 
+            physical_quantity_id = physical_quantity.id
             filename: File
             for filename in filenames:
                 file_id = filename.id
-                physical_quantity_id = physical_quantity.id
 
                 if not is_all_step:
                     # 不读取中间结果，所以不选择NucData.middle_steps，否则反之
