@@ -84,7 +84,7 @@ def save_extracted_data_to_db(filenames=None, physical_quantities='all', nuclide
             session.commit()
 
 
-def save_save_extracted_data_to_exel(filenames=None, is_all_step=False, file_path=Path('.')):
+def save_extracted_data_to_exel(filenames=None, is_all_step=False, file_path=Path('.')):
     """
     将数据存入到exel文件
     将传入的File list中包含的文件的数据存到exel文件
@@ -162,8 +162,6 @@ def save_save_extracted_data_to_exel(filenames=None, is_all_step=False, file_pat
 
 def main():
     filenames = fetch_all_filenames()
-
-    save_save_extracted_data_to_exel(filenames, True)
 
 
 if __name__ == '__main__':
