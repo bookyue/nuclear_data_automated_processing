@@ -62,14 +62,14 @@ def populate_database(xml_file):
                  )
     file_tmp = session.execute(file_stmt).scalar_one_or_none()
     if file_tmp is None:
-        """如果数据库不存在对应的File records则插入"""
+        # 如果数据库不存在对应的File records则插入
         file_tmp = File(name=xml_file.name)
         session.add(file_tmp)
 
     for key in xml_file.table_of_physical_quantity:
 
         if not xml_file.table_of_physical_quantity[key]:
-            """为空则跳过"""
+            # 为空则跳过
             continue
 
         # 依据物理量名获取对应的PhysicalQuantity object
@@ -78,7 +78,7 @@ def populate_database(xml_file):
                                   )
         physical_quantity_tmp = session.execute(physical_quantity_stmt).scalar_one_or_none()
         if physical_quantity_tmp is None:
-            """如果数据库不存在对应的PhysicalQuantity records则插入"""
+            # 如果数据库不存在对应的PhysicalQuantity records则插入
             physical_quantity_tmp = PhysicalQuantity(name=key)
             session.add(physical_quantity_tmp)
 
