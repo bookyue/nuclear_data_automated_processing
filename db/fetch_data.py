@@ -165,7 +165,7 @@ def fetch_data_by_filename_and_nuclide_list(filename, physical_quantities, nucli
     return dict_df_data
 
 
-def fetch_extracted_data_by_filename(filename, is_all_step=False):
+def fetch_extracted_data_by_filename_and_physical_quantity(filename, physical_quantities, is_all_step=False):
     """
     根据输入的File extracted_data table获取数据
 
@@ -173,6 +173,8 @@ def fetch_extracted_data_by_filename(filename, is_all_step=False):
     ----------
     filename : File
         File object
+    physical_quantities: list[str] or str or PhysicalQuantity or list[PhysicalQuantity]
+        核素名，可以是核素名的list[str]或str，也可以是list[PhysicalQuantity]或PhysicalQuantity
     is_all_step : bool, default = False
         是否读取全部中间结果数据列，默认只读取最终结果列
     Returns
@@ -181,7 +183,8 @@ def fetch_extracted_data_by_filename(filename, is_all_step=False):
     """
     dict_df_data = {}
 
-    physical_quantities = fetch_physical_quantities_by_name('all')
+    if is_it_all_str(physical_quantities):
+        physical_quantities = fetch_physical_quantities_by_name(physical_quantities)
 
     with Session() as session:
         file_id = filename.id
@@ -238,7 +241,7 @@ def main():
     fission_light_nuclide_list = Config.get_nuclide_list("fission_light")
     # dict_df_data = fetch_data_by_filename_and_nuclide_list(filenames[32], ['isotope', 'radioactivity'],
     #                                                        fission_light_nuclide_list, True)
-    dict_df_data = fetch_extracted_data_by_filename(filenames[32], True)
+    dict_df_data = fetch_extracted_data_by_filename_and_physical_quantity(filenames[32], ['isotope', 'radioactivity'], True)
     print(dict_df_data)
 
 
