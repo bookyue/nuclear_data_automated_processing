@@ -182,7 +182,8 @@ def fetch_extracted_data_by_filename_and_physical_quantity(filename, physical_qu
         是否读取全部中间结果数据列，默认只读取最终结果列
     Returns
     -------
-
+    dict[str, pd.DataFrame]
+        返回一个结果字典，key为物理量名(str)，value为对应物理量的数据(DataFrame)
     """
     dict_df_data = {}
 
