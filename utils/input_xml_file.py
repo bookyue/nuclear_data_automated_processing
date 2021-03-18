@@ -34,7 +34,7 @@ class InputXmlFileReader:
             核素名
         """
         self.path = Path(file_path)
-        self.name = Path(file_path).name
+        self.name = Path(file_path).name.split('.')[0]
         self.chosen_physical_quantity = physical_quantity_list_generator(physical_quantity_name)
         self.length_of_physical_quantity = self.get_length_of_physical_quantity()
         self.unfetched_physical_quantity = self.get_unfetched_physical_quantity()
