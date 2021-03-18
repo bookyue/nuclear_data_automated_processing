@@ -3,46 +3,51 @@ from decimal import Decimal
 import pandas as pd
 
 from db.db_model import PhysicalQuantity, File
-from db.fetch_data import fetch_extracted_data_by_filename_and_physical_quantity, fetch_all_filenames, \
-    fetch_physical_quantities_by_name
+from db.fetch_data import fetch_extracted_data_by_filename_and_physical_quantity, \
+    fetch_all_filenames, fetch_physical_quantities_by_name
 from utils.physical_quantity_list_generator import is_it_all_str
 
 
-def _complement_columns(df1, df2,
-                        df1_complement_column_name,
-                        df2_complement_column_name):
+def _complement_columns(df_reference, df_comparison,
+                        reference_complement_column_name,
+                        comparison_complement_column_name):
     """
-    对齐columns，数值填充为NaN
+    对齐middle_step_* columns，数值填充为NaN
 
     Parameters
     ----------
-    df1 : pd.DataFrame
-    df2 : pd.DataFrame
-    df1_complement_column_name : str
-    df2_complement_column_name : str
+    df_reference : pd.DataFrame
+    df_comparison : pd.DataFrame
+    reference_complement_column_name : str
+    comparison_complement_column_name : str
 
     Returns
     -------
     tuple[pd.DataFrame, pd.DataFrame]
     """
-    df1_column_length = len(df1.columns)
-    df2_column_length = len(df2.columns)
-    column_length_difference = df1_column_length - df2_column_length
+    reference_column_length = len(df_reference.columns)
+    comparison_column_length = len(df_comparison.columns)
+    column_length_difference = reference_column_length - comparison_column_length
 
-    column_start_num = min(df1_column_length, df2_column_length) - 2
+    column_start_num = min(reference_column_length, comparison_column_length) - 2
 
-    if df1_column_length < df2_column_length:
-        complement_columns = [f'{df1_complement_column_name}_middle_steps_{i}' for i in
-                              range(column_start_num, column_start_num + abs(column_length_difference))]
+    if reference_column_length == comparison_column_length:
+        # 当column length相同时，什么也不做
+        pass
+    elif reference_column_length < comparison_column_length:
+        complement_columns = [f'{reference_complement_column_name}_middle_step_{i}'
+                              for i in range(column_start_num,
+                                             column_start_num + abs(column_length_difference))]
         complement_df = pd.DataFrame(data=None, columns=complement_columns)
-        df1 = pd.concat([df1, complement_df], axis=1, copy=False)
+        df_reference = pd.concat([df_reference, complement_df], axis=1, copy=False)
     else:
-        complement_columns = [f'{df2_complement_column_name}_middle_steps_{i}' for i in
-                              range(column_start_num, column_start_num + abs(column_length_difference))]
+        complement_columns = [f'{comparison_complement_column_name}_middle_step_{i}'
+                              for i in range(column_start_num,
+                                             column_start_num + abs(column_length_difference))]
         complement_df = pd.DataFrame(data=None, columns=complement_columns)
-        df2 = pd.concat([df2, complement_df], axis=1, copy=False)
+        df_comparison = pd.concat([df_comparison, complement_df], axis=1, copy=False)
 
-    return df1, df2
+    return df_reference, df_comparison
 
 
 def calculate_comparative_result(reference_file,
@@ -97,7 +102,6 @@ def calculate_comparative_result(reference_file,
                                                                               reference_file.name,
                                                                               comparison_file.name)
 
-            print()
 
 
 def main():
