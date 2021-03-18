@@ -49,7 +49,7 @@ def filter_data(filename, physical_quantity_name, nuclide_list, is_all_step):
 def process(physical_quantity_name, nuclide_list, is_all_step):
     filenames = fetch_all_filenames()
     physical_quantities = fetch_physical_quantities_by_name(physical_quantity_name)
-    file_path = Config.get_file_path('final_file_path')
+    file_path = Config.get_file_path('result_file_path')
 
     delete_all_from_table(ExtractedData)
 
