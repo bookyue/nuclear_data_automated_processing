@@ -130,7 +130,8 @@ def populate_database(xml_file):
         # session.execute(insert(NucData).values(df_data_all.to_dict(orient='records')))
         session.execute(NucData.__table__.insert(), df_data_all.to_dict(orient='records'))
 
-    session.commit()
+        session.commit()
+        
     session.close()
 
 
