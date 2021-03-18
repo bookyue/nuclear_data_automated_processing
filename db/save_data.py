@@ -85,7 +85,7 @@ def save_extracted_data_to_db(filenames=None, physical_quantities='all', nuclide
             session.commit()
 
 
-def save_extracted_data_to_exel(filenames=None, is_all_step=False, file_path=Path('.')):
+def save_extracted_data_to_exel(filenames=None, is_all_step=False, dir_path=Path('.')):
     """
     将数据存入到exel文件
     将传入的File list中包含的文件的数据存到exel文件
@@ -95,7 +95,7 @@ def save_extracted_data_to_exel(filenames=None, is_all_step=False, file_path=Pat
     filenames : comparison_files : list[File] or File
     is_all_step : bool, default false
         是否读取全部中间结果数据列，默认只读取最终结果列
-    file_path : Path
+    dir_path : Path
     Returns
     -------
 
@@ -106,6 +106,10 @@ def save_extracted_data_to_exel(filenames=None, is_all_step=False, file_path=Pat
         filenames = [filenames]
 
     physical_quantities = fetch_physical_quantities_by_name('all')
+
+    dir_path.mkdir(parents=True, exist_ok=True)
+    file_path = dir_path.joinpath('final.xlsx')
+    file_path.unlink(missing_ok=True)
 
     with Session() as session:
         physical_quantity: PhysicalQuantity
@@ -158,7 +162,7 @@ def save_extracted_data_to_exel(filenames=None, is_all_step=False, file_path=Pat
                 if not df_right.empty:
                     df_left = pd.merge(df_left, df_right, how='outer', on=['nuc_ix', 'name'])
 
-            append_df_to_excel(f'{file_path}/final.xlsx', df_left,
+            append_df_to_excel(file_path, df_left,
                                sheet_name=physical_quantity.name,
                                index=False,
                                encoding='utf-8')
