@@ -1,14 +1,17 @@
-from decimal import Decimal
+from decimal import localcontext, Decimal, InvalidOperation
 
+import numpy as np
 import pandas as pd
 
 from db.db_model import PhysicalQuantity, File
-from db.fetch_data import fetch_extracted_data_by_filename_and_physical_quantity, \
-    fetch_all_filenames, fetch_physical_quantities_by_name
+from db.fetch_data import (fetch_extracted_data_by_filename_and_physical_quantity,
+                           fetch_all_filenames,
+                           fetch_physical_quantities_by_name)
 from utils.physical_quantity_list_generator import is_it_all_str
 
 
-def _complement_columns(df_reference, df_comparison,
+def _complement_columns(df_reference,
+                        df_comparison,
                         reference_complement_column_name,
                         comparison_complement_column_name):
     """
@@ -50,11 +53,74 @@ def _complement_columns(df_reference, df_comparison,
     return df_reference, df_comparison
 
 
+def _calculate_deviation(df_reference,
+                         df_comparison,
+                         deviation_mode='relative',
+                         threshold=Decimal('1.0E-12')):
+    """
+    计算误差
+    relative deviation formula: abs(X - Y) / 1 + min(abs(X), abs(Y))
+    absolute deviation formula: X - Y
+
+    Parameters
+    ----------
+    df_reference : pd.DataFrame
+    df_comparison : pd.DataFrame
+    deviation_mode : str, default = 'relative'
+        绝对=absolute
+        相对=relative
+        偏差模式，分为绝对和相对，默认为相对
+
+    Returns
+    -------
+    tuple[pd.DataFrame, pd.Series]
+    """
+
+    df_deviation = pd.DataFrame()
+    for reference_column, \
+        comparison_column in zip(df_reference.columns.values.tolist()[2:],
+                                 df_comparison.columns.values.tolist()[2:]):
+        i = 0
+        if deviation_mode == 'relative':
+            # abs(X - Y) / 1 + min(abs(X), abs(Y))
+            """NaN is classified as unordered.
+            By default InvalidOperation is trapped, 
+            so a Python exception is raised when using <= and >= against Decimal('NaN'). 
+            This is a logical extension; 
+            Python has actual exceptions so if you compare against the 
+            NaN exception value, you can expect an exception being raised. 
+            You could disable trapping by using a Decimal.localcontext()
+            https://stackoverflow.com/a/28371465/11071374
+            """
+            with localcontext() as ctx:
+                ctx.traps[InvalidOperation] = False
+                deviation = (df_reference[reference_column] - df_comparison[comparison_column]).abs() / \
+                            (1 + np.minimum(df_reference[reference_column].fillna(Decimal('NaN')),
+                                            df_comparison[comparison_column].fillna(Decimal('NaN'))))
+
+        elif deviation_mode == 'absolute':
+            deviation = (df_reference[reference_column] - df_comparison[comparison_column]).abs()
+
+        else:
+            raise Exception("wrong deviation mode")
+
+        if not deviation.isnull().values.all():
+            df_deviation[f'relative_deviation_middle_step_{i}'] = deviation
+
+        i += 1
+
+    df_deviation.rename(columns={'relative_deviation_middle_step_0': 'last_step'}, inplace=True)
+
+    reserved_index = (df_deviation.T > threshold).any()
+    df_deviation = df_deviation.loc[reserved_index]
+    return df_deviation, reserved_index
+
+
 def calculate_comparative_result(reference_file,
                                  comparison_files,
                                  physical_quantities='isotope',
                                  deviation_mode='relative',
-                                 threshold=Decimal(1.0E-12),
+                                 threshold=Decimal('1.0E-12'),
                                  is_all_step=False):
     """
     选定一个基准文件，与其他文件进行对比，计算对比结果
@@ -73,7 +139,7 @@ def calculate_comparative_result(reference_file,
         绝对=absolute
         相对=relative
         偏差模式，分为绝对和相对，默认为相对
-    threshold : Decimal, default = Decimal(1.0E-12)
+    threshold : Decimal, default = Decimal('1.0E-12')
         偏差阈值，默认1.0E-12
     is_all_step : bool, default = False
         是否读取全部中间结果数据列，默认只读取最终结果列
@@ -97,11 +163,17 @@ def calculate_comparative_result(reference_file,
         physical_quantity: PhysicalQuantity
         for physical_quantity in physical_quantities:
             reference_data[physical_quantity.name], \
-                comparison_data[physical_quantity.name] = _complement_columns(reference_data[physical_quantity.name],
-                                                                              comparison_data[physical_quantity.name],
-                                                                              reference_file.name,
-                                                                              comparison_file.name)
+                comparison_data[physical_quantity.name] = _complement_columns(
+                                                            reference_data[physical_quantity.name],
+                                                            comparison_data[physical_quantity.name],
+                                                            reference_file.name,
+                                                            comparison_file.name)
 
+            df_deviation, reserved_index = _calculate_deviation(
+                                            reference_data[physical_quantity.name],
+                                            comparison_data[physical_quantity.name],
+                                            deviation_mode,
+                                            threshold)
 
 
 def main():
