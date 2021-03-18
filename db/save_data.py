@@ -1,4 +1,3 @@
-from decimal import Decimal
 from pathlib import Path
 
 import pandas as pd
@@ -6,8 +5,7 @@ from sqlalchemy import select, or_, insert, lambda_stmt
 
 from db.base import Session
 from db.db_model import File, Nuc, NucData, ExtractedData, PhysicalQuantity
-from db.fetch_data import fetch_physical_quantities_by_name, fetch_all_filenames, \
-    fetch_extracted_data_by_filename_and_physical_quantity
+from db.fetch_data import fetch_physical_quantities_by_name, fetch_all_filenames
 from utils.middle_steps import middle_steps_line_parsing
 from utils.physical_quantity_list_generator import is_it_all_str
 from utils.worksheet import append_df_to_excel
@@ -163,82 +161,8 @@ def save_extracted_data_to_exel(filenames=None, is_all_step=False, file_path=Pat
             append_df_to_excel(file_path, df_left, sheet_name=physical_quantity.name, index=False)
 
 
-def save_comparative_result_to_excel(reference_file,
-                                     comparison_files,
-                                     physical_quantities='isotope',
-                                     deviation_mode='relative',
-                                     threshold=Decimal(1.0E-12),
-                                     is_all_step=False):
-    """
-    选定一个基准文件，与其他文件进行对比，将结果保存至xlsx文件
-
-    Parameters
-    ----------
-    reference_file : File
-        基准文件
-    comparison_files : list[File] or File
-        对比文件列表
-    physical_quantities : list[str] or str or list[PhysicalQuantity] or PhysicalQuantity, default = 'isotope'
-        对比用物理量，可以是物理量名的list[str]或str，
-        也可以是PhysicalQuantity list也可以是list[PhysicalQuantity]或PhysicalQuantity
-        默认为核素密度
-    deviation_mode : str, default = 'relative'
-        绝对=absolute
-        相对=relative
-        偏差模式，分为绝对和相对，默认为相对
-    threshold : Decimal, default = Decimal(1.0E-12)
-        偏差阈值，默认1.0E-12
-    is_all_step : bool, default = False
-        是否读取全部中间结果数据列，默认只读取最终结果列
-    Returns
-    -------
-
-    """
-    if is_it_all_str(physical_quantities):
-        physical_quantities = fetch_physical_quantities_by_name(physical_quantities)
-
-    comparison_file: File
-    for comparison_file in comparison_files:
-        reference_data = fetch_extracted_data_by_filename_and_physical_quantity(reference_file,
-                                                                                physical_quantities,
-                                                                                is_all_step)
-
-        comparison_data = fetch_extracted_data_by_filename_and_physical_quantity(comparison_file,
-                                                                                 physical_quantities,
-                                                                                 is_all_step
-                                                                                 )
-        physical_quantity: PhysicalQuantity
-        for physical_quantity in physical_quantities:
-            reference_data_column_length = len(reference_data[physical_quantity.name].columns)
-            comparison_data_column_length = len(comparison_data[physical_quantity.name].columns)
-            column_length_difference = reference_data_column_length - comparison_data_column_length
-
-            column_start_num = min(reference_data_column_length, comparison_data_column_length) - 2
-
-            if reference_data_column_length < comparison_data_column_length:
-                complement_columns = [f'{reference_file.name}_middle_steps_{i}' for i in
-                                      range(column_start_num, column_start_num+abs(column_length_difference))]
-                complement_df = pd.DataFrame(data=None, columns=complement_columns)
-                reference_data[physical_quantity.name] = pd.concat([reference_data[physical_quantity.name],
-                                                                    complement_df], axis=1, copy=False)
-            else:
-                complement_columns = [f'{comparison_file.name}_middle_steps_{i}' for i in
-                                      range(column_start_num, column_start_num + abs(column_length_difference))]
-                complement_df = pd.DataFrame(data=None, columns=complement_columns)
-                comparison_data[physical_quantity.name] = pd.concat([comparison_data[physical_quantity.name],
-                                                                     complement_df], axis=1, copy=False)
-
-            
-
-            print()
-
-
-
 def main():
     filenames = fetch_all_filenames()
-    save_comparative_result_to_excel(filenames.pop(2),
-                                     filenames,
-                                     is_all_step=True)
 
 
 if __name__ == '__main__':

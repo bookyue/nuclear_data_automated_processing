@@ -2,7 +2,7 @@ from db.db_model import ExtractedData
 from db.db_utils import delete_all_from_table
 from db.fetch_data import fetch_data_by_filename_and_nuclide_list, fetch_all_filenames, \
     fetch_physical_quantities_by_name
-from db.save_data import save_extracted_data_to_db, save_save_extracted_data_to_exel
+from db.save_data import save_extracted_data_to_db, save_extracted_data_to_exel
 from utils.configlib import Config
 
 
@@ -55,7 +55,7 @@ def process(physical_quantity_name, nuclide_list, is_all_step):
 
     save_extracted_data_to_db(filenames, physical_quantities, nuclide_list)
 
-    save_save_extracted_data_to_exel(filenames, is_all_step, file_path)
+    save_extracted_data_to_exel(filenames, is_all_step, file_path)
 
 
 def main():
