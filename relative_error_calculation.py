@@ -11,6 +11,20 @@ from utils.physical_quantity_list_generator import is_it_all_str
 def _complement_columns(df1, df2,
                         df1_complement_column_name,
                         df2_complement_column_name):
+    """
+    对齐columns，数值填充为NaN
+
+    Parameters
+    ----------
+    df1 : pd.DataFrame
+    df2 : pd.DataFrame
+    df1_complement_column_name : str
+    df2_complement_column_name : str
+
+    Returns
+    -------
+    tuple[pd.DataFrame, pd.DataFrame]
+    """
     df1_column_length = len(df1.columns)
     df2_column_length = len(df2.columns)
     column_length_difference = df1_column_length - df2_column_length
@@ -31,14 +45,14 @@ def _complement_columns(df1, df2,
     return df1, df2
 
 
-def save_comparative_result_to_excel(reference_file,
-                                     comparison_files,
-                                     physical_quantities='isotope',
-                                     deviation_mode='relative',
-                                     threshold=Decimal(1.0E-12),
-                                     is_all_step=False):
+def calculate_comparative_result(reference_file,
+                                 comparison_files,
+                                 physical_quantities='isotope',
+                                 deviation_mode='relative',
+                                 threshold=Decimal(1.0E-12),
+                                 is_all_step=False):
     """
-    选定一个基准文件，与其他文件进行对比，将结果保存至xlsx文件
+    选定一个基准文件，与其他文件进行对比，计算对比结果
 
     Parameters
     ----------
@@ -88,9 +102,9 @@ def save_comparative_result_to_excel(reference_file,
 
 def main():
     filenames = fetch_all_filenames()
-    save_comparative_result_to_excel(filenames.pop(2),
-                                     filenames,
-                                     is_all_step=True)
+    calculate_comparative_result(filenames.pop(2),
+                                 filenames,
+                                 is_all_step=True)
 
 
 if __name__ == '__main__':
