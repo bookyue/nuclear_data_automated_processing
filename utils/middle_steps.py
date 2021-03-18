@@ -1,3 +1,5 @@
+from decimal import Decimal
+
 from utils.middle_steps_pb2 import MiddleStep, MiddleSteps
 
 
@@ -50,4 +52,4 @@ def middle_steps_line_parsing(data):
     if data is None:
         return {'middle_steps': None}
     else:
-        return {f'middle_step_{middle_step.id}': middle_step.data for middle_step in parsing(data)}
+        return {f'middle_step_{middle_step.id}': Decimal(middle_step.data) for middle_step in parsing(data)}
