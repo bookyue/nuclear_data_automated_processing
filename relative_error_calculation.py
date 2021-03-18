@@ -109,11 +109,45 @@ def _calculate_deviation(df_reference,
 
         i += 1
 
-    df_deviation.rename(columns={'relative_deviation_middle_step_0': 'last_step'}, inplace=True)
+    df_deviation.rename(columns={'relative_deviation_middle_step_0': 'relative_deviation_last_step'}, inplace=True)
 
     reserved_index = (df_deviation.T > threshold).any()
-    df_deviation = df_deviation.loc[reserved_index]
+    df_deviation = df_deviation.loc[reserved_index].reset_index(drop=True)
     return df_deviation, reserved_index
+
+
+def _merge_reference_comparison_and_deviation(df_reference,
+                                              df_comparison,
+                                              df_deviation,
+                                              reserved_index,
+                                              reserved_na=False):
+    """
+    依据reserved_index合并reference，comparison和deviation表
+    如果reserved_na为False,则drop columns with all NaN's，否则反之
+    默认reserved_na为False
+
+    Parameters
+    ----------
+    df_reference : pd.DataFrame
+    df_comparison : pd.DataFrame
+    df_deviation : pd.DataFrame
+    reserved_index : pd.Series
+    reserved_na : bool, default = False
+        如果reserved_na为False,则drop columns with all NaN's，否则反之
+    Returns
+    -------
+    pd.DataFrame
+    """
+    df_ = pd.merge(df_reference.loc[reserved_index],
+                   df_comparison.loc[reserved_index],
+                   how='outer', on=['nuc_ix', 'name'])
+
+    df_all = pd.concat([df_, df_deviation], axis=1, copy=False)
+
+    if not reserved_na:
+        df_all.dropna(axis=1, how='all', inplace=True)
+
+    return df_all
 
 
 def calculate_comparative_result(reference_file,
@@ -174,6 +208,14 @@ def calculate_comparative_result(reference_file,
                                             comparison_data[physical_quantity.name],
                                             deviation_mode,
                                             threshold)
+
+            df_all = _merge_reference_comparison_and_deviation(
+                        reference_data[physical_quantity.name],
+                        comparison_data[physical_quantity.name],
+                        df_deviation,
+                        reserved_index)
+
+            print(df_all)
 
 
 def main():
