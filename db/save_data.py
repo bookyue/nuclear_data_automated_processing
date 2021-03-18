@@ -158,7 +158,10 @@ def save_extracted_data_to_exel(filenames=None, is_all_step=False, file_path=Pat
                 if not df_right.empty:
                     df_left = pd.merge(df_left, df_right, how='outer', on=['nuc_ix', 'name'])
 
-            append_df_to_excel(file_path, df_left, sheet_name=physical_quantity.name, index=False)
+            append_df_to_excel(file_path, df_left,
+                               sheet_name=physical_quantity.name,
+                               index=False,
+                               encoding='utf-8')
 
 
 def main():
