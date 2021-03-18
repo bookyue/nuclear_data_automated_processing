@@ -7,7 +7,9 @@ from db.db_model import PhysicalQuantity, File
 from db.fetch_data import (fetch_extracted_data_by_filename_and_physical_quantity,
                            fetch_all_filenames,
                            fetch_physical_quantities_by_name)
+from utils.configlib import Config
 from utils.physical_quantity_list_generator import is_it_all_str
+from utils.worksheet import append_df_to_excel
 
 
 def _complement_columns(df_reference,
@@ -113,6 +115,7 @@ def _calculate_deviation(df_reference,
 
     reserved_index = (df_deviation.T > threshold).any()
     df_deviation = df_deviation.loc[reserved_index].reset_index(drop=True)
+
     return df_deviation, reserved_index
 
 
@@ -148,6 +151,45 @@ def _merge_reference_comparison_and_deviation(df_reference,
         df_all.dropna(axis=1, how='all', inplace=True)
 
     return df_all
+
+
+def _save_to_excel(dict_df_all,
+                   reference_file_name,
+                   comparison_file_name,
+                   is_all_step=False):
+    """
+    保存结果至xlsx文件
+    
+    Parameters
+    ----------
+    dict_df_all : dict[str, pd.DataFrame]
+    reference_file_name : str
+    comparison_file_name : str
+    is_all_step : bool, default = False
+        是否读取过全部中间结果数据列，默认只读取最终结果列
+    Returns
+    -------
+
+    """
+    if is_all_step:
+        file_name = f'all_step_{reference_file_name}_vs_{comparison_file_name}.xlsx'
+    else:
+        file_name = f'{reference_file_name}_vs_{comparison_file_name}.xlsx'
+
+    dir_path = Config.get_file_path('result_file_path').joinpath(reference_file_name)
+
+    dir_path.mkdir(parents=True, exist_ok=True)
+
+    file_path = dir_path.joinpath(file_name)
+
+    file_path.unlink(missing_ok=True)
+
+    for physical_quantity_name in dict_df_all:
+        append_df_to_excel(file_path, dict_df_all[physical_quantity_name],
+                           sheet_name=physical_quantity_name,
+                           index=False,
+                           encoding='utf-8'
+                           )
 
 
 def calculate_comparative_result(reference_file,
@@ -194,8 +236,15 @@ def calculate_comparative_result(reference_file,
                                                                                  physical_quantities,
                                                                                  is_all_step
                                                                                  )
+        dict_df_all = {}
+
         physical_quantity: PhysicalQuantity
         for physical_quantity in physical_quantities:
+
+            if reference_data[physical_quantity.name].empty or \
+                    comparison_data[physical_quantity.name].empty:
+                continue
+
             reference_data[physical_quantity.name], \
                 comparison_data[physical_quantity.name] = _complement_columns(
                                                             reference_data[physical_quantity.name],
@@ -209,19 +258,23 @@ def calculate_comparative_result(reference_file,
                                             deviation_mode,
                                             threshold)
 
-            df_all = _merge_reference_comparison_and_deviation(
-                        reference_data[physical_quantity.name],
-                        comparison_data[physical_quantity.name],
-                        df_deviation,
-                        reserved_index)
+            dict_df_all[physical_quantity.name] = _merge_reference_comparison_and_deviation(
+                                                reference_data[physical_quantity.name],
+                                                comparison_data[physical_quantity.name],
+                                                df_deviation,
+                                                reserved_index)
 
-            print(df_all)
+        _save_to_excel(dict_df_all,
+                       reference_file.name,
+                       comparison_file.name,
+                       is_all_step)
 
 
 def main():
     filenames = fetch_all_filenames()
     calculate_comparative_result(filenames.pop(2),
                                  filenames,
+                                 physical_quantities='all',
                                  is_all_step=True)
 
 
