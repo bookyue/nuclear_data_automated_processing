@@ -38,13 +38,15 @@ def _choose_db(db_type, debug=False):
     elif db_type == 'mysql':
         connector_string = f'mysql+mysqlconnector://{user}:{password}@{url}:{port}/{db_name}?charset=utf8mb4'
         engine_tmp = create_engine(connector_string, future=True, echo=debug)
-    else:
+    elif db_type == 'postgresql':
         connector_string = f'postgresql+psycopg2://{user}:{password}@{url}:{port}/{db_name}?client_encoding=utf8'
         engine_tmp = create_engine(connector_string, future=True,
                                    executemany_mode='values',
                                    executemany_values_page_size=10000,
                                    executemany_batch_page_size=500,
                                    echo=debug)
+    else:
+        raise Exception(f"can't support {db_type} now")
 
     session_tmp = sessionmaker(bind=engine_tmp, future=True)
 
@@ -52,4 +54,4 @@ def _choose_db(db_type, debug=False):
 
 
 Base = declarative_base()
-engine, Session = _choose_db('postgresql', debug=False)
+engine, Session = _choose_db('sqlite', debug=False)
