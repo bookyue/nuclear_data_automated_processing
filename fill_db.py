@@ -113,7 +113,7 @@ def main():
     # sqlite:      928.97s user 0.57s system 99% cpu 15:32.94 total
     # mysql:      1456.85s user 104.03s system 52% cpu 49:55.42 total
     # postgresql: 1010.68s user 31.02s system 67% cpu 25:52.97 total
-    file_names = test_file_path.glob('*.out')
+    file_names = sorted(test_file_path.glob('*.out'))
     for file_name in file_names:
         with InputXmlFileReader(file_name, physical_quantity_name) as xml_file:
             populate_database(xml_file)
