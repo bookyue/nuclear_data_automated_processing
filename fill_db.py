@@ -1,49 +1,12 @@
 import pandas as pd
-from sqlalchemy import select, insert
-from sqlalchemy.dialects.mysql import insert as mysql_insert
-from sqlalchemy.dialects.postgresql import insert as postgres_insert
+from sqlalchemy import select
 
 from db.base import Session
 from db.db_model import Nuc, NucData, File, PhysicalQuantity
-from db.db_utils import init_db
+from db.db_utils import init_db, upsert
 from utils import configlib
 from utils.input_xml_file import InputXmlFileReader
 from utils.middle_steps import middle_steps_line_serialization
-
-
-def upsert(model, data: list, update_field: list):
-    """
-    upsert实现
-    依据session.bind.dialect得到当前数据库类型
-    然后生成对应的upsert语句，当前支持mysql，postgresql，sqlite三种数据库
-    on_duplicate_key_update for mysql
-    on_conflict_do_nothing for postgresql
-    insert or ignore for sqlite
-
-    Parameters
-    ----------
-    model : Base
-        orm model
-    data : list
-    update_field : list
-    Returns
-    -------
-    insert
-        insert statement
-    """
-    session = Session()
-    if session.bind.dialect.name == 'mysql':
-        stmt = mysql_insert(model).values(data)
-        d = {f: getattr(stmt.inserted, f) for f in update_field}
-        return stmt.on_duplicate_key_update(**d)
-    elif session.bind.dialect.name == 'postgresql':
-        stmt = postgres_insert(model).values(data)
-        return stmt.on_conflict_do_nothing(index_elements=[update_field[0]])
-    elif session.bind.dialect.name == 'sqlite':
-        stmt = insert(model).values(data).prefix_with('OR IGNORE')
-        return stmt
-    else:
-        raise Exception(f"can't support {session.bind.dialect.name} dialect")
 
 
 def populate_database(xml_file):
@@ -135,7 +98,7 @@ def populate_database(xml_file):
         session.execute(NucData.__table__.insert(), df_data_all.to_dict(orient='records'))
 
         session.commit()
-        
+
     session.close()
 
 
