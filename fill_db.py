@@ -66,9 +66,12 @@ def populate_database(xml_file):
         df_nuc_tmp.columns = ('nuc_ix', 'name')
 
         # upsert into db
-        stmt = upsert(Nuc, df_nuc_tmp.to_dict(orient='records'), update_field=df_nuc_tmp.columns.values.tolist())
+        stmt = upsert(Nuc,
+                      df_nuc_tmp.to_dict(orient='records'),
+                      update_field=df_nuc_tmp.columns.values.tolist(),
+                      engine=session.bind)
+
         session.execute(stmt)
-        session.commit()
 
         # 如果len(df_all_tmp.columns)为5则说明有middle_steps列
         # 将数据部分截取出来

@@ -30,7 +30,7 @@ def delete_all_from_table(model):
         session.commit()
 
 
-def upsert(model, data: list, update_field: list):
+def upsert(model, data: list, update_field: list, engine):
     """
     upsert实现
     依据session.bind.dialect得到当前数据库类型
@@ -45,21 +45,23 @@ def upsert(model, data: list, update_field: list):
         orm model
     data : list
     update_field : list
+    engine
+        _engine.Engine instance
     Returns
     -------
     insert
         insert statement
     """
-    session = Session()
-    if session.bind.dialect.name == 'mysql':
+
+    if engine.dialect.name == 'mysql':
         stmt = mysql_insert(model).values(data)
         d = {f: getattr(stmt.inserted, f) for f in update_field}
         return stmt.on_duplicate_key_update(**d)
-    elif session.bind.dialect.name == 'postgresql':
+    elif engine.dialect.name == 'postgresql':
         stmt = postgres_insert(model).values(data)
         return stmt.on_conflict_do_nothing(index_elements=[update_field[0]])
-    elif session.bind.dialect.name == 'sqlite':
+    elif engine.dialect.name == 'sqlite':
         stmt = insert(model).values(data).prefix_with('OR IGNORE')
         return stmt
     else:
-        raise Exception(f"can't support {session.bind.dialect.name} dialect")
+        raise Exception(f"can't support {engine.dialect.name} dialect")
