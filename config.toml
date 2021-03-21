@@ -32,7 +32,7 @@ burnup_time_file_path = "./burnup time"
 [database]
 
 [database.sqlite]
-path = "./data.db"
+path = "./data.sqlite"
 
 [database.mysql]
 user = "user"
