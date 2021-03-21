@@ -54,4 +54,4 @@ def _choose_db(db_type, debug=False):
 
 
 Base = declarative_base()
-engine, Session = _choose_db('sqlite', debug=False)
+engine, Session = _choose_db('postgresql', debug=False)
