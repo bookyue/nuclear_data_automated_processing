@@ -1,45 +1,12 @@
 import pandas as pd
 from sqlalchemy import select
-from sqlalchemy.dialects.mysql import insert as mysql_insert
-from sqlalchemy.dialects.postgresql import insert as postgres_insert
 
 from db.base import Session
 from db.db_model import Nuc, NucData, File, PhysicalQuantity
-from db.db_utils import init_db
+from db.db_utils import init_db, upsert
 from utils import configlib
 from utils.input_xml_file import InputXmlFileReader
 from utils.middle_steps import middle_steps_line_serialization
-
-
-def _upsert(model, data: list, update_field: list):
-    """
-    upsert实现
-    依据session.bind.dialect得到当前数据库类型
-    然后生成对应的upsert语句，当前支持mysql和postgresql两种数据库
-    on_duplicate_key_update for mysql
-    on_conflict_do_nothing for postgresql
-
-    Parameters
-    ----------
-    model : Base
-        orm model
-    data : list
-    update_field : list
-    Returns
-    -------
-    insert
-        insert statement
-    """
-    session = Session()
-    if session.bind.dialect.name == 'mysql':
-        stmt = mysql_insert(model).values(data)
-        d = {f: getattr(stmt.inserted, f) for f in update_field}
-        return stmt.on_duplicate_key_update(**d)
-    elif session.bind.dialect.name == 'postgresql':
-        stmt = postgres_insert(model).values(data)
-        return stmt.on_conflict_do_nothing(index_elements=[update_field[0]])
-    else:
-        raise Exception(f"can't support {session.bind.dialect.name} dialect")
 
 
 def populate_database(xml_file):
@@ -99,9 +66,12 @@ def populate_database(xml_file):
         df_nuc_tmp.columns = ('nuc_ix', 'name')
 
         # upsert into db
-        stmt = _upsert(Nuc, df_nuc_tmp.to_dict(orient='records'), update_field=df_nuc_tmp.columns.values.tolist())
+        stmt = upsert(Nuc,
+                      df_nuc_tmp.to_dict(orient='records'),
+                      update_field=df_nuc_tmp.columns.values.tolist(),
+                      engine=session.bind)
+
         session.execute(stmt)
-        session.commit()
 
         # 如果len(df_all_tmp.columns)为5则说明有middle_steps列
         # 将数据部分截取出来
@@ -131,7 +101,7 @@ def populate_database(xml_file):
         session.execute(NucData.__table__.insert(), df_data_all.to_dict(orient='records'))
 
         session.commit()
-        
+
     session.close()
 
 
