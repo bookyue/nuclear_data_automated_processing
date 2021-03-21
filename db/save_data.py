@@ -55,6 +55,18 @@ def save_extracted_data_to_db(filenames=None, physical_quantities='all', nuclide
                     if physical_quantity.name == 'gamma_spectra':
                         gamma_physical_quantity_id = physical_quantity.id
 
+                        gamma_stmt = (select(NucData.nuc_id, NucData.file_id, NucData.physical_quantity_id,
+                                             NucData.last_step, NucData.middle_steps).
+                                      where(NucData.file_id == file_id,
+                                            NucData.physical_quantity_id == gamma_physical_quantity_id)
+                                      )
+
+                        gamma_insert_stmt = insert(ExtractedData).from_select(
+                            names=['nuc_id', 'file_id', 'physical_quantity_id', 'last_step',
+                                   'middle_steps'],
+                            select=gamma_stmt)
+                        session.execute(gamma_insert_stmt)
+
                 stmt = (select(NucData.nuc_id, NucData.file_id, NucData.physical_quantity_id,
                                NucData.last_step, NucData.middle_steps).
                         join(Nuc, Nuc.id == NucData.nuc_id).
@@ -63,25 +75,13 @@ def save_extracted_data_to_db(filenames=None, physical_quantities='all', nuclide
                         where(Nuc.name.in_(nuclide_list))
                         )
 
-                gamma_stmt = (select(NucData.nuc_id, NucData.file_id, NucData.physical_quantity_id,
-                                     NucData.last_step, NucData.middle_steps).
-                              where(NucData.file_id == file_id,
-                                    NucData.physical_quantity_id == gamma_physical_quantity_id)
-                              )
-
-                gamma_insert_stmt = insert(ExtractedData).from_select(
-                    names=['nuc_id', 'file_id', 'physical_quantity_id', 'last_step',
-                           'middle_steps'],
-                    select=gamma_stmt)
-                session.execute(gamma_insert_stmt)
-
             # 用INSERT INTO FROM SELECT将数据插入ExtractedData table
             insert_stmt = insert(ExtractedData).from_select(
                 names=['nuc_id', 'file_id', 'physical_quantity_id', 'last_step',
                        'middle_steps'],
                 select=stmt)
-
             session.execute(insert_stmt)
+
             session.commit()
 
 
