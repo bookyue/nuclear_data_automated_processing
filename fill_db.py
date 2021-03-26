@@ -82,14 +82,11 @@ def populate_database(xml_file):
             df_data_tmp: pd.DataFrame = df_all_tmp.iloc[:, -3:]
             df_data_tmp.columns = ('first_step', 'last_step', 'middle_steps')
 
-        # 找到起始核素的id(主键)
-        if key == 'gamma_spectra':
-            start = session.execute(select(Nuc.id).where(Nuc.nuc_ix == 0)).scalar()
-        else:
-            start = session.execute(select(Nuc.id).where(Nuc.nuc_ix == 10010)).scalar()
+        list_nuc_id = session.execute(select(Nuc.id).
+                                      where(Nuc.nuc_ix.in_(df_nuc_tmp['nuc_ix']))).scalars().all()
 
         # 为数据部分生成3个外键
-        df_data_prefix = pd.DataFrame({'nuc_id': range(start, len(df_nuc_tmp) + start),
+        df_data_prefix = pd.DataFrame({'nuc_id': list_nuc_id,
                                        'file_id': file_tmp.id,
                                        'physical_quantity_id': physical_quantity_tmp.id})
         # 合并外键和数据部分
