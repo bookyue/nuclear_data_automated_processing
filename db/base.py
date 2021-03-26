@@ -1,5 +1,5 @@
 from sqlalchemy import create_engine
-from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import registry
 from sqlalchemy.orm import sessionmaker
 
 from utils import configlib
@@ -53,5 +53,6 @@ def _choose_db(db_type, debug=False):
     return engine_tmp, session_tmp
 
 
-Base = declarative_base()
+mapper_registry = registry()
+Base = mapper_registry.generate_base()
 engine, Session = _choose_db('postgresql', debug=False)
