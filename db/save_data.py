@@ -62,7 +62,10 @@ def save_extracted_data_to_db(filenames=None, physical_quantities='all', nuclide
                                       )
 
                         gamma_insert_stmt = insert(ExtractedData).from_select(
-                            names=['nuc_id', 'file_id', 'physical_quantity_id', 'last_step',
+                            names=['nuc_id',
+                                   'file_id',
+                                   'physical_quantity_id',
+                                   'last_step',
                                    'middle_steps'],
                             select=gamma_stmt)
                         session.execute(gamma_insert_stmt)
@@ -77,15 +80,18 @@ def save_extracted_data_to_db(filenames=None, physical_quantities='all', nuclide
 
             # 用INSERT INTO FROM SELECT将数据插入ExtractedData table
             insert_stmt = insert(ExtractedData).from_select(
-                names=['nuc_id', 'file_id', 'physical_quantity_id', 'last_step',
-                       'middle_steps'],
-                select=stmt)
+                            names=['nuc_id',
+                                   'file_id',
+                                   'physical_quantity_id',
+                                   'last_step',
+                                   'middle_steps'],
+                            select=stmt)
             session.execute(insert_stmt)
 
             session.commit()
 
 
-def save_extracted_data_to_exel(filenames=None, is_all_step=False, dir_path=Path('.')):
+def save_extracted_data_to_exel(filenames=None, is_all_step=False, dir_path=Path('.'), merge=True):
     """
     将数据存入到exel文件
     将传入的File list中包含的文件的数据存到exel文件
@@ -93,9 +99,12 @@ def save_extracted_data_to_exel(filenames=None, is_all_step=False, dir_path=Path
     Parameters
     ----------
     filenames : comparison_files : list[File] or File
-    is_all_step : bool, default false
+    is_all_step : bool, default = False
         是否读取全部中间结果数据列，默认只读取最终结果列
     dir_path : Path
+    merge : bool, default = True
+        是否将结果合并输出至一个文件，否则单独输出至每个文件
+
     Returns
     -------
 
@@ -108,8 +117,10 @@ def save_extracted_data_to_exel(filenames=None, is_all_step=False, dir_path=Path
     physical_quantities = fetch_physical_quantities_by_name('all')
 
     dir_path.mkdir(parents=True, exist_ok=True)
-    file_path = dir_path.joinpath('final.xlsx')
-    file_path.unlink(missing_ok=True)
+
+    if merge:
+        file_path = dir_path.joinpath('final.xlsx')
+        file_path.unlink(missing_ok=True)
 
     with Session() as session:
         physical_quantity: PhysicalQuantity
@@ -120,6 +131,10 @@ def save_extracted_data_to_exel(filenames=None, is_all_step=False, dir_path=Path
             filename: File
             for filename in filenames:
                 file_id = filename.id
+
+                if not merge:
+                    file_path = dir_path.joinpath(f'{filename.name}.xlsx')
+                    file_path.unlink(missing_ok=True)
 
                 if not is_all_step:
                     # 不读取中间结果，所以不选择NucData.middle_steps，否则反之
@@ -162,10 +177,18 @@ def save_extracted_data_to_exel(filenames=None, is_all_step=False, dir_path=Path
                 if not df_right.empty:
                     df_left = pd.merge(df_left, df_right, how='outer', on=['nuc_ix', 'name'])
 
-            append_df_to_excel(file_path, df_left,
-                               sheet_name=physical_quantity.name,
-                               index=False,
-                               encoding='utf-8')
+                if not merge:
+                    append_df_to_excel(file_path, df_left,
+                                       sheet_name=physical_quantity.name,
+                                       index=False,
+                                       encoding='utf-8')
+                    df_left = pd.DataFrame(data=None, columns=['nuc_ix', 'name'])
+
+            if merge:
+                append_df_to_excel(file_path, df_left,
+                                   sheet_name=physical_quantity.name,
+                                   index=False,
+                                   encoding='utf-8')
 
 
 def main():
