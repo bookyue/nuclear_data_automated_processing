@@ -5,7 +5,7 @@ import pandas as pd
 
 from db.db_model import PhysicalQuantity, File
 from db.fetch_data import (fetch_extracted_data_by_filename_and_physical_quantity,
-                           fetch_all_filenames,
+                           fetch_files_by_name,
                            fetch_physical_quantities_by_name)
 from utils.configlib import Config
 from utils.physical_quantity_list_generator import is_it_all_str
@@ -271,7 +271,7 @@ def calculate_comparative_result(reference_file,
 
 
 def main():
-    filenames = fetch_all_filenames()
+    filenames = fetch_files_by_name()
     calculate_comparative_result(filenames.pop(2),
                                  filenames,
                                  physical_quantities='all',

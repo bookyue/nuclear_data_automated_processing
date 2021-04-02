@@ -1,6 +1,6 @@
 from db.db_model import ExtractedData
 from db.db_utils import delete_all_from_table
-from db.fetch_data import fetch_data_by_filename_and_nuclide_list, fetch_all_filenames, \
+from db.fetch_data import fetch_data_by_filename_and_nuclide_list, fetch_files_by_name, \
     fetch_physical_quantities_by_name
 from db.save_data import save_extracted_data_to_db, save_extracted_data_to_exel
 from utils.configlib import Config
@@ -47,7 +47,7 @@ def filter_data(filename, physical_quantity_name, nuclide_list, is_all_step):
 
 
 def process(physical_quantity_name, nuclide_list, is_all_step):
-    filenames = fetch_all_filenames()
+    filenames = fetch_files_by_name()
     physical_quantities = fetch_physical_quantities_by_name(physical_quantity_name)
     file_path = Config.get_file_path('result_file_path')
 
