@@ -1,7 +1,7 @@
 from db.db_model import ExtractedData
 from db.db_utils import delete_all_from_table
-from db.fetch_data import fetch_data_by_filename_and_nuclide_list, fetch_all_filenames, \
-    fetch_physical_quantities_by_name
+from db.fetch_data import fetch_data_by_filename_and_nuclide_list, fetch_files_by_name, \
+    fetch_physical_quantities_by_name, fetch_extracted_data_id, fetch_extracted_data
 from db.save_data import save_extracted_data_to_db, save_extracted_data_to_exel
 from utils.configlib import Config
 
@@ -47,24 +47,32 @@ def filter_data(filename, physical_quantity_name, nuclide_list, is_all_step):
 
 
 def process(physical_quantity_name, nuclide_list, is_all_step):
-    filenames = fetch_all_filenames()
+    filenames = fetch_files_by_name()
     physical_quantities = fetch_physical_quantities_by_name(physical_quantity_name)
     file_path = Config.get_file_path('result_file_path')
 
     delete_all_from_table(ExtractedData)
 
-    save_extracted_data_to_db(filenames, physical_quantities, nuclide_list)
+    # save_extracted_data_to_db(filenames, physical_quantities, nuclide_list)
+    #
+    # save_extracted_data_to_exel(filenames, is_all_step, file_path, False)
 
-    save_extracted_data_to_exel(filenames, is_all_step, file_path)
+    nuc_data_id = fetch_extracted_data_id(filenames, physical_quantities, nuclide_list)
+
+    dict_dataframe = fetch_extracted_data(nuc_data_id=nuc_data_id,
+                                          is_all_step=is_all_step)
 
 
 def main():
     fission_light_nuclide_list = Config.get_nuclide_list('fission_light')
+    add_nuclide_list = ['I135', 'Xe135', 'Cs135', 'Pm149',
+                        'Sm149', 'Sm150', 'Pu239', 'U239',
+                        'Np239', 'U233', 'Pa233']
     is_all_step = Config.get_data_extraction_conf('is_all_step')
     physical_quantity_name = 'all'
 
     process(physical_quantity_name=physical_quantity_name,
-            nuclide_list=fission_light_nuclide_list,
+            nuclide_list=list(set(fission_light_nuclide_list + add_nuclide_list)),
             is_all_step=is_all_step)
 
 
