@@ -8,19 +8,34 @@ from utils.middle_steps import middle_steps_line_parsing
 from utils.physical_quantity_list_generator import physical_quantity_list_generator, is_it_all_str
 
 
-def fetch_all_filenames():
+def fetch_files_by_name(filenames='all'):
     """
     获取files table中所有File objects
+
+    Parameters
+    ----------
+    filenames : str or list[str]
 
     Returns
     -------
     list[File]
         File list
     """
-    with Session() as session:
-        stmt = select(File)
-        filenames = session.execute(stmt).scalars().all()
-    return filenames
+    stmt = lambda_stmt(lambda: select(File))
+    if filenames == 'all':
+        pass
+    else:
+        if isinstance(filenames, str):
+            filenames = [filenames]
+        stmt += lambda s: s.where(File.name.in_(filenames))
+
+    try:
+        with Session() as session:
+            files = session.execute(stmt).scalars().all()
+    finally:
+        if not files:
+            raise Exception(f"{filenames} doesn't exists")
+    return files
 
 
 def fetch_physical_quantities_by_name(physical_quantities):
@@ -259,7 +274,7 @@ def fetch_extracted_data_id(filenames=None, physical_quantities='all', nuclide_l
     list[int]
     """
     if filenames is None:
-        filenames = fetch_all_filenames()
+        filenames = fetch_files_by_name()
     if not isinstance(filenames, list):
         filenames = [filenames]
 
@@ -306,7 +321,7 @@ def fetch_extracted_data_id(filenames=None, physical_quantities='all', nuclide_l
 
 
 def main():
-    filenames = fetch_all_filenames()
+    filenames = fetch_files_by_name()
     fission_light_nuclide_list = Config.get_nuclide_list("fission_light")
     # dict_df_data = fetch_data_by_filename_and_nuclide_list(filenames[32], ['isotope', 'radioactivity'],
     #                                                        fission_light_nuclide_list, True)
