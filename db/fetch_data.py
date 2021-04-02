@@ -240,12 +240,78 @@ def fetch_extracted_data_by_filename_and_physical_quantity(filename, physical_qu
     return dict_df_data
 
 
+def fetch_extracted_data_id(filenames=None, physical_quantities='all', nuclide_list=None):
+    """
+    获取extracted_data的id
+
+    Parameters
+    ----------
+    filenames : list[File] or File
+        File object
+    physical_quantities : list[str] or str or list[PhysicalQuantity] or PhysicalQuantity
+        物理量，可以是物理量名的list[str]或str，
+        也可以是PhysicalQuantity list也可以是list[PhysicalQuantity]或PhysicalQuantity
+    nuclide_list : list[str]
+        核素list
+
+    Returns
+    -------
+    list[int]
+    """
+    if filenames is None:
+        filenames = fetch_all_filenames()
+    if not isinstance(filenames, list):
+        filenames = [filenames]
+
+    if is_it_all_str(physical_quantities):
+        physical_quantities = fetch_physical_quantities_by_name(physical_quantities)
+
+    nuc_data_id = []
+
+    with Session() as session:
+        for filename in filenames:
+            physical_quantities: list[PhysicalQuantity]
+            physical_quantities_id = [physical_quantity.id
+                                      for physical_quantity in physical_quantities]
+            file_id = filename.id
+
+            if nuclide_list is None:
+                # 核素列表为空则过滤first_step和last_step皆为0的records
+                stmt = (select(NucData.id).
+                        where(NucData.file_id == file_id,
+                              NucData.physical_quantity_id.in_(physical_quantities_id)).
+                        where(or_(NucData.first_step != 0, NucData.last_step != 0))
+                        )
+            else:
+                # 核素不为gamma时，依照核素列表过滤records，否则反之
+                for physical_quantity in physical_quantities:
+                    if physical_quantity.name == 'gamma_spectra':
+                        gamma_physical_quantity_id = physical_quantity.id
+
+                        gamma_stmt = (select(NucData.id).
+                                      where(NucData.file_id == file_id,
+                                            NucData.physical_quantity_id == gamma_physical_quantity_id)
+                                      )
+                        nuc_data_id.extend(session.execute(gamma_stmt).scalars().all())
+
+                stmt = (select(NucData.id).
+                        join(Nuc, Nuc.id == NucData.nuc_id).
+                        where(NucData.file_id == file_id,
+                              NucData.physical_quantity_id.in_(physical_quantities_id)).
+                        where(Nuc.name.in_(nuclide_list))
+                        )
+                nuc_data_id.extend(session.execute(stmt).scalars().all())
+
+    return nuc_data_id
+
+
 def main():
     filenames = fetch_all_filenames()
     fission_light_nuclide_list = Config.get_nuclide_list("fission_light")
     # dict_df_data = fetch_data_by_filename_and_nuclide_list(filenames[32], ['isotope', 'radioactivity'],
     #                                                        fission_light_nuclide_list, True)
-    dict_df_data = fetch_extracted_data_by_filename_and_physical_quantity(filenames[32], ['isotope', 'radioactivity'], True)
+    dict_df_data = fetch_extracted_data_by_filename_and_physical_quantity(filenames[32], ['isotope', 'radioactivity'],
+                                                                          True)
     print(dict_df_data)
 
 
