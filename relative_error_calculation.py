@@ -8,7 +8,7 @@ from db.fetch_data import (fetch_extracted_data_by_filename_and_physical_quantit
                            fetch_files_by_name,
                            fetch_physical_quantities_by_name)
 from utils.configlib import Config
-from utils.physical_quantity_list_generator import is_it_all_str
+from utils.formatter import type_checker
 from utils.worksheet import append_df_to_excel
 
 
@@ -223,7 +223,8 @@ def calculate_comparative_result(reference_file,
     -------
 
     """
-    if is_it_all_str(physical_quantities):
+
+    if type_checker(physical_quantities, PhysicalQuantity) == 'str':
         physical_quantities = fetch_physical_quantities_by_name(physical_quantities)
 
     comparison_file: File

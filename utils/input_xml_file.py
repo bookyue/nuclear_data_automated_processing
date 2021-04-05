@@ -2,7 +2,7 @@ import linecache
 from pathlib import Path
 
 from utils.configlib import Config
-from utils.physical_quantity_list_generator import physical_quantity_list_generator
+from utils.formatter import physical_quantity_list_generator
 
 
 class InputXmlFileReader:

@@ -4,8 +4,8 @@ from sqlalchemy import select, lambda_stmt, or_
 from db.base import Session
 from db.db_model import File, NucData, Nuc, PhysicalQuantity, ExtractedData
 from utils.configlib import Config
+from utils.formatter import physical_quantity_list_generator, type_checker
 from utils.middle_steps import middle_steps_line_parsing
-from utils.physical_quantity_list_generator import physical_quantity_list_generator, is_it_all_str
 
 
 def fetch_files_by_name(filenames='all'):
@@ -83,7 +83,7 @@ def fetch_data_by_filename(filename, physical_quantities):
     """
     dict_df_data = {}
 
-    if is_it_all_str(physical_quantities):
+    if type_checker(physical_quantities, PhysicalQuantity) == 'str':
         physical_quantities = fetch_physical_quantities_by_name(physical_quantities)
 
     with Session() as session:
@@ -130,7 +130,7 @@ def fetch_data_by_filename_and_nuclide_list(filename, physical_quantities, nucli
     """
     dict_df_data = {}
 
-    if is_it_all_str(physical_quantities):
+    if type_checker(physical_quantities, PhysicalQuantity) == 'str':
         physical_quantities = fetch_physical_quantities_by_name(physical_quantities)
 
     with Session() as session:
@@ -202,7 +202,7 @@ def fetch_extracted_data_by_filename_and_physical_quantity(filename, physical_qu
     """
     dict_df_data = {}
 
-    if is_it_all_str(physical_quantities):
+    if type_checker(physical_quantities, PhysicalQuantity) == 'str':
         physical_quantities = fetch_physical_quantities_by_name(physical_quantities)
 
     with Session() as session:
