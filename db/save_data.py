@@ -5,9 +5,9 @@ from sqlalchemy import select, or_, insert, lambda_stmt
 
 from db.base import Session
 from db.db_model import File, Nuc, NucData, ExtractedData, PhysicalQuantity
-from db.fetch_data import fetch_physical_quantities_by_name, fetch_all_filenames
+from db.fetch_data import fetch_physical_quantities_by_name, fetch_files_by_name
+from utils.formatter import type_checker
 from utils.middle_steps import middle_steps_line_parsing
-from utils.physical_quantity_list_generator import is_it_all_str
 from utils.worksheet import append_df_to_excel
 
 
@@ -27,11 +27,12 @@ def save_extracted_data_to_db(filenames=None, physical_quantities='all', nuclide
     """
 
     if filenames is None:
-        filenames = fetch_all_filenames()
-    if not isinstance(filenames, list):
-        filenames = [filenames]
+        filenames = fetch_files_by_name()
+    else:
+        if type_checker(filenames, File) == 'str':
+            filenames = fetch_files_by_name(filenames)
 
-    if is_it_all_str(physical_quantities):
+    if type_checker(physical_quantities, PhysicalQuantity) == 'str':
         physical_quantities = fetch_physical_quantities_by_name(physical_quantities)
 
     with Session() as session:
@@ -110,9 +111,10 @@ def save_extracted_data_to_exel(filenames=None, is_all_step=False, dir_path=Path
 
     """
     if filenames is None:
-        filenames = fetch_all_filenames()
-    if not isinstance(filenames, list):
-        filenames = [filenames]
+        filenames = fetch_files_by_name()
+    else:
+        if type_checker(filenames, File) == 'str':
+            filenames = fetch_files_by_name(filenames)
 
     physical_quantities = fetch_physical_quantities_by_name('all')
 
@@ -192,7 +194,7 @@ def save_extracted_data_to_exel(filenames=None, is_all_step=False, dir_path=Path
 
 
 def main():
-    filenames = fetch_all_filenames()
+    filenames = fetch_files_by_name()
 
 
 if __name__ == '__main__':

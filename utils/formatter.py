@@ -1,3 +1,4 @@
+from db.db_model import PhysicalQuantity, File
 from utils.configlib import Config
 
 
@@ -49,19 +50,36 @@ def physical_quantity_list_generator(physical_quantity_name):
         list(set(physical_quantity_name))
 
 
-def is_it_all_str(str_or_list):
+def type_checker(object_or_list, expected_type):
     """
-    判断输入的是不是str或str of list
+    判断输入的是不是str or PhysicalQuantity or File or list[str or PhysicalQuantity or File]
     Parameters
     ----------
-    str_or_list : 输入
+    object_or_list : str or PhysicalQuantity or File or list[str or PhysicalQuantity or File]
+    expected_type : Any
     Returns
     -------
     bool
     """
-    is_in = False
-    if isinstance(str_or_list, str) or \
-            all(isinstance(e, str)
-                for e in str_or_list):
-        is_in = True
-    return is_in
+
+    if isinstance(object_or_list, str) or all(isinstance(ele, str) for ele in object_or_list):
+        return 'str'
+    elif isinstance(object_or_list, list) and all(isinstance(ele, expected_type) for ele in object_or_list):
+        return 'original'
+    else:
+        raise Exception('unexpected type')
+
+
+# def formatter(object_or_list, file_or_physical_quantity):
+#     expected_type = (PhysicalQuantity, File)
+#     type_s = type_checker(object_or_list, expected_type)
+#
+#     if type_s == 'str':
+#         if file_or_physical_quantity == PhysicalQuantity:
+#             return fetch_physical_quantities_by_name(object_or_list)
+#         elif file_or_physical_quantity == File:
+#             return fetch_files_by_name(object_or_list)
+#         else:
+#             raise Exception('must be PhysicalQuantity or File object')
+#     elif type_s == 'original':
+#         return object_or_list
