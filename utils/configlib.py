@@ -86,7 +86,7 @@ class Config:
             核素列表名
         Returns
         -------
-        list
+        list[str]
         """
         return cls.conf.get("nuclide_list").get(nuclide_name, None)
 
