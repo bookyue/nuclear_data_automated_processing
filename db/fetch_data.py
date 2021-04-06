@@ -2,30 +2,43 @@ import pandas as pd
 from sqlalchemy import select, lambda_stmt, or_
 
 from db.base import Session
-from db.db_model import File, NucData, Nuc, PhysicalQuantity, ExtractedData
-from utils.configlib import Config
+from db.db_model import File, NucData, Nuc, PhysicalQuantity
+from utils.formatter import physical_quantity_list_generator, type_checker
 from utils.middle_steps import middle_steps_line_parsing
-from utils.physical_quantity_list_generator import physical_quantity_list_generator, is_it_all_str
 
 
-def fetch_all_filenames():
+def fetch_files_by_name(filenames='all'):
     """
-    获取files table中所有File objects
+    根据输入的物理量名，从files table获取 file object(s)
+
+    Parameters
+    ----------
+    filenames : str or list[str]
 
     Returns
     -------
-    list[File]
-        File list
+    list[File] or File
     """
-    with Session() as session:
-        stmt = select(File)
-        filenames = session.execute(stmt).scalars().all()
-    return filenames
+    stmt = lambda_stmt(lambda: select(File))
+    if filenames == 'all':
+        pass
+    else:
+        if isinstance(filenames, str):
+            filenames = [filenames]
+        stmt += lambda s: s.where(File.name.in_(filenames))
+
+    try:
+        with Session() as session:
+            files = session.execute(stmt).scalars().all()
+    finally:
+        if not files:
+            raise Exception(f"{filenames} doesn't exists")
+    return files
 
 
 def fetch_physical_quantities_by_name(physical_quantities):
     """
-    根据输入的物理量名，从physical_quantities table获取 physical_quantity(ies) object(s)
+    根据输入的物理量名，从physical_quantities table获取 physical_quantity object(s)
 
     Parameters
     ----------
@@ -34,12 +47,12 @@ def fetch_physical_quantities_by_name(physical_quantities):
 
     Returns
     -------
-    list[PhysicalQuantity]
-        PhysicalQuantity list
+    list[PhysicalQuantity] or PhysicalQuantity
 
     See Also
     --------
-    physical_quantity_list_generator : 根据输入生成对应的physical_quantity list
+    physical_quantity_list_generator : 根据输入生成对应的物理量list
+    physical_quantity list
     """
     with Session() as session:
         physical_quantities_list = physical_quantity_list_generator(physical_quantities)
@@ -68,7 +81,7 @@ def fetch_data_by_filename(filename, physical_quantities):
     """
     dict_df_data = {}
 
-    if is_it_all_str(physical_quantities):
+    if type_checker(physical_quantities, PhysicalQuantity) == 'str':
         physical_quantities = fetch_physical_quantities_by_name(physical_quantities)
 
     with Session() as session:
@@ -115,7 +128,7 @@ def fetch_data_by_filename_and_nuclide_list(filename, physical_quantities, nucli
     """
     dict_df_data = {}
 
-    if is_it_all_str(physical_quantities):
+    if type_checker(physical_quantities, PhysicalQuantity) == 'str':
         physical_quantities = fetch_physical_quantities_by_name(physical_quantities)
 
     with Session() as session:
@@ -167,87 +180,149 @@ def fetch_data_by_filename_and_nuclide_list(filename, physical_quantities, nucli
     return dict_df_data
 
 
-def fetch_extracted_data_by_filename_and_physical_quantity(filename, physical_quantities, is_all_step=False):
+def fetch_extracted_data_id(filenames=None, physical_quantities='all', nuclide_list=None):
     """
-    根据输入的File extracted_data table获取数据
+    获取extracted_data的id
 
     Parameters
     ----------
-    filename : File
+    filenames : list[File] or File
         File object
     physical_quantities : list[str] or str or list[PhysicalQuantity] or PhysicalQuantity
         物理量，可以是物理量名的list[str]或str，
         也可以是PhysicalQuantity list也可以是list[PhysicalQuantity]或PhysicalQuantity
-    is_all_step : bool, default = False
-        是否读取全部中间结果数据列，默认只读取最终结果列
+    nuclide_list : list[str]
+        核素list
+
     Returns
     -------
-    dict[str, pd.DataFrame]
-        返回一个结果字典，key为物理量名(str)，value为对应物理量的数据(DataFrame)
+    list[int]
     """
-    dict_df_data = {}
 
-    if is_it_all_str(physical_quantities):
+    if type_checker(filenames, File) == 'str':
+        filenames = fetch_files_by_name(filenames)
+
+    if not isinstance(filenames, list):
+        filenames = [filenames]
+
+    if type_checker(physical_quantities, PhysicalQuantity) == 'str':
         physical_quantities = fetch_physical_quantities_by_name(physical_quantities)
 
+    nuc_data_id = []
+
     with Session() as session:
-        file_id = filename.id
+        for filename in filenames:
+            physical_quantities: list[PhysicalQuantity]
+            physical_quantities_id = [physical_quantity.id
+                                      for physical_quantity in physical_quantities]
+            file_id = filename.id
 
-        physical_quantity: PhysicalQuantity
-        for physical_quantity in physical_quantities:
-            physical_quantity_id = physical_quantity.id
-
-            if not is_all_step:
-                # 不读取中间结果，所以不选择NucData.middle_steps，否则反之
-                stmt = lambda_stmt(lambda: select(Nuc.nuc_ix, Nuc.name,
-                                                  ExtractedData.last_step))
+            if nuclide_list is None:
+                # 核素列表为空则过滤first_step和last_step皆为0的records
+                stmt = (select(NucData.id).
+                        where(NucData.file_id == file_id,
+                              NucData.physical_quantity_id.in_(physical_quantities_id)).
+                        where(or_(NucData.first_step != 0, NucData.last_step != 0))
+                        )
             else:
-                stmt = lambda_stmt(lambda: select(Nuc.nuc_ix, Nuc.name,
-                                                  ExtractedData.last_step,
-                                                  ExtractedData.middle_steps))
+                # 核素不为gamma时，依照核素列表过滤records，否则反之
+                for physical_quantity in physical_quantities:
+                    if physical_quantity.name == 'gamma_spectra':
+                        gamma_physical_quantity_id = physical_quantity.id
 
-            stmt += lambda s: s.join(Nuc,
-                                     Nuc.id == ExtractedData.nuc_id)
-            stmt += lambda s: s.join(PhysicalQuantity,
-                                     PhysicalQuantity.id == ExtractedData.physical_quantity_id)
-            stmt += lambda s: s.where(ExtractedData.file_id == file_id,
-                                      PhysicalQuantity.id == physical_quantity_id)
+                        gamma_stmt = (select(NucData.id).
+                                      where(NucData.file_id == file_id,
+                                            NucData.physical_quantity_id == gamma_physical_quantity_id)
+                                      )
+                        nuc_data_id.extend(session.execute(gamma_stmt).scalars().all())
 
-            if not is_all_step:
-                column_names = ['nuc_ix', 'name', f'{filename.name}_last_step']
-                df_all = pd.DataFrame(data=session.execute(stmt).all(),
-                                      columns=column_names)
-            else:
-                column_names = ['nuc_ix', 'name', f'{filename.name}_last_step', 'middle_steps']
-                df_all = pd.DataFrame(data=session.execute(stmt).all(),
-                                      columns=column_names)
+                stmt = (select(NucData.id).
+                        join(Nuc, Nuc.id == NucData.nuc_id).
+                        where(NucData.file_id == file_id,
+                              NucData.physical_quantity_id.in_(physical_quantities_id)).
+                        where(Nuc.name.in_(nuclide_list))
+                        )
 
-                exclude_middle_steps = df_all.drop(columns='middle_steps', axis=1)
-                del column_names[-1]
-                exclude_middle_steps.columns = column_names
+            nuc_data_id.extend(session.execute(stmt).scalars().all())
 
-                middle_steps = pd.DataFrame([middle_steps_line_parsing(middle_steps)
-                                             for middle_steps in df_all['middle_steps']
-                                             if middle_steps is not None])
-                middle_step_column_names = [f'{filename.name}_{name}'
-                                            for name in middle_steps.columns.values.tolist()]
-                middle_steps.columns = middle_step_column_names
-
-                df_all = pd.concat([exclude_middle_steps, middle_steps], axis=1, copy=False)
-
-            dict_df_data[physical_quantity.name] = df_all
-
-    return dict_df_data
+    return nuc_data_id
 
 
-def main():
-    filenames = fetch_all_filenames()
-    fission_light_nuclide_list = Config.get_nuclide_list("fission_light")
-    # dict_df_data = fetch_data_by_filename_and_nuclide_list(filenames[32], ['isotope', 'radioactivity'],
-    #                                                        fission_light_nuclide_list, True)
-    dict_df_data = fetch_extracted_data_by_filename_and_physical_quantity(filenames[32], ['isotope', 'radioactivity'], True)
-    print(dict_df_data)
+def fetch_extracted_data_by_filename_and_physical_quantity(nuc_data_id,
+                                                           filename,
+                                                           physical_quantity,
+                                                           is_all_step=False):
+    """
+    获取 extracted_data
 
+    Parameters
+    ----------
+    nuc_data_id : list[int]
+    filename :str or File
+    physical_quantity : str or PhysicalQuantity
+    is_all_step : bool, default = False
+        是否读取全部中间结果数据列，默认只读取最终结果列
 
-if __name__ == '__main__':
-    main()
+    Returns
+    -------
+
+    """
+
+    if type_checker(filename, File) == 'str':
+        filename = fetch_files_by_name(filename)
+
+    if type_checker(physical_quantity, PhysicalQuantity) == 'str':
+        physical_quantity = fetch_physical_quantities_by_name(physical_quantity)
+
+    df_left = pd.DataFrame(data=None, columns=['nuc_ix', 'name'])
+
+    physical_quantity_id = physical_quantity.id
+
+    filename: File
+    file_id = filename.id
+
+    if not is_all_step:
+        # 不读取中间结果，所以不选择NucData.middle_steps，否则反之
+        stmt = lambda_stmt(lambda: select(Nuc.nuc_ix, Nuc.name,
+                                          NucData.last_step).
+                           where(NucData.id.in_(nuc_data_id)))
+    else:
+        stmt = lambda_stmt(lambda: select(Nuc.nuc_ix, Nuc.name,
+                                          NucData.last_step,
+                                          NucData.middle_steps).
+                           where(NucData.id.in_(nuc_data_id)))
+
+        stmt += lambda s: s.join(Nuc,
+                                 Nuc.id == NucData.nuc_id)
+        stmt += lambda s: s.join(PhysicalQuantity,
+                                 PhysicalQuantity.id == NucData.physical_quantity_id)
+        stmt += lambda s: s.where(NucData.file_id == file_id,
+                                  PhysicalQuantity.id == physical_quantity_id)
+
+    with Session() as session:
+        if not is_all_step:
+            column_names = ['nuc_ix', 'name', f'{filename.name}_last_step']
+            df_right = pd.DataFrame(data=session.execute(stmt).all(),
+                                    columns=column_names)
+        else:
+            column_names = ['nuc_ix', 'name', f'{filename.name}_last_step', 'middle_steps']
+            df_right = pd.DataFrame(data=session.execute(stmt).all(),
+                                    columns=column_names)
+
+        exclude_middle_steps = df_right.drop(columns='middle_steps', axis=1)
+        del column_names[-1]
+        exclude_middle_steps.columns = column_names
+
+        middle_steps = pd.DataFrame([middle_steps_line_parsing(middle_steps)
+                                     for middle_steps in df_right['middle_steps']
+                                     if middle_steps is not None])
+        middle_step_column_names = [f'{filename.name}_{name}'
+                                    for name in middle_steps.columns.values.tolist()]
+        middle_steps.columns = middle_step_column_names
+
+        df_right = pd.concat([exclude_middle_steps, middle_steps], axis=1, copy=False)
+
+    if not df_right.empty:
+        df_left = pd.merge(df_left, df_right, how='outer', on=['nuc_ix', 'name'])
+
+    return df_left

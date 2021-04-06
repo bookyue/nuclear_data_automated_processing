@@ -7,7 +7,7 @@ from utils import configlib
 
 def _choose_db(db_type, debug=False):
     """
-    选择数据库（如Mysql, Postgresql），生成对应的Session和engine
+    选择数据库（目前支持 Mysql, Postgresql, sqlite），生成对应的Session和engine
 
     Parameters
     ----------
