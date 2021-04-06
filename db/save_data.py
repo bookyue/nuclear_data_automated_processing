@@ -8,7 +8,7 @@ from db.db_model import File, Nuc, NucData, ExtractedData, PhysicalQuantity
 from db.fetch_data import fetch_physical_quantities_by_name, fetch_files_by_name
 from utils.formatter import type_checker
 from utils.middle_steps import middle_steps_line_parsing
-from utils.worksheet import append_df_to_excel
+from utils.workbook import append_df_to_excel
 
 
 def save_extracted_data_to_db(filenames=None, physical_quantities='all', nuclide_list=None):
@@ -21,16 +21,13 @@ def save_extracted_data_to_db(filenames=None, physical_quantities='all', nuclide
         File object
     physical_quantities : list[str] or str or list[PhysicalQuantity] or PhysicalQuantity
         物理量，可以是物理量名的list[str]或str，
-        也可以是PhysicalQuantity list也可以是list[PhysicalQuantity]或PhysicalQuantity
+        也可以是list[PhysicalQuantity]或PhysicalQuantity
     nuclide_list : list[str]
         核素list
     """
 
-    if filenames is None:
-        filenames = fetch_files_by_name()
-    else:
-        if type_checker(filenames, File) == 'str':
-            filenames = fetch_files_by_name(filenames)
+    if type_checker(filenames, File) == 'str':
+        filenames = fetch_files_by_name(filenames)
 
     if type_checker(physical_quantities, PhysicalQuantity) == 'str':
         physical_quantities = fetch_physical_quantities_by_name(physical_quantities)
@@ -97,6 +94,7 @@ def save_extracted_data_to_exel(filenames=None, is_all_step=False, dir_path=Path
     将数据存入到exel文件
     将传入的File list中包含的文件的数据存到exel文件
     如无filenames is None，则包含所有文件
+    
     Parameters
     ----------
     filenames : comparison_files : list[File] or File
@@ -110,11 +108,9 @@ def save_extracted_data_to_exel(filenames=None, is_all_step=False, dir_path=Path
     -------
 
     """
-    if filenames is None:
-        filenames = fetch_files_by_name()
-    else:
-        if type_checker(filenames, File) == 'str':
-            filenames = fetch_files_by_name(filenames)
+
+    if type_checker(filenames, File) == 'str':
+        filenames = fetch_files_by_name(filenames)
 
     physical_quantities = fetch_physical_quantities_by_name('all')
 

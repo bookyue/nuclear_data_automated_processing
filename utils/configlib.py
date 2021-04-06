@@ -45,13 +45,14 @@ class Config:
 
         Returns
         -------
+        dict
         """
         return cls.conf.get("data_extraction").get(properties)
 
     @classmethod
     def get_file_path(cls, properties):
         """
-        获取data_extraction下的配置
+        获取文件路径
 
         Parameters
         ----------
@@ -60,7 +61,7 @@ class Config:
 
         Returns
         -------
-
+        Path
         """
         return Path(cls.conf.get("file_path").get(properties))
 
@@ -71,21 +72,21 @@ class Config:
 
         Returns
         -------
-
+        dict
         """
         return cls.conf.get("database")
 
     @classmethod
     def get_nuclide_list(cls, nuclide_name):
         """
-        获取nuclide_list下的配置
+        输入核素列表名，获取对应的核素列表
         Parameters
         ----------
-        nuclide_name : 核素名
-
+        nuclide_name : str
+            核素列表名
         Returns
         -------
-
+        list
         """
         return cls.conf.get("nuclide_list").get(nuclide_name, None)
 
