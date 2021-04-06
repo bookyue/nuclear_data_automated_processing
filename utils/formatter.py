@@ -63,12 +63,20 @@ def type_checker(object_or_list, expected_type):
     str
     """
 
-    if isinstance(object_or_list, str) or all(isinstance(ele, str) for ele in object_or_list):
-        return 'str'
-    elif isinstance(object_or_list, list) and all(isinstance(ele, expected_type) for ele in object_or_list):
-        return 'original'
+    if isinstance(object_or_list, list):
+        if all(isinstance(ele, str) for ele in object_or_list):
+            return 'str'
+        elif all(isinstance(ele, expected_type) for ele in object_or_list):
+            return 'original'
+        else:
+            raise Exception('unexpected type')
     else:
-        raise Exception('unexpected type')
+        if isinstance(object_or_list, str):
+            return 'str'
+        elif isinstance(object_or_list, expected_type):
+            return 'original'
+        else:
+            raise Exception('unexpected type')
 
 
 # def formatter(object_or_list, file_or_physical_quantity):

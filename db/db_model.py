@@ -1,27 +1,29 @@
 """
 Database model
 
-                          ┌───────┐
-                          │       │
-     ┌───────────────────►│  nuc  │◄───────────────────┐
-     │                 one│       │one                 │
-     │                    └───────┘                    │
-     │                                                 │
-     │many                                         many│
-┌────┴─────┐             ┌─────────┐           ┌───────┴────────┐
-│          │many     one │         │one    many│                │
-│ nuc_data ├────────────►│  files  │◄──────────┤ extracted_data │
-│          │             │         │           │                │
-└────┬─────┘             └────┬────┘           └───────┬────────┘
-     │many                    │many                many│
-     │                        │                        │
-     │                        │                        │
-     │                        │many                    │
-     │             ┌──────────┴────────────┐           │
-     │          one│                       │one        │
-     └────────────►│  physical_quantities  │◄──────────┘
-                   │                       │
-                   └───────────────────────┘
+       ┌───────┐
+       │       │
+       │  nuc  │
+       │       │
+       └───────┘
+           ▲ one
+           │
+           │
+           │many
+      ┌────┴─────┐           ┌─────────┐
+      │          │many    one│         │
+      │ nuc_data ├──────────►│  files  │
+      │          │           │         │
+      └────┬─────┘           └────┬────┘
+           │many                  │many
+           │                      │
+           │                      │
+           ▼ one                  │
+┌───────────────────────┐         │
+│                       │         │
+│  physical_quantities  ├─────────┘
+│                       │many
+└───────────────────────┘
 
 """
 
@@ -44,7 +46,6 @@ class Nuc(Base):
     name = Column(String(32))
 
     data = relationship('NucData', back_populates='nuc')
-    extracted_data = relationship('ExtractedData', back_populates='nuc')
 
 
 class NucData(Base):
@@ -62,27 +63,12 @@ class NucData(Base):
     physical_quantity = relationship('PhysicalQuantity', back_populates='data')
 
 
-class ExtractedData(Base):
-    __tablename__ = 'extracted_data'
-    id = Column(Integer, primary_key=True)
-    nuc_id = Column(Integer, ForeignKey('nuc.id'))
-    file_id = Column(Integer, ForeignKey('files.id'))
-    physical_quantity_id = Column(Integer, ForeignKey('physical_quantities.id'))
-    last_step = Column(Numeric(25))
-    middle_steps = Column(LargeBinary)
-
-    nuc = relationship('Nuc', back_populates='extracted_data')
-    file = relationship('File', back_populates='extracted_data')
-    physical_quantity = relationship('PhysicalQuantity', back_populates='extracted_data')
-
-
 class File(Base):
     __tablename__ = 'files'
     id = Column(Integer, primary_key=True, autoincrement=True)
     name = Column(String(50))
 
     data = relationship('NucData', back_populates='file')
-    extracted_data = relationship('ExtractedData', back_populates='file')
     physical_quantities = relationship('PhysicalQuantity',
                                        secondary=files_physical_quantities_association,
                                        back_populates='files')
@@ -94,6 +80,5 @@ class PhysicalQuantity(Base):
     name = Column(String(16))
 
     data = relationship('NucData', back_populates='physical_quantity')
-    extracted_data = relationship('ExtractedData', back_populates='physical_quantity')
     files = relationship('File', secondary=files_physical_quantities_association,
                          back_populates='physical_quantities')

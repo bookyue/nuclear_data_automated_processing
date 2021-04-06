@@ -1,9 +1,13 @@
-from db.db_model import ExtractedData
-from db.db_utils import delete_all_from_table
+from pathlib import Path
+
+import pandas as pd
+
+from db.db_model import File, PhysicalQuantity
 from db.fetch_data import fetch_data_by_filename_and_nuclide_list, fetch_files_by_name, \
-    fetch_physical_quantities_by_name
-from db.save_data import save_extracted_data_to_db, save_extracted_data_to_exel
+    fetch_physical_quantities_by_name, fetch_extracted_data_id, fetch_extracted_data_by_filename_and_physical_quantity
 from utils.configlib import Config
+from utils.formatter import type_checker
+from utils.workbook import append_df_to_excel
 
 
 def filter_data(filename, physical_quantity_name, nuclide_list, is_all_step):
@@ -46,25 +50,89 @@ def filter_data(filename, physical_quantity_name, nuclide_list, is_all_step):
     return dict_df_data
 
 
-def process(physical_quantity_name, nuclide_list, is_all_step):
-    filenames = fetch_files_by_name()
+def save_extracted_data_to_exel(nuc_data_id, filenames=None, is_all_step=False, dir_path=Path('.'), merge=True):
+    """
+    将数据存入到exel文件
+    将传入的File list中包含的文件的数据存到exel文件
+    如无filenames is None，则包含所有文件
+
+    Parameters
+    ----------
+    nuc_data_id : list[int]
+    filenames : comparison_files : list[File] or File
+    is_all_step : bool, default = False
+        是否读取全部中间结果数据列，默认只读取最终结果列
+    dir_path : Path
+    merge : bool, default = True
+        是否将结果合并输出至一个文件，否则单独输出至每个文件
+
+    Returns
+    -------
+
+    """
+
+    if type_checker(filenames, File) == 'str':
+        filenames = fetch_files_by_name(filenames)
+
+    physical_quantities = fetch_physical_quantities_by_name('all')
+
+    dir_path.mkdir(parents=True, exist_ok=True)
+
+    file_path = dir_path.joinpath('final.xlsx')
+    file_path.unlink(missing_ok=True)
+
+    physical_quantity: PhysicalQuantity
+    for physical_quantity in physical_quantities:
+        df_left = pd.DataFrame(data=None, columns=['nuc_ix', 'name'])
+
+        filename: File
+        for filename in filenames:
+            if not merge:
+                file_path = dir_path.joinpath(f'{filename.name}.xlsx')
+                file_path.unlink(missing_ok=True)
+
+            df_right = fetch_extracted_data_by_filename_and_physical_quantity(nuc_data_id,
+                                                                              filename,
+                                                                              physical_quantity,
+                                                                              is_all_step)
+
+            if not df_right.empty:
+                df_left = pd.merge(df_left, df_right, how='outer', on=['nuc_ix', 'name'])
+
+            if not merge:
+                append_df_to_excel(file_path, df_left,
+                                   sheet_name=physical_quantity.name,
+                                   index=False,
+                                   encoding='utf-8')
+                df_left = pd.DataFrame(data=None, columns=['nuc_ix', 'name'])
+
+        if merge:
+            append_df_to_excel(file_path, df_left,
+                               sheet_name=physical_quantity.name,
+                               index=False,
+                               encoding='utf-8')
+
+
+def process(filenames, physical_quantity_name, nuclide_list, is_all_step):
     physical_quantities = fetch_physical_quantities_by_name(physical_quantity_name)
     file_path = Config.get_file_path('result_file_path')
 
-    delete_all_from_table(ExtractedData)
-
-    save_extracted_data_to_db(filenames, physical_quantities, nuclide_list)
-
-    save_extracted_data_to_exel(filenames, is_all_step, file_path)
+    nuc_data_id = fetch_extracted_data_id(filenames, physical_quantities, nuclide_list)
+    save_extracted_data_to_exel(nuc_data_id, filenames, is_all_step, file_path, False)
 
 
 def main():
     fission_light_nuclide_list = Config.get_nuclide_list('fission_light')
+    add_nuclide_list = ['I135', 'Xe135', 'Cs135', 'Pm149',
+                        'Sm149', 'Sm150', 'Pu239', 'U239',
+                        'Np239', 'U233', 'Pa233']
     is_all_step = Config.get_data_extraction_conf('is_all_step')
     physical_quantity_name = 'all'
+    filenames = fetch_files_by_name()
 
-    process(physical_quantity_name=physical_quantity_name,
-            nuclide_list=fission_light_nuclide_list,
+    process(filenames=filenames,
+            physical_quantity_name=physical_quantity_name,
+            nuclide_list=list(set(fission_light_nuclide_list + add_nuclide_list)),
             is_all_step=is_all_step)
 
 
