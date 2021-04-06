@@ -8,7 +8,7 @@ from db.db_model import File, Nuc, NucData, ExtractedData, PhysicalQuantity
 from db.fetch_data import fetch_physical_quantities_by_name, fetch_files_by_name
 from utils.formatter import type_checker
 from utils.middle_steps import middle_steps_line_parsing
-from utils.worksheet import append_df_to_excel
+from utils.workbook import append_df_to_excel
 
 
 def save_extracted_data_to_db(filenames=None, physical_quantities='all', nuclide_list=None):
