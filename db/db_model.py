@@ -1,5 +1,5 @@
 """
-Database orm model
+Database model
 
                           ┌───────┐
                           │       │

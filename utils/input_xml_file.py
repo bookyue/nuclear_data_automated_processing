@@ -83,6 +83,7 @@ class InputXmlFileReader:
         physical_quantity_name: str
             物理量名
         Returns
+        dict[str, list[int]]
         -------
 
         """
@@ -137,7 +138,7 @@ class InputXmlFileReader:
 
         Returns
         -------
-
+        list
         """
         unfetched_physical_quantity = [name for name in self.chosen_physical_quantity
                                        if not self.length_of_physical_quantity.get(name)]
@@ -149,7 +150,7 @@ class InputXmlFileReader:
         从xml.out文件中使用linecache.getlines获取文本内容
         Returns
         -------
-
+        dict[str, list[str]]
         """
         df_data = {}
         for key in self.chosen_physical_quantity:

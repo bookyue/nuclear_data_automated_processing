@@ -8,18 +8,20 @@ from db.base import Session, Base
 def init_db():
     """
     初始化数据库
+
     Returns
     -------
 
     """
-    session = Session()
-    Base.metadata.drop_all(session.bind)
-    Base.metadata.create_all(session.bind)
+    with Session() as session:
+        Base.metadata.drop_all(session.bind)
+        Base.metadata.create_all(session.bind)
 
 
 def delete_all_from_table(model):
     """
     删除某表的全部records
+
     Returns
     -------
 
@@ -30,7 +32,7 @@ def delete_all_from_table(model):
         session.commit()
 
 
-def upsert(model, data: list, update_field: list, engine):
+def upsert(model, data, update_field, engine):
     """
     upsert实现
     依据session.bind.dialect得到当前数据库类型

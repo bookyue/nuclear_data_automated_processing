@@ -23,7 +23,7 @@ def physical_quantity_list_generator(physical_quantity_name):
 
     Parameters
     ----------
-    physical_quantity_name : str or list
+    physical_quantity_name : str or list[str]
 
     Returns
     -------
@@ -57,9 +57,10 @@ def type_checker(object_or_list, expected_type):
     ----------
     object_or_list : str or PhysicalQuantity or File or list[str or PhysicalQuantity or File]
     expected_type : Any
+
     Returns
     -------
-    bool
+    str
     """
 
     if isinstance(object_or_list, str) or all(isinstance(ele, str) for ele in object_or_list):
