@@ -10,7 +10,7 @@ from utils.middle_steps import middle_steps_line_parsing
 
 def fetch_files_by_name(filenames='all'):
     """
-    获取files table中所有File objects
+    根据输入的物理量名，从files table获取 file object(s)
 
     Parameters
     ----------
@@ -40,7 +40,7 @@ def fetch_files_by_name(filenames='all'):
 
 def fetch_physical_quantities_by_name(physical_quantities):
     """
-    根据输入的物理量名，从physical_quantities table获取 physical_quantity(ies) object(s)
+    根据输入的物理量名，从physical_quantities table获取 physical_quantity object(s)
 
     Parameters
     ----------
@@ -54,7 +54,8 @@ def fetch_physical_quantities_by_name(physical_quantities):
 
     See Also
     --------
-    physical_quantity_list_generator : 根据输入生成对应的physical_quantity list
+    physical_quantity_list_generator : 根据输入生成对应的物理量list
+    physical_quantity list
     """
     with Session() as session:
         physical_quantities_list = physical_quantity_list_generator(physical_quantities)
