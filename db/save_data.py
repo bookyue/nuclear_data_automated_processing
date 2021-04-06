@@ -1,13 +1,13 @@
 from pathlib import Path
 
 import pandas as pd
-from sqlalchemy import select, or_, insert, lambda_stmt
+from sqlalchemy import select, or_, insert
 
 from db.base import Session
 from db.db_model import File, Nuc, NucData, ExtractedData, PhysicalQuantity
-from db.fetch_data import fetch_physical_quantities_by_name, fetch_files_by_name
+from db.fetch_data import fetch_physical_quantities_by_name, fetch_files_by_name, \
+    fetch_extracted_data_by_filename_and_physical_quantity
 from utils.formatter import type_checker
-from utils.middle_steps import middle_steps_line_parsing
 from utils.workbook import append_df_to_excel
 
 
@@ -78,25 +78,26 @@ def save_extracted_data_to_db(filenames=None, physical_quantities='all', nuclide
 
             # 用INSERT INTO FROM SELECT将数据插入ExtractedData table
             insert_stmt = insert(ExtractedData).from_select(
-                            names=['nuc_id',
-                                   'file_id',
-                                   'physical_quantity_id',
-                                   'last_step',
-                                   'middle_steps'],
-                            select=stmt)
+                names=['nuc_id',
+                       'file_id',
+                       'physical_quantity_id',
+                       'last_step',
+                       'middle_steps'],
+                select=stmt)
             session.execute(insert_stmt)
 
             session.commit()
 
 
-def save_extracted_data_to_exel(filenames=None, is_all_step=False, dir_path=Path('.'), merge=True):
+def save_extracted_data_to_exel(nuc_data_id, filenames=None, is_all_step=False, dir_path=Path('.'), merge=True):
     """
     将数据存入到exel文件
     将传入的File list中包含的文件的数据存到exel文件
     如无filenames is None，则包含所有文件
-    
+
     Parameters
     ----------
+    nuc_data_id : list[int]
     filenames : comparison_files : list[File] or File
     is_all_step : bool, default = False
         是否读取全部中间结果数据列，默认只读取最终结果列
@@ -116,82 +117,36 @@ def save_extracted_data_to_exel(filenames=None, is_all_step=False, dir_path=Path
 
     dir_path.mkdir(parents=True, exist_ok=True)
 
-    if merge:
-        file_path = dir_path.joinpath('final.xlsx')
-        file_path.unlink(missing_ok=True)
+    file_path = dir_path.joinpath('final.xlsx')
+    file_path.unlink(missing_ok=True)
 
-    with Session() as session:
-        physical_quantity: PhysicalQuantity
-        for physical_quantity in physical_quantities:
-            df_left = pd.DataFrame(data=None, columns=['nuc_ix', 'name'])
+    physical_quantity: PhysicalQuantity
+    for physical_quantity in physical_quantities:
+        df_left = pd.DataFrame(data=None, columns=['nuc_ix', 'name'])
 
-            physical_quantity_id = physical_quantity.id
-            filename: File
-            for filename in filenames:
-                file_id = filename.id
+        filename: File
+        for filename in filenames:
+            if not merge:
+                file_path = dir_path.joinpath(f'{filename.name}.xlsx')
+                file_path.unlink(missing_ok=True)
 
-                if not merge:
-                    file_path = dir_path.joinpath(f'{filename.name}.xlsx')
-                    file_path.unlink(missing_ok=True)
+            df_right = fetch_extracted_data_by_filename_and_physical_quantity(nuc_data_id,
+                                                                              filename,
+                                                                              physical_quantity,
+                                                                              is_all_step)
 
-                if not is_all_step:
-                    # 不读取中间结果，所以不选择NucData.middle_steps，否则反之
-                    stmt = lambda_stmt(lambda: select(Nuc.nuc_ix, Nuc.name,
-                                                      ExtractedData.last_step))
-                else:
-                    stmt = lambda_stmt(lambda: select(Nuc.nuc_ix, Nuc.name,
-                                                      ExtractedData.last_step,
-                                                      ExtractedData.middle_steps))
+            if not df_right.empty:
+                df_left = pd.merge(df_left, df_right, how='outer', on=['nuc_ix', 'name'])
 
-                stmt += lambda s: s.join(Nuc,
-                                         Nuc.id == ExtractedData.nuc_id)
-                stmt += lambda s: s.join(PhysicalQuantity,
-                                         PhysicalQuantity.id == ExtractedData.physical_quantity_id)
-                stmt += lambda s: s.where(ExtractedData.file_id == file_id,
-                                          PhysicalQuantity.id == physical_quantity_id)
-
-                if not is_all_step:
-                    column_names = ['nuc_ix', 'name', f'{filename.name}_last_step']
-                    df_right = pd.DataFrame(data=session.execute(stmt).all(),
-                                            columns=column_names)
-                else:
-                    column_names = ['nuc_ix', 'name', f'{filename.name}_last_step', 'middle_steps']
-                    df_right = pd.DataFrame(data=session.execute(stmt).all(),
-                                            columns=column_names)
-
-                    exclude_middle_steps = df_right.drop(columns='middle_steps', axis=1)
-                    del column_names[-1]
-                    exclude_middle_steps.columns = column_names
-
-                    middle_steps = pd.DataFrame([middle_steps_line_parsing(middle_steps)
-                                                 for middle_steps in df_right['middle_steps']
-                                                 if middle_steps is not None])
-                    middle_step_column_names = [f'{filename.name}_{name}'
-                                                for name in middle_steps.columns.values.tolist()]
-                    middle_steps.columns = middle_step_column_names
-
-                    df_right = pd.concat([exclude_middle_steps, middle_steps], axis=1, copy=False)
-
-                if not df_right.empty:
-                    df_left = pd.merge(df_left, df_right, how='outer', on=['nuc_ix', 'name'])
-
-                if not merge:
-                    append_df_to_excel(file_path, df_left,
-                                       sheet_name=physical_quantity.name,
-                                       index=False,
-                                       encoding='utf-8')
-                    df_left = pd.DataFrame(data=None, columns=['nuc_ix', 'name'])
-
-            if merge:
+            if not merge:
                 append_df_to_excel(file_path, df_left,
                                    sheet_name=physical_quantity.name,
                                    index=False,
                                    encoding='utf-8')
+                df_left = pd.DataFrame(data=None, columns=['nuc_ix', 'name'])
 
-
-def main():
-    filenames = fetch_files_by_name()
-
-
-if __name__ == '__main__':
-    main()
+        if merge:
+            append_df_to_excel(file_path, df_left,
+                               sheet_name=physical_quantity.name,
+                               index=False,
+                               encoding='utf-8')
