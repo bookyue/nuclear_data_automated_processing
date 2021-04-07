@@ -13,14 +13,14 @@ class InputXmlFileReader:
     ----------
     path : Path
         xml.out文件路径
-    physical_quantity_name : str
+    physical_quantities : str
             核素名
 
     """
     chosen_physical_quantity: list
     length_of_physical_quantity: dict
 
-    def __init__(self, file_path, physical_quantity_name='all'):
+    def __init__(self, file_path, physical_quantities='all'):
         """
         可以根据输入的文件路径和物理量
         自动计算得出选择的物理量chosen_physical_quantity和
@@ -28,15 +28,15 @@ class InputXmlFileReader:
 
         Parameters
         ----------
-        file_path : Path
+        file_path : Path or str
             xml.out文件路径
-        physical_quantity_name : str
+        physical_quantities : str or list[str]
             核素名
         """
         self.path = Path(file_path)
         self.name = Path(file_path).name.split('.')[0]
-        self.chosen_physical_quantity = physical_quantity_list_generator(physical_quantity_name)
-        self.length_of_physical_quantity = self.get_length_of_physical_quantity()
+        self.chosen_physical_quantity = physical_quantity_list_generator(physical_quantities)
+        self.length_of_physical_quantity = self.get_length_of_physical_quantity(self.chosen_physical_quantity)
         self.unfetched_physical_quantity = self.get_unfetched_physical_quantity()
         self.table_of_physical_quantity = self.get_table_of_physical_quantity()
 
@@ -74,61 +74,51 @@ class InputXmlFileReader:
         self.chosen_physical_quantity = physical_quantity_list_generator(physical_quantity_name)
         self.length_of_physical_quantity = self.get_length_of_physical_quantity()
 
-    def get_length_of_physical_quantity(self, physical_quantity_name=None):
+    def get_length_of_physical_quantity(self, physical_quantities=None):
         """
         获取对应物理量的行号范围，physical_quantity_name默认为None,设置则输出physical_quantity_name对应的行号的字典
         但是此只是临时返回一个物理量及行号范围的字典，不修改类的属性self.chosen_physical_quantity和self.length_of_physical_quantity
         Parameters
         ----------
-        physical_quantity_name: str
+        physical_quantities: str or list[str]
             物理量名
+
         Returns
-        dict[str, list[int]]
         -------
-
+        dict[str, list[int]]
         """
-        chosen_physical_quantity = self.chosen_physical_quantity
-        if physical_quantity_name:
-            chosen_physical_quantity = physical_quantity_list_generator(physical_quantity_name)
-        else:
-            if len(chosen_physical_quantity) == 6:
-                physical_quantity_name = 'all'
-            else:
-                physical_quantity_name = chosen_physical_quantity[0]
 
-        # 从配置文件获取对应物理量的搜索关键字
-        list_of_strings_to_search = Config.get_data_extraction_conf("keys_of_rows").get(
-            physical_quantity_name)
+        physical_quantities = physical_quantity_list_generator(physical_quantities)
 
         # 开始搜索关键字
-        index_start = list_of_strings_to_search[:-1]
+        index_start = {physical_quantity: Config.get_data_extraction_conf("keys_of_rows").get(physical_quantity)[0]
+                       for physical_quantity in physical_quantities}
         # 结尾搜索关键字
-        index_end = list_of_strings_to_search[-1]
+        index_end = {physical_quantity: Config.get_data_extraction_conf("keys_of_rows").get(physical_quantity)[-1]
+                     for physical_quantity in physical_quantities}
 
-        length_of_physical_quantity = {key: [] for key in chosen_physical_quantity}
+        length_of_physical_quantity = {key: [] for key in physical_quantities}
 
         is_find_start_title = True
-        for row_number, line in enumerate(self.path.open(encoding='UTF-8')):
-            if is_find_start_title:
-                for i, string_to_search in enumerate(index_start):
-                    if string_to_search in line:
-                        length_of_physical_quantity[chosen_physical_quantity[i]].append(
+
+        for physical_quantity in physical_quantities:
+            for row_number, line in enumerate(self.path.open(encoding='UTF-8')):
+                if is_find_start_title:
+                    if index_start[physical_quantity] in line:
+                        length_of_physical_quantity[physical_quantity].append(
                             row_number + 7
-                            if chosen_physical_quantity[i] != 'gamma_spectra'
+                            if physical_quantity != 'gamma_spectra'
                             else
                             row_number + 2)
                         is_find_start_title = False
-                        break
-            else:
-                if index_end in line:
-                    length_of_physical_quantity[chosen_physical_quantity[i]].append(
-                        row_number - 3
-                        if chosen_physical_quantity[i] != 'gamma_spectra'
-                        else
-                        row_number - 2)
-                    is_find_start_title = True
-                    if physical_quantity_name != 'all':
-                        break
+                else:
+                    if index_end[physical_quantity] in line:
+                        length_of_physical_quantity[physical_quantity].append(
+                            row_number - 3
+                            if physical_quantity != 'gamma_spectra'
+                            else
+                            row_number - 2)
+                        is_find_start_title = True
 
         return length_of_physical_quantity
 
