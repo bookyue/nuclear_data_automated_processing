@@ -8,7 +8,6 @@ absorption = ["Absorption", "Total  "]
 fission = ["Fission", "Total  "]
 decay_heat = ["Decay Heat", "Total  "]
 gamma_spectra = ["Gamma-ray", "Total  "]
-all = ["Nuclide Density", "Radioactivity", "Absorption", "Fission", "Decay Heat", "Gamma-ray", "Total  "]
 
 [data_extraction.keys_of_column]
 id = "NucId"
