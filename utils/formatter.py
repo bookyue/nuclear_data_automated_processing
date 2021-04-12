@@ -1,3 +1,5 @@
+from typing import Iterable
+
 from db.db_model import PhysicalQuantity, File
 from utils.configlib import config
 
@@ -63,7 +65,7 @@ def type_checker(object_or_list, expected_type):
     str
     """
 
-    if isinstance(object_or_list, list):
+    if isinstance(object_or_list, Iterable):
         if all(isinstance(ele, str) for ele in object_or_list):
             return 'str'
         elif all(isinstance(ele, expected_type) for ele in object_or_list):
