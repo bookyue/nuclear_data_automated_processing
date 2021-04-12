@@ -4,6 +4,7 @@ from data_extraction import save_extracted_data_to_exel
 from db.db_utils import init_db
 from db.fetch_data import fetch_extracted_data_id, fetch_physical_quantities_by_name
 from fill_db import populate_database
+from relative_error_calculation import calculate_comparative_result, save_to_excel
 from utils.configlib import config
 from utils.formatter import all_physical_quantity_list, physical_quantity_list_generator
 from utils.input_xml_file import InputXmlFileReader
@@ -62,7 +63,7 @@ def pop(path,
               default=['all'],
               multiple=True,
               help='文件名(没有后缀) 例如：001.xml.out -> 001，默认为所有文件')
-@click.option('--result_path', '-p'
+@click.option('--result_path', '-p',
               'result_path',
               default=config.get_file_path('result_file_path'),
               type=click.Path(exists=True),
@@ -76,6 +77,7 @@ def pop(path,
               help='物理量，默认为全部物理量')
 @click.option('--nuclide', '-n',
               'nuclide_list',
+              default='fission_light',
               type=click.Choice(config.get_conf('nuclide_list').keys(),
                                 case_sensitive=False),
               help='核素列表，从配置文件 nuclide_list 项下读取')
@@ -111,6 +113,80 @@ def extract(filenames,
                                 is_all_step=is_all_step,
                                 result_path=result_path,
                                 merge=merge)
+
+
+@cli.command()
+@click.option('--reference_file', '-rf',
+              'reference_file',
+              required=True,
+              help='基准文件名(没有后缀) 例如：001.xml.out -> 001')
+@click.option('--comparison_file', '-cf',
+              'comparison_file',
+              required=True,
+              help='对比文件名(没有后缀) 例如：001.xml.out -> 001')
+@click.option('--result_path', '-p',
+              'result_path',
+              default=config.get_file_path('result_file_path'),
+              type=click.Path(exists=True),
+              help='输出文件路径，默认读取配置文件中的路径')
+@click.option('--physical_quantities', '-pq',
+              'physical_quantities',
+              default=['isotope'],
+              type=click.Choice(all_physical_quantity_list,
+                                case_sensitive=False),
+              multiple=True,
+              help='物理量，默认为全部物理量')
+@click.option('--nuclide', '-n',
+              'nuclide_list',
+              default='fission_light',
+              type=click.Choice(config.get_conf('nuclide_list').keys(),
+                                case_sensitive=False),
+              help='核素列表，从配置文件 nuclide_list 项下读取')
+@click.option('--deviation_mode',
+              '-dm',
+              'deviation_mode',
+              default='relative',
+              type=click.Choice(['relative', 'absolute']),
+              help='偏差模式，分为绝对和相对，默认为相对')
+@click.option('--threshold',
+              '-t',
+              'threshold',
+              default='1.0E-12',
+              help='偏差阈值，默认1.0E-12')
+@click.option('--all_step', '-all',
+              'is_all_step',
+              is_flag=True,
+              default=False,
+              help='提取中间步骤')
+def compare(reference_file,
+            comparison_file,
+            result_path,
+            physical_quantities,
+            nuclide_list,
+            deviation_mode,
+            threshold,
+            is_all_step):
+    """
+    选定一个基准文件，一个对比文件，与其进行对比，计算并输出对比结果至工作簿(xlsx文件)
+    """
+
+    physical_quantities = fetch_physical_quantities_by_name(physical_quantities)
+    nuc_data_id = fetch_extracted_data_id([reference_file, comparison_file],
+                                          physical_quantities,
+                                          config.get_nuclide_list(nuclide_list))
+
+    dict_df_all = calculate_comparative_result(nuc_data_id=nuc_data_id,
+                                               reference_file=reference_file,
+                                               comparison_file=comparison_file,
+                                               physical_quantities=physical_quantities,
+                                               deviation_mode=deviation_mode,
+                                               threshold=threshold,
+                                               is_all_step=is_all_step)
+    save_to_excel(dict_df_all,
+                  reference_file_name=reference_file,
+                  comparison_file_name=comparison_file,
+                  dir_path=result_path,
+                  is_all_step=is_all_step)
 
 
 def main():
