@@ -5,7 +5,7 @@ import pandas as pd
 from db.db_model import File, PhysicalQuantity
 from db.fetch_data import fetch_data_by_filename_and_nuclide_list, fetch_files_by_name, \
     fetch_physical_quantities_by_name, fetch_extracted_data_id, fetch_extracted_data_by_filename_and_physical_quantity
-from utils.configlib import Config
+from utils.configlib import config
 from utils.formatter import type_checker
 from utils.workbook import append_df_to_excel
 
@@ -115,18 +115,18 @@ def save_extracted_data_to_exel(nuc_data_id, filenames=None, is_all_step=False, 
 
 def process(filenames, physical_quantity_name, nuclide_list, is_all_step):
     physical_quantities = fetch_physical_quantities_by_name(physical_quantity_name)
-    file_path = Config.get_file_path('result_file_path')
+    file_path = config.get_file_path('result_file_path')
 
     nuc_data_id = fetch_extracted_data_id(filenames, physical_quantities, nuclide_list)
     save_extracted_data_to_exel(nuc_data_id, filenames, is_all_step, file_path, False)
 
 
 def main():
-    fission_light_nuclide_list = Config.get_nuclide_list('fission_light')
+    fission_light_nuclide_list = config.get_nuclide_list('fission_light')
     add_nuclide_list = ['I135', 'Xe135', 'Cs135', 'Pm149',
                         'Sm149', 'Sm150', 'Pu239', 'U239',
                         'Np239', 'U233', 'Pa233']
-    is_all_step = Config.get_data_extraction_conf('is_all_step')
+    is_all_step = config.get_data_extraction_conf('is_all_step')
     physical_quantity_name = 'all'
     filenames = fetch_files_by_name()
 

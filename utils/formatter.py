@@ -1,5 +1,5 @@
 from db.db_model import PhysicalQuantity, File
-from utils.configlib import Config
+from utils.configlib import config
 
 
 def _get_physical_quantity_list_by_conf_file():
@@ -10,7 +10,7 @@ def _get_physical_quantity_list_by_conf_file():
     list
         全部物理量
     """
-    return [key for key in Config.get_data_extraction_conf('keys_of_rows')]
+    return [key for key in config.get_data_extraction_conf('keys_of_rows')]
 
 
 # 从配置文件获取全部物理量名

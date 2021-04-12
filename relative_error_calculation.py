@@ -7,7 +7,7 @@ from db.db_model import PhysicalQuantity, File
 from db.fetch_data import (fetch_extracted_data_by_filename_and_physical_quantity,
                            fetch_files_by_name,
                            fetch_physical_quantities_by_name, fetch_extracted_data_id)
-from utils.configlib import Config
+from utils.configlib import config
 from utils.formatter import type_checker
 from utils.workbook import append_df_to_excel
 
@@ -176,7 +176,7 @@ def _save_to_excel(dict_df_all,
     else:
         file_name = f'{reference_file_name}_vs_{comparison_file_name}.xlsx'
 
-    dir_path = Config.get_file_path('result_file_path').joinpath(reference_file_name)
+    dir_path = config.get_file_path('result_file_path').joinpath(reference_file_name)
 
     dir_path.mkdir(parents=True, exist_ok=True)
 
@@ -274,7 +274,7 @@ def main():
     filenames = fetch_files_by_name()
     physical_quantities = fetch_physical_quantities_by_name('all')
 
-    fission_light_nuclide_list = Config.get_nuclide_list('fission_light')
+    fission_light_nuclide_list = config.get_nuclide_list('fission_light')
     add_nuclide_list = ['I135', 'Xe135', 'Cs135', 'Pm149',
                         'Sm149', 'Sm150', 'Pu239', 'U239',
                         'Np239', 'U233', 'Pa233']

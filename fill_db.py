@@ -4,7 +4,7 @@ from sqlalchemy import select
 from db.base import Session
 from db.db_model import Nuc, NucData, File, PhysicalQuantity
 from db.db_utils import init_db, upsert
-from utils import configlib
+from utils.configlib import config
 from utils.input_xml_file import InputXmlFileReader
 from utils.middle_steps import middle_steps_line_serialization
 
@@ -103,7 +103,7 @@ def populate_database(xml_file):
 
 
 def main():
-    test_file_path = configlib.Config.get_file_path('test_file_path')
+    test_file_path = config.get_file_path('test_file_path')
     physical_quantity_name = 'all'
     init_db()
 

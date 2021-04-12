@@ -1,7 +1,7 @@
 import linecache
 from pathlib import Path
 
-from utils.configlib import Config
+from utils.configlib import config
 from utils.formatter import physical_quantity_list_generator
 
 
@@ -91,10 +91,10 @@ class InputXmlFileReader:
         physical_quantities = physical_quantity_list_generator(physical_quantities)
 
         # 开始搜索关键字
-        index_start = {physical_quantity: Config.get_data_extraction_conf("keys_of_rows").get(physical_quantity)[0]
+        index_start = {physical_quantity: config.get_data_extraction_conf("keys_of_rows").get(physical_quantity)[0]
                        for physical_quantity in physical_quantities}
         # 结尾搜索关键字
-        index_end = {physical_quantity: Config.get_data_extraction_conf("keys_of_rows").get(physical_quantity)[-1]
+        index_end = {physical_quantity: config.get_data_extraction_conf("keys_of_rows").get(physical_quantity)[-1]
                      for physical_quantity in physical_quantities}
 
         length_of_physical_quantity = {key: [] for key in physical_quantities}
