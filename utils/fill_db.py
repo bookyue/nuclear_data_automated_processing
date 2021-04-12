@@ -3,8 +3,7 @@ from sqlalchemy import select
 
 from db.base import Session
 from db.db_model import Nuc, NucData, File, PhysicalQuantity
-from db.db_utils import init_db, upsert
-from utils.configlib import config
+from db.db_utils import upsert
 from utils.input_xml_file import InputXmlFileReader
 from utils.middle_steps import middle_steps_line_serialization
 
@@ -100,21 +99,3 @@ def populate_database(xml_file):
         session.commit()
 
     session.close()
-
-
-def main():
-    test_file_path = config.get_file_path('test_file_path')
-    physical_quantity_name = 'all'
-    init_db()
-
-    # sqlite:      928.97s user 0.57s system 99% cpu 15:32.94 total
-    # mysql:      1456.85s user 104.03s system 52% cpu 49:55.42 total
-    # postgresql: 1010.68s user 31.02s system 67% cpu 25:52.97 total
-    file_names = sorted(test_file_path.glob('*.out'))
-    for file_name in file_names:
-        with InputXmlFileReader(file_name, physical_quantity_name) as xml_file:
-            populate_database(xml_file)
-
-
-if __name__ == '__main__':
-    main()

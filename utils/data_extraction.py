@@ -4,8 +4,7 @@ import pandas as pd
 
 from db.db_model import File, PhysicalQuantity
 from db.fetch_data import fetch_data_by_filename_and_nuclide_list, fetch_files_by_name, \
-    fetch_physical_quantities_by_name, fetch_extracted_data_id, fetch_extracted_data_by_filename_and_physical_quantity
-from utils.configlib import config
+    fetch_physical_quantities_by_name, fetch_extracted_data_by_filename_and_physical_quantity
 from utils.formatter import type_checker
 from utils.workbook import append_df_to_excel
 
@@ -50,7 +49,7 @@ def filter_data(filename, physical_quantity_name, nuclide_list, is_all_step):
     return dict_df_data
 
 
-def save_extracted_data_to_exel(nuc_data_id, filenames=None, is_all_step=False, result_path=Path('.'), merge=True):
+def save_extracted_data_to_exel(nuc_data_id, filenames=None, is_all_step=False, result_path=Path('..'), merge=True):
     """
     将数据存入到exel文件
     将传入的File list中包含的文件的数据存到exel文件
@@ -111,23 +110,3 @@ def save_extracted_data_to_exel(nuc_data_id, filenames=None, is_all_step=False, 
                                sheet_name=physical_quantity.name,
                                index=False,
                                encoding='utf-8')
-
-
-def main():
-    fission_light_nuclide_list = config.get_nuclide_list('fission_light')
-    result_path = config.get_file_path('result_file_path')
-    is_all_step = config.get_data_extraction_conf('is_all_step')
-    filenames = fetch_files_by_name()
-
-    physical_quantities = fetch_physical_quantities_by_name('all')
-    nuc_data_id = fetch_extracted_data_id(filenames, physical_quantities, fission_light_nuclide_list)
-
-    save_extracted_data_to_exel(nuc_data_id=nuc_data_id,
-                                filenames=filenames,
-                                is_all_step=is_all_step,
-                                result_path=result_path,
-                                merge=False)
-
-
-if __name__ == '__main__':
-    main()

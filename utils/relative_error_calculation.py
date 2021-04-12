@@ -6,8 +6,7 @@ import pandas as pd
 from db.db_model import PhysicalQuantity, File
 from db.fetch_data import (fetch_extracted_data_by_filename_and_physical_quantity,
                            fetch_files_by_name,
-                           fetch_physical_quantities_by_name, fetch_extracted_data_id)
-from utils.configlib import config
+                           fetch_physical_quantities_by_name)
 from utils.formatter import type_checker
 from utils.workbook import append_df_to_excel
 
@@ -268,31 +267,3 @@ def calculate_comparative_result(nuc_data_id,
                                                                                         reserved_index)
 
     return dict_df_all
-
-
-def main():
-    filenames = fetch_files_by_name()
-    physical_quantities = fetch_physical_quantities_by_name('all')
-
-    fission_light_nuclide_list = config.get_nuclide_list('fission_light')
-
-    nuc_data_id = fetch_extracted_data_id(filenames,
-                                          physical_quantities,
-                                          fission_light_nuclide_list)
-
-    result_path = config.get_file_path('result_file_path')
-
-    dict_df_all = calculate_comparative_result(nuc_data_id=nuc_data_id,
-                                               reference_file='001',
-                                               comparison_file='002',
-                                               physical_quantities='all',
-                                               is_all_step=True)
-    save_to_excel(dict_df_all,
-                  '001',
-                  '002',
-                  result_path,
-                  is_all_step=True)
-
-
-if __name__ == '__main__':
-    main()

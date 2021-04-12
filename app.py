@@ -1,10 +1,10 @@
 import click
 
-from data_extraction import save_extracted_data_to_exel
+from utils.data_extraction import save_extracted_data_to_exel
 from db.db_utils import init_db
 from db.fetch_data import fetch_extracted_data_id, fetch_physical_quantities_by_name
-from fill_db import populate_database
-from relative_error_calculation import calculate_comparative_result, save_to_excel
+from utils.fill_db import populate_database
+from utils.relative_error_calculation import calculate_comparative_result, save_to_excel
 from utils.configlib import config
 from utils.formatter import all_physical_quantity_list, physical_quantity_list_generator
 from utils.input_xml_file import InputXmlFileReader
@@ -80,7 +80,7 @@ def pop(path,
               default='fission_light',
               type=click.Choice(config.get_conf('nuclide_list').keys(),
                                 case_sensitive=False),
-              help='核素列表，从配置文件 nuclide_list 项下读取')
+              help='核素列表，从配置文件 nuclide_list 项下读取，默认 fission_light')
 @click.option('--all_step', '-all',
               'is_all_step',
               is_flag=True,
