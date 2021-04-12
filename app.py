@@ -1,7 +1,8 @@
 import click
 
-from data_extraction import process
+from data_extraction import save_extracted_data_to_exel
 from db.db_utils import init_db
+from db.fetch_data import fetch_extracted_data_id, fetch_physical_quantities_by_name
 from fill_db import populate_database
 from utils.configlib import config
 from utils.formatter import all_physical_quantity_list, physical_quantity_list_generator
@@ -83,22 +84,33 @@ def pop(path,
               is_flag=True,
               default=False,
               help='提取中间步骤')
+@click.option('--merge', '-m',
+              'merge',
+              is_flag=True,
+              default=False,
+              help='将结果合并输出至一个文件')
 def extract(filenames,
             result_path,
             physical_quantities,
             nuclide_list,
-            is_all_step):
+            is_all_step,
+            merge):
     """
     从数据库导出选中的文件的数据到工作簿(xlsx文件)
     """
     if len(filenames) == 1:
         (filenames,) = filenames
 
-    process(filenames=filenames,
-            result_path=result_path,
-            physical_quantities=physical_quantities,
-            nuclide_list=config.get_nuclide_list(nuclide_list),
-            is_all_step=is_all_step)
+    physical_quantities = fetch_physical_quantities_by_name(physical_quantities)
+    nuc_data_id = fetch_extracted_data_id(filenames,
+                                          physical_quantities,
+                                          config.get_nuclide_list(nuclide_list))
+
+    save_extracted_data_to_exel(nuc_data_id=nuc_data_id,
+                                filenames=filenames,
+                                is_all_step=is_all_step,
+                                result_path=result_path,
+                                merge=merge)
 
 
 def main():
