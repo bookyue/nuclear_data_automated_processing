@@ -50,7 +50,7 @@ def filter_data(filename, physical_quantity_name, nuclide_list, is_all_step):
     return dict_df_data
 
 
-def save_extracted_data_to_exel(nuc_data_id, filenames=None, is_all_step=False, dir_path=Path('.'), merge=True):
+def save_extracted_data_to_exel(nuc_data_id, filenames=None, is_all_step=False, result_path=Path('.'), merge=True):
     """
     将数据存入到exel文件
     将传入的File list中包含的文件的数据存到exel文件
@@ -62,7 +62,7 @@ def save_extracted_data_to_exel(nuc_data_id, filenames=None, is_all_step=False, 
     filenames : comparison_files : list[File] or File
     is_all_step : bool, default = False
         是否读取全部中间结果数据列，默认只读取最终结果列
-    dir_path : Path
+    result_path : Path
     merge : bool, default = True
         是否将结果合并输出至一个文件，否则单独输出至每个文件
 
@@ -76,9 +76,9 @@ def save_extracted_data_to_exel(nuc_data_id, filenames=None, is_all_step=False, 
 
     physical_quantities = fetch_physical_quantities_by_name('all')
 
-    dir_path.mkdir(parents=True, exist_ok=True)
+    result_path.mkdir(parents=True, exist_ok=True)
 
-    file_path = dir_path.joinpath('final.xlsx')
+    file_path = result_path.joinpath('final.xlsx')
     file_path.unlink(missing_ok=True)
 
     physical_quantity: PhysicalQuantity
@@ -87,9 +87,9 @@ def save_extracted_data_to_exel(nuc_data_id, filenames=None, is_all_step=False, 
 
         filename: File
         for filename in filenames:
-            if not merge:
-                file_path = dir_path.joinpath(f'{filename.name}.xlsx')
-                file_path.unlink(missing_ok=True)
+
+            files_path = result_path.joinpath(f'{filename.name}.xlsx')
+            files_path.unlink(missing_ok=True)
 
             df_right = fetch_extracted_data_by_filename_and_physical_quantity(nuc_data_id,
                                                                               filename,
@@ -100,7 +100,7 @@ def save_extracted_data_to_exel(nuc_data_id, filenames=None, is_all_step=False, 
                 df_left = pd.merge(df_left, df_right, how='outer', on=['nuc_ix', 'name'])
 
             if not merge:
-                append_df_to_excel(file_path, df_left,
+                append_df_to_excel(files_path, df_left,
                                    sheet_name=physical_quantity.name,
                                    index=False,
                                    encoding='utf-8')
@@ -113,25 +113,20 @@ def save_extracted_data_to_exel(nuc_data_id, filenames=None, is_all_step=False, 
                                encoding='utf-8')
 
 
-def process(filenames, result_path, physical_quantities, nuclide_list, is_all_step):
-    physical_quantities = fetch_physical_quantities_by_name(physical_quantities)
-
-    nuc_data_id = fetch_extracted_data_id(filenames, physical_quantities, nuclide_list)
-    save_extracted_data_to_exel(nuc_data_id, filenames, is_all_step, result_path, False)
-
-
 def main():
     fission_light_nuclide_list = config.get_nuclide_list('fission_light')
     result_path = config.get_file_path('result_file_path')
     is_all_step = config.get_data_extraction_conf('is_all_step')
-    physical_quantity_name = 'all'
     filenames = fetch_files_by_name()
 
-    process(filenames=filenames,
-            result_path=result_path,
-            physical_quantities=physical_quantity_name,
-            nuclide_list=fission_light_nuclide_list,
-            is_all_step=is_all_step)
+    physical_quantities = fetch_physical_quantities_by_name('all')
+    nuc_data_id = fetch_extracted_data_id(filenames, physical_quantities, fission_light_nuclide_list)
+
+    save_extracted_data_to_exel(nuc_data_id=nuc_data_id,
+                                filenames=filenames,
+                                is_all_step=is_all_step,
+                                result_path=result_path,
+                                merge=False)
 
 
 if __name__ == '__main__':
