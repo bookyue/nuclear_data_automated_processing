@@ -17,37 +17,37 @@ def _get_physical_quantity_list_by_conf_file():
 all_physical_quantity_list = _get_physical_quantity_list_by_conf_file()
 
 
-def physical_quantity_list_generator(physical_quantity_name):
+def physical_quantity_list_generator(physical_quantities):
     """
     根据输入生成对应的physical_quantity list,如果输入为all，返回全部物理量list
 
     Parameters
     ----------
-    physical_quantity_name : str or list[str]
+    physical_quantities : str or list[str]
 
     Returns
     -------
     list[str]
     """
-    if isinstance(physical_quantity_name, str):
+    if isinstance(physical_quantities, str):
         # 如果输入的是str,则将其包装为list
-        physical_quantity_name = [physical_quantity_name]
+        physical_quantities = [physical_quantities]
 
     if not all(physical_quantity in all_physical_quantity_list
-               for physical_quantity in set(physical_quantity_name)) \
-            and physical_quantity_name != 'all':
+               for physical_quantity in set(physical_quantities)) \
+            and physical_quantities != 'all':
 
-        # 遍历输入(physical_quantity_name)，如果不是每个element都在all_physical_quantity_list内
+        # 遍历输入(physical_quantities)，如果不是每个element都在all_physical_quantity_list内
         # 并且输入不是all，设置输入为all
 
-        physical_quantity_name = 'all'
+        physical_quantities = 'all'
 
     # 如果输入为all，返回全部物理量list，否，
     # 则先用set()去掉重复物理量名，然后再return 物理量list
     return all_physical_quantity_list \
-        if physical_quantity_name == 'all' \
+        if physical_quantities == 'all' \
         else \
-        list(set(physical_quantity_name))
+        list(set(physical_quantities))
 
 
 def type_checker(object_or_list, expected_type):
