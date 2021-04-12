@@ -2,7 +2,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import registry
 from sqlalchemy.orm import sessionmaker
 
-from utils import configlib
+from utils.configlib import config
 
 
 def _choose_db(db_type, debug=False):
@@ -20,7 +20,7 @@ def _choose_db(db_type, debug=False):
     tuple
         返回对应数据裤的Session和engine
     """
-    db_config = configlib.Config.get_database_config()
+    db_config = config.get_database_config()
 
     if db_type not in db_config:
         db_type = 'sqlite'

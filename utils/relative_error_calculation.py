@@ -6,8 +6,7 @@ import pandas as pd
 from db.db_model import PhysicalQuantity, File
 from db.fetch_data import (fetch_extracted_data_by_filename_and_physical_quantity,
                            fetch_files_by_name,
-                           fetch_physical_quantities_by_name, fetch_extracted_data_id)
-from utils.configlib import Config
+                           fetch_physical_quantities_by_name)
 from utils.formatter import type_checker
 from utils.workbook import append_df_to_excel
 
@@ -153,10 +152,11 @@ def _merge_reference_comparison_and_deviation(df_reference,
     return df_all
 
 
-def _save_to_excel(dict_df_all,
-                   reference_file_name,
-                   comparison_file_name,
-                   is_all_step=False):
+def save_to_excel(dict_df_all,
+                  reference_file_name,
+                  comparison_file_name,
+                  dir_path,
+                  is_all_step=False):
     """
     保存结果至xlsx文件
     
@@ -165,6 +165,7 @@ def _save_to_excel(dict_df_all,
     dict_df_all : dict[str, pd.DataFrame]
     reference_file_name : str
     comparison_file_name : str
+    dir_path : Path
     is_all_step : bool, default = False
         是否读取过全部中间结果数据列，默认只读取最终结果列
     Returns
@@ -176,8 +177,7 @@ def _save_to_excel(dict_df_all,
     else:
         file_name = f'{reference_file_name}_vs_{comparison_file_name}.xlsx'
 
-    dir_path = Config.get_file_path('result_file_path').joinpath(reference_file_name)
-
+    dir_path = dir_path.joinpath(reference_file_name)
     dir_path.mkdir(parents=True, exist_ok=True)
 
     file_path = dir_path.joinpath(file_name)
@@ -194,22 +194,22 @@ def _save_to_excel(dict_df_all,
 
 def calculate_comparative_result(nuc_data_id,
                                  reference_file,
-                                 comparison_files,
+                                 comparison_file,
                                  physical_quantities='isotope',
                                  deviation_mode='relative',
                                  threshold=Decimal('1.0E-12'),
                                  is_all_step=False):
     """
-    选定一个基准文件，与其他文件进行对比，计算对比结果
+    选定一个基准文件，一个对比文件，与其进行对比，计算并输出对比结果至工作簿(xlsx文件)
 
     Parameters
     ----------
     nuc_data_id : list[int]
-    reference_file : File
+    reference_file : File or str
         基准文件
-    comparison_files : list[File] or File
-        对比文件列表
-    physical_quantities : list[str] or str or list[PhysicalQuantity] or PhysicalQuantity, default = 'isotope'
+    comparison_file : File or str
+        对比文件
+    physical_quantities : list[str or PhysicalQuantity] or str or PhysicalQuantity, default = 'isotope'
         对比用物理量，可以是物理量名的list[str]或str，
         也可以是PhysicalQuantity list也可以是list[PhysicalQuantity]或PhysicalQuantity
         默认为核素密度
@@ -226,69 +226,44 @@ def calculate_comparative_result(nuc_data_id,
 
     """
 
+    if type_checker([reference_file, comparison_file], File) == 'str':
+        reference_file = fetch_files_by_name(reference_file).pop()
+        comparison_file = fetch_files_by_name(comparison_file).pop()
+
     if type_checker(physical_quantities, PhysicalQuantity) == 'str':
         physical_quantities = fetch_physical_quantities_by_name(physical_quantities)
 
-    comparison_file: File
-    for comparison_file in comparison_files:
-        dict_df_all = {}
+    dict_df_all = {}
 
-        physical_quantity: PhysicalQuantity
-        for physical_quantity in physical_quantities:
-            reference_data = fetch_extracted_data_by_filename_and_physical_quantity(nuc_data_id,
-                                                                                    reference_file,
-                                                                                    physical_quantity,
-                                                                                    is_all_step)
+    physical_quantity: PhysicalQuantity
+    for physical_quantity in physical_quantities:
+        reference_data = fetch_extracted_data_by_filename_and_physical_quantity(nuc_data_id,
+                                                                                reference_file,
+                                                                                physical_quantity,
+                                                                                is_all_step)
 
-            comparison_data = fetch_extracted_data_by_filename_and_physical_quantity(nuc_data_id,
-                                                                                     comparison_file,
-                                                                                     physical_quantity,
-                                                                                     is_all_step
-                                                                                     )
+        comparison_data = fetch_extracted_data_by_filename_and_physical_quantity(nuc_data_id,
+                                                                                 comparison_file,
+                                                                                 physical_quantity,
+                                                                                 is_all_step
+                                                                                 )
 
-            if reference_data.empty or comparison_data.empty:
-                continue
+        if reference_data.empty or comparison_data.empty:
+            continue
 
-            reference_data, comparison_data = _complement_columns(reference_data,
-                                                                  comparison_data,
-                                                                  reference_file.name,
-                                                                  comparison_file.name)
+        reference_data, comparison_data = _complement_columns(reference_data,
+                                                              comparison_data,
+                                                              reference_file.name,
+                                                              comparison_file.name)
 
-            df_deviation, reserved_index = _calculate_deviation(reference_data,
-                                                                comparison_data,
-                                                                deviation_mode,
-                                                                threshold)
+        df_deviation, reserved_index = _calculate_deviation(reference_data,
+                                                            comparison_data,
+                                                            deviation_mode,
+                                                            Decimal(threshold))
 
-            dict_df_all[physical_quantity.name] = _merge_reference_comparison_and_deviation(reference_data,
-                                                                                            comparison_data,
-                                                                                            df_deviation,
-                                                                                            reserved_index)
+        dict_df_all[physical_quantity.name] = _merge_reference_comparison_and_deviation(reference_data,
+                                                                                        comparison_data,
+                                                                                        df_deviation,
+                                                                                        reserved_index)
 
-        _save_to_excel(dict_df_all,
-                       reference_file.name,
-                       comparison_file.name,
-                       is_all_step)
-
-
-def main():
-    filenames = fetch_files_by_name()
-    physical_quantities = fetch_physical_quantities_by_name('all')
-
-    fission_light_nuclide_list = Config.get_nuclide_list('fission_light')
-    add_nuclide_list = ['I135', 'Xe135', 'Cs135', 'Pm149',
-                        'Sm149', 'Sm150', 'Pu239', 'U239',
-                        'Np239', 'U233', 'Pa233']
-
-    nuclide_list = list(set(fission_light_nuclide_list + add_nuclide_list))
-
-    nuc_data_id = fetch_extracted_data_id(filenames, physical_quantities, nuclide_list)
-
-    calculate_comparative_result(nuc_data_id,
-                                 filenames.pop(2),
-                                 filenames,
-                                 physical_quantities='all',
-                                 is_all_step=True)
-
-
-if __name__ == '__main__':
-    main()
+    return dict_df_all
