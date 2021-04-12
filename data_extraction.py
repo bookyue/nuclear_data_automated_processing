@@ -59,7 +59,7 @@ def save_extracted_data_to_exel(nuc_data_id, filenames=None, is_all_step=False, 
     Parameters
     ----------
     nuc_data_id : list[int]
-    filenames : comparison_files : list[File] or File
+    filenames : comparison_files : list[File or str] or File or str
     is_all_step : bool, default = False
         是否读取全部中间结果数据列，默认只读取最终结果列
     result_path : Path
