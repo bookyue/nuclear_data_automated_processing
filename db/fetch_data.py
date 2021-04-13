@@ -188,9 +188,9 @@ def fetch_extracted_data_id(filenames=None, physical_quantities='all', nuclide_l
     ----------
     filenames : list[File] or File
         File object
-    physical_quantities : list[str] or str or list[PhysicalQuantity] or PhysicalQuantity
+    physical_quantities : list[str or PhysicalQuantity] or str or PhysicalQuantity
         物理量，可以是物理量名的list[str]或str，
-        也可以是PhysicalQuantity list也可以是list[PhysicalQuantity]或PhysicalQuantity
+        也可以是list[PhysicalQuantity]或PhysicalQuantity
     nuclide_list : list[str]
         核素list
 
