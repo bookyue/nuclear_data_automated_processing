@@ -110,6 +110,7 @@ def extract(filenames,
 
     save_extracted_data_to_exel(nuc_data_id=nuc_data_id,
                                 filenames=filenames,
+                                physical_quantities=physical_quantities,
                                 is_all_step=is_all_step,
                                 result_path=result_path,
                                 merge=merge)
