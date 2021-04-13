@@ -325,4 +325,4 @@ def save_comparative_result_to_excel(nuc_data_id,
 
         save_to_excel(dict_df_all,
                       file_name,
-                      result_path.joinpath(reference_file.name))
+                      result_path.joinpath('comparative_result'))
