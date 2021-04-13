@@ -3,10 +3,11 @@ from pathlib import Path
 import pandas as pd
 
 from db.db_model import File, PhysicalQuantity
-from db.fetch_data import fetch_data_by_filename_and_nuclide_list, fetch_files_by_name, \
-    fetch_physical_quantities_by_name, fetch_extracted_data_by_filename_and_physical_quantity
+from db.fetch_data import (fetch_data_by_filename_and_nuclide_list, fetch_files_by_name,
+                           fetch_extracted_data_by_filename_and_physical_quantity,
+                           fetch_physical_quantities_by_name)
 from utils.formatter import type_checker
-from utils.workbook import append_df_to_excel
+from utils.workbook import save_to_excel
 
 
 def filter_data(filename, physical_quantity_name, nuclide_list, is_all_step):
@@ -49,7 +50,8 @@ def filter_data(filename, physical_quantity_name, nuclide_list, is_all_step):
     return dict_df_data
 
 
-def save_extracted_data_to_exel(nuc_data_id, filenames=None, is_all_step=False, result_path=Path('..'), merge=True):
+def save_extracted_data_to_exel(nuc_data_id, filenames=None, physical_quantities=None, is_all_step=False,
+                                result_path=Path('.'), merge=True):
     """
     将数据存入到exel文件
     将传入的File list中包含的文件的数据存到exel文件
@@ -59,6 +61,9 @@ def save_extracted_data_to_exel(nuc_data_id, filenames=None, is_all_step=False, 
     ----------
     nuc_data_id : list[int]
     filenames : comparison_files : list[File or str] or File or str
+    physical_quantities : list[str or PhysicalQuantity] or str or PhysicalQuantity
+        物理量，可以是物理量名的list[str]或str，
+        也可以是list[PhysicalQuantity]或PhysicalQuantity
     is_all_step : bool, default = False
         是否读取全部中间结果数据列，默认只读取最终结果列
     result_path : Path
@@ -73,12 +78,10 @@ def save_extracted_data_to_exel(nuc_data_id, filenames=None, is_all_step=False, 
     if type_checker(filenames, File) == 'str':
         filenames = fetch_files_by_name(filenames)
 
-    physical_quantities = fetch_physical_quantities_by_name('all')
+    if type_checker(physical_quantities, PhysicalQuantity) == 'str':
+        physical_quantities = fetch_physical_quantities_by_name(physical_quantities)
 
-    result_path.mkdir(parents=True, exist_ok=True)
-
-    file_path = result_path.joinpath('final.xlsx')
-    file_path.unlink(missing_ok=True)
+    file_name = 'final.xlsx'
 
     physical_quantity: PhysicalQuantity
     for physical_quantity in physical_quantities:
@@ -87,8 +90,7 @@ def save_extracted_data_to_exel(nuc_data_id, filenames=None, is_all_step=False, 
         filename: File
         for filename in filenames:
 
-            files_path = result_path.joinpath(f'{filename.name}.xlsx')
-            files_path.unlink(missing_ok=True)
+            files_name = f'{filename.name}.xlsx'
 
             df_right = fetch_extracted_data_by_filename_and_physical_quantity(nuc_data_id,
                                                                               filename,
@@ -99,14 +101,12 @@ def save_extracted_data_to_exel(nuc_data_id, filenames=None, is_all_step=False, 
                 df_left = pd.merge(df_left, df_right, how='outer', on=['nuc_ix', 'name'])
 
             if not merge:
-                append_df_to_excel(files_path, df_left,
-                                   sheet_name=physical_quantity.name,
-                                   index=False,
-                                   encoding='utf-8')
+                save_to_excel({physical_quantity.name: df_left},
+                              files_name,
+                              result_path)
                 df_left = pd.DataFrame(data=None, columns=['nuc_ix', 'name'])
 
         if merge:
-            append_df_to_excel(file_path, df_left,
-                               sheet_name=physical_quantity.name,
-                               index=False,
-                               encoding='utf-8')
+            save_to_excel({physical_quantity.name: df_left},
+                          file_name,
+                          result_path)
