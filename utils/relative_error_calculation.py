@@ -1,4 +1,5 @@
 from decimal import localcontext, Decimal, InvalidOperation
+from itertools import combinations
 
 import numpy as np
 import pandas as pd
@@ -271,8 +272,7 @@ def calculate_comparative_result(nuc_data_id,
 
 
 def save_comparative_result_to_excel(nuc_data_id,
-                                     reference_file,
-                                     comparison_file,
+                                     files,
                                      result_path,
                                      physical_quantities='isotope',
                                      deviation_mode='relative',
@@ -284,10 +284,8 @@ def save_comparative_result_to_excel(nuc_data_id,
     Parameters
     ----------
     nuc_data_id : list[int]
-    reference_file : File or str
-        基准文件
-    comparison_file : File or str
-        对比文件
+    files : list[str or File]or File or str
+        文件列表
     result_path : Path or str
     physical_quantities : list[str or PhysicalQuantity] or str or PhysicalQuantity, default = 'isotope'
         对比用物理量，可以是物理量名的list[str]或str，
@@ -306,23 +304,25 @@ def save_comparative_result_to_excel(nuc_data_id,
     -------
     """
 
-    if type_checker([reference_file, comparison_file], File) == 'str':
-        reference_file = fetch_files_by_name(reference_file).pop()
-        comparison_file = fetch_files_by_name(comparison_file).pop()
+    if type_checker(files, File) == 'str':
+        files = fetch_files_by_name(files)
 
-    dict_df_all = calculate_comparative_result(nuc_data_id=nuc_data_id,
-                                               reference_file=reference_file,
-                                               comparison_file=comparison_file,
-                                               physical_quantities=physical_quantities,
-                                               deviation_mode=deviation_mode,
-                                               threshold=threshold,
-                                               is_all_step=is_all_step)
+    for reference_file, comparison_file in combinations(files, 2):
+        print((reference_file.name, comparison_file.name))
 
-    file_name = f'{deviation_mode}_{threshold}_{reference_file.name}_vs_{comparison_file.name}.xlsx'
+        dict_df_all = calculate_comparative_result(nuc_data_id=nuc_data_id,
+                                                   reference_file=reference_file,
+                                                   comparison_file=comparison_file,
+                                                   physical_quantities=physical_quantities,
+                                                   deviation_mode=deviation_mode,
+                                                   threshold=threshold,
+                                                   is_all_step=is_all_step)
 
-    if is_all_step:
-        file_name = f'all_step_{file_name}'
+        file_name = f'{deviation_mode}_{threshold}_{reference_file.name}_vs_{comparison_file.name}.xlsx'
 
-    save_to_excel(dict_df_all,
-                  file_name,
-                  result_path.joinpath(reference_file.name))
+        if is_all_step:
+            file_name = f'all_step_{file_name}'
+
+        save_to_excel(dict_df_all,
+                      file_name,
+                      result_path.joinpath(reference_file.name))

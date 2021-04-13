@@ -123,14 +123,12 @@ def extract(filenames,
 
 
 @cli.command()
-@click.option('--reference_file', '-rf',
-              'reference_file',
-              required=True,
-              help='基准文件名(没有后缀) 例如：001.xml.out -> 001')
-@click.option('--comparison_file', '-cf',
-              'comparison_file',
-              required=True,
-              help='对比文件名(没有后缀) 例如：001.xml.out -> 001')
+@click.option('--file', '-f',
+              'filenames',
+              default='all',
+              cls=PythonLiteralOption,
+              help="""文件名(列表)(没有后缀) 例如：001.xml.out -> 001，默认为所有文件
+                   例子： 003  001,002,003  '[001,004,003]'""")
 @click.option('--result_path', '-p',
               'result_path',
               default=config.get_file_path('result_file_path'),
@@ -165,8 +163,7 @@ def extract(filenames,
               is_flag=True,
               default=False,
               help='提取中间步骤')
-def compare(reference_file,
-            comparison_file,
+def compare(filenames,
             result_path,
             physical_quantities,
             nuclide_list,
@@ -177,16 +174,14 @@ def compare(reference_file,
     选定一个基准文件，一个对比文件，与其进行对比，计算并输出对比结果至工作簿(xlsx文件)
     """
 
-    reference_file = fetch_files_by_name(reference_file).pop()
-    comparison_file = fetch_files_by_name(comparison_file).pop()
+    filenames = fetch_files_by_name(filenames)
     physical_quantities = fetch_physical_quantities_by_name(physical_quantities)
-    nuc_data_id = fetch_extracted_data_id([reference_file, comparison_file],
+    nuc_data_id = fetch_extracted_data_id(filenames,
                                           physical_quantities,
                                           config.get_nuclide_list(nuclide_list))
 
     save_comparative_result_to_excel(nuc_data_id=nuc_data_id,
-                                     reference_file=reference_file,
-                                     comparison_file=comparison_file,
+                                     files=filenames,
                                      result_path=result_path,
                                      physical_quantities=physical_quantities,
                                      deviation_mode=deviation_mode,
