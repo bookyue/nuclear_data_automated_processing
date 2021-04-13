@@ -93,3 +93,31 @@ def append_df_to_excel(filename, df, sheet_name='Sheet1', startrow=None,
 
     # save the workbook
     writer.save()
+
+
+def save_to_excel(dict_df, file_name, dir_path):
+    """
+    保存结果至xlsx文件
+    keys of dict 为 sheet name
+    values of dict 为 worksheet table
+
+    Parameters
+    ----------
+    dict_df : dict[str, pd.DataFrame]
+    file_name : str
+    dir_path : Path
+
+    Returns
+    -------
+    """
+
+    dir_path.mkdir(parents=True, exist_ok=True)
+    file_path = dir_path.joinpath(file_name)
+    file_path.unlink(missing_ok=True)
+
+    for key in dict_df:
+        append_df_to_excel(file_path,
+                           dict_df[key],
+                           sheet_name=key,
+                           index=False,
+                           encoding='utf-8')
