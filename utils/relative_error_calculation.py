@@ -8,7 +8,7 @@ from db.fetch_data import (fetch_extracted_data_by_filename_and_physical_quantit
                            fetch_files_by_name,
                            fetch_physical_quantities_by_name)
 from utils.formatter import type_checker
-from utils.workbook import append_df_to_excel
+from utils.workbook import save_to_excel
 
 
 def _complement_columns(df_reference,
@@ -152,44 +152,44 @@ def _merge_reference_comparison_and_deviation(df_reference,
     return df_all
 
 
-def save_to_excel(dict_df_all,
-                  reference_file_name,
-                  comparison_file_name,
-                  dir_path,
-                  is_all_step=False):
-    """
-    保存结果至xlsx文件
-    
-    Parameters
-    ----------
-    dict_df_all : dict[str, pd.DataFrame]
-    reference_file_name : str
-    comparison_file_name : str
-    dir_path : Path
-    is_all_step : bool, default = False
-        是否读取过全部中间结果数据列，默认只读取最终结果列
-    Returns
-    -------
-
-    """
-    if is_all_step:
-        file_name = f'all_step_{reference_file_name}_vs_{comparison_file_name}.xlsx'
-    else:
-        file_name = f'{reference_file_name}_vs_{comparison_file_name}.xlsx'
-
-    dir_path = dir_path.joinpath(reference_file_name)
-    dir_path.mkdir(parents=True, exist_ok=True)
-
-    file_path = dir_path.joinpath(file_name)
-
-    file_path.unlink(missing_ok=True)
-
-    for physical_quantity_name in dict_df_all:
-        append_df_to_excel(file_path, dict_df_all[physical_quantity_name],
-                           sheet_name=physical_quantity_name,
-                           index=False,
-                           encoding='utf-8'
-                           )
+# def save_to_excel(dict_df_all,
+#                   reference_file_name,
+#                   comparison_file_name,
+#                   dir_path,
+#                   is_all_step=False):
+#     """
+#     保存结果至xlsx文件
+#
+#     Parameters
+#     ----------
+#     dict_df_all : dict[str, pd.DataFrame]
+#     reference_file_name : str
+#     comparison_file_name : str
+#     dir_path : Path
+#     is_all_step : bool, default = False
+#         是否读取过全部中间结果数据列，默认只读取最终结果列
+#     Returns
+#     -------
+#
+#     """
+#     if is_all_step:
+#         file_name = f'all_step_{reference_file_name}_vs_{comparison_file_name}.xlsx'
+#     else:
+#         file_name = f'{reference_file_name}_vs_{comparison_file_name}.xlsx'
+#
+#     dir_path = dir_path.joinpath(reference_file_name)
+#     dir_path.mkdir(parents=True, exist_ok=True)
+#
+#     file_path = dir_path.joinpath(file_name)
+#
+#     file_path.unlink(missing_ok=True)
+#
+#     for physical_quantity_name in dict_df_all:
+#         append_df_to_excel(file_path, dict_df_all[physical_quantity_name],
+#                            sheet_name=physical_quantity_name,
+#                            index=False,
+#                            encoding='utf-8'
+#                            )
 
 
 def calculate_comparative_result(nuc_data_id,
@@ -221,9 +221,10 @@ def calculate_comparative_result(nuc_data_id,
         偏差阈值，默认1.0E-12
     is_all_step : bool, default = False
         是否读取全部中间结果数据列，默认只读取最终结果列
+
     Returns
     -------
-
+    dict[str, pd.DataFrame]
     """
 
     if type_checker([reference_file, comparison_file], File) == 'str':
@@ -267,3 +268,61 @@ def calculate_comparative_result(nuc_data_id,
                                                                                         reserved_index)
 
     return dict_df_all
+
+
+def save_comparative_result_to_excel(nuc_data_id,
+                                     reference_file,
+                                     comparison_file,
+                                     result_path,
+                                     physical_quantities='isotope',
+                                     deviation_mode='relative',
+                                     threshold=Decimal('1.0E-12'),
+                                     is_all_step=False):
+    """
+    选定一个基准文件，一个对比文件，与其进行对比，计算并输出对比结果至工作簿(xlsx文件)
+
+    Parameters
+    ----------
+    nuc_data_id : list[int]
+    reference_file : File or str
+        基准文件
+    comparison_file : File or str
+        对比文件
+    result_path : Path or str
+    physical_quantities : list[str or PhysicalQuantity] or str or PhysicalQuantity, default = 'isotope'
+        对比用物理量，可以是物理量名的list[str]或str，
+        也可以是PhysicalQuantity list也可以是list[PhysicalQuantity]或PhysicalQuantity
+        默认为核素密度
+    deviation_mode : str, default = 'relative'
+        绝对=absolute
+        相对=relative
+        偏差模式，分为绝对和相对，默认为相对
+    threshold : Decimal, default = Decimal('1.0E-12')
+        偏差阈值，默认1.0E-12
+    is_all_step : bool, default = False
+        是否读取全部中间结果数据列，默认只读取最终结果列
+
+    Returns
+    -------
+    """
+
+    if type_checker([reference_file, comparison_file], File) == 'str':
+        reference_file = fetch_files_by_name(reference_file).pop()
+        comparison_file = fetch_files_by_name(comparison_file).pop()
+
+    dict_df_all = calculate_comparative_result(nuc_data_id=nuc_data_id,
+                                               reference_file=reference_file,
+                                               comparison_file=comparison_file,
+                                               physical_quantities=physical_quantities,
+                                               deviation_mode=deviation_mode,
+                                               threshold=threshold,
+                                               is_all_step=is_all_step)
+
+    file_name = f'{deviation_mode}_{threshold}_{reference_file.name}_vs_{comparison_file.name}.xlsx'
+
+    if is_all_step:
+        file_name = f'all_step_{file_name}'
+
+    save_to_excel(dict_df_all,
+                  file_name,
+                  result_path.joinpath(reference_file.name))
