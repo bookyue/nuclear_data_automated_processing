@@ -171,7 +171,7 @@ def compare(filenames,
             threshold,
             is_all_step):
     """
-    选定一个基准文件，一个对比文件，与其进行对比，计算并输出对比结果至工作簿(xlsx文件)
+    对文件列表进行两两组合，进行对比，计算并输出对比结果至工作簿(xlsx文件)
     """
 
     filenames = fetch_files_by_name(filenames)

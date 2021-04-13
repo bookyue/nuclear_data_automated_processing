@@ -153,46 +153,6 @@ def _merge_reference_comparison_and_deviation(df_reference,
     return df_all
 
 
-# def save_to_excel(dict_df_all,
-#                   reference_file_name,
-#                   comparison_file_name,
-#                   dir_path,
-#                   is_all_step=False):
-#     """
-#     保存结果至xlsx文件
-#
-#     Parameters
-#     ----------
-#     dict_df_all : dict[str, pd.DataFrame]
-#     reference_file_name : str
-#     comparison_file_name : str
-#     dir_path : Path
-#     is_all_step : bool, default = False
-#         是否读取过全部中间结果数据列，默认只读取最终结果列
-#     Returns
-#     -------
-#
-#     """
-#     if is_all_step:
-#         file_name = f'all_step_{reference_file_name}_vs_{comparison_file_name}.xlsx'
-#     else:
-#         file_name = f'{reference_file_name}_vs_{comparison_file_name}.xlsx'
-#
-#     dir_path = dir_path.joinpath(reference_file_name)
-#     dir_path.mkdir(parents=True, exist_ok=True)
-#
-#     file_path = dir_path.joinpath(file_name)
-#
-#     file_path.unlink(missing_ok=True)
-#
-#     for physical_quantity_name in dict_df_all:
-#         append_df_to_excel(file_path, dict_df_all[physical_quantity_name],
-#                            sheet_name=physical_quantity_name,
-#                            index=False,
-#                            encoding='utf-8'
-#                            )
-
-
 def calculate_comparative_result(nuc_data_id,
                                  reference_file,
                                  comparison_file,
@@ -279,7 +239,7 @@ def save_comparative_result_to_excel(nuc_data_id,
                                      threshold=Decimal('1.0E-12'),
                                      is_all_step=False):
     """
-    选定一个基准文件，一个对比文件，与其进行对比，计算并输出对比结果至工作簿(xlsx文件)
+    对文件列表进行两两组合，进行对比，计算并输出对比结果至工作簿(xlsx文件)
 
     Parameters
     ----------
