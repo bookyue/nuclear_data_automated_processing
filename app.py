@@ -2,12 +2,18 @@ import click
 
 from utils.data_extraction import save_extracted_data_to_exel
 from db.db_utils import init_db
-from db.fetch_data import fetch_extracted_data_id, fetch_physical_quantities_by_name
+from db.fetch_data import fetch_extracted_data_id, fetch_physical_quantities_by_name, fetch_files_by_name
 from utils.fill_db import populate_database
 from utils.relative_error_calculation import calculate_comparative_result, save_to_excel
 from utils.configlib import config
 from utils.formatter import all_physical_quantity_list, physical_quantity_list_generator
 from utils.input_xml_file import InputXmlFileReader
+
+
+class PythonLiteralOption(click.Option):
+
+    def type_cast_value(self, ctx, value):
+        return list(map(str.strip, value.strip('][').replace('"', '').split(',')))
 
 
 @click.group()
@@ -60,9 +66,10 @@ def pop(path,
 @cli.command()
 @click.option('--file', '-f',
               'filenames',
-              default=['all'],
-              multiple=True,
-              help='文件名(没有后缀) 例如：001.xml.out -> 001，默认为所有文件')
+              default='all',
+              cls=PythonLiteralOption,
+              help="""文件名(列表)(没有后缀) 例如：001.xml.out -> 001，默认为所有文件
+                   例子： 003  001,002  '[001,003]'""")
 @click.option('--result_path', '-p',
               'result_path',
               default=config.get_file_path('result_file_path'),
@@ -100,9 +107,8 @@ def extract(filenames,
     """
     从数据库导出选中的文件的数据到工作簿(xlsx文件)
     """
-    if len(filenames) == 1:
-        (filenames,) = filenames
 
+    filenames = fetch_files_by_name(filenames)
     physical_quantities = fetch_physical_quantities_by_name(physical_quantities)
     nuc_data_id = fetch_extracted_data_id(filenames,
                                           physical_quantities,
