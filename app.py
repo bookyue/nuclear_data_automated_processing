@@ -4,7 +4,7 @@ from utils.data_extraction import save_extracted_data_to_exel
 from db.db_utils import init_db
 from db.fetch_data import fetch_extracted_data_id, fetch_physical_quantities_by_name, fetch_files_by_name
 from utils.fill_db import populate_database
-from utils.relative_error_calculation import calculate_comparative_result, save_to_excel
+from utils.relative_error_calculation import save_comparative_result_to_excel
 from utils.configlib import config
 from utils.formatter import all_physical_quantity_list, physical_quantity_list_generator
 from utils.input_xml_file import InputXmlFileReader
@@ -177,23 +177,21 @@ def compare(reference_file,
     选定一个基准文件，一个对比文件，与其进行对比，计算并输出对比结果至工作簿(xlsx文件)
     """
 
+    reference_file = fetch_files_by_name(reference_file).pop()
+    comparison_file = fetch_files_by_name(comparison_file).pop()
     physical_quantities = fetch_physical_quantities_by_name(physical_quantities)
     nuc_data_id = fetch_extracted_data_id([reference_file, comparison_file],
                                           physical_quantities,
                                           config.get_nuclide_list(nuclide_list))
 
-    dict_df_all = calculate_comparative_result(nuc_data_id=nuc_data_id,
-                                               reference_file=reference_file,
-                                               comparison_file=comparison_file,
-                                               physical_quantities=physical_quantities,
-                                               deviation_mode=deviation_mode,
-                                               threshold=threshold,
-                                               is_all_step=is_all_step)
-    save_to_excel(dict_df_all,
-                  reference_file_name=reference_file,
-                  comparison_file_name=comparison_file,
-                  dir_path=result_path,
-                  is_all_step=is_all_step)
+    save_comparative_result_to_excel(nuc_data_id=nuc_data_id,
+                                     reference_file=reference_file,
+                                     comparison_file=comparison_file,
+                                     result_path=result_path,
+                                     physical_quantities=physical_quantities,
+                                     deviation_mode=deviation_mode,
+                                     threshold=threshold,
+                                     is_all_step=is_all_step)
 
 
 def main():
