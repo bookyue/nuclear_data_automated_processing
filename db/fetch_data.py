@@ -17,14 +17,15 @@ def fetch_files_by_name(filenames='all'):
 
     Returns
     -------
-    list[File] or File
+    list[File]
     """
     stmt = lambda_stmt(lambda: select(File))
-    if filenames == 'all':
+    if (filenames == 'all') or ('all' in filenames):
         pass
     else:
         if isinstance(filenames, str):
             filenames = [filenames]
+
         stmt += lambda s: s.where(File.name.in_(filenames))
 
     try:
@@ -33,6 +34,7 @@ def fetch_files_by_name(filenames='all'):
     finally:
         if not files:
             raise Exception(f"{filenames} doesn't exists")
+
     return files
 
 
@@ -47,7 +49,7 @@ def fetch_physical_quantities_by_name(physical_quantities):
 
     Returns
     -------
-    list[PhysicalQuantity] or PhysicalQuantity
+    list[PhysicalQuantity]
 
     See Also
     --------
@@ -60,6 +62,7 @@ def fetch_physical_quantities_by_name(physical_quantities):
                 .where(PhysicalQuantity.name.in_(physical_quantities_list))
                 )
         physical_quantities = session.execute(stmt).scalars().all()
+
     return physical_quantities
 
 
@@ -269,7 +272,7 @@ def fetch_extracted_data_by_filename_and_physical_quantity(nuc_data_id,
     """
 
     if type_checker(filename, File) == 'str':
-        filename = fetch_files_by_name(filename)
+        filename = fetch_files_by_name(filename).pop()
 
     if type_checker(physical_quantity, PhysicalQuantity) == 'str':
         physical_quantity = fetch_physical_quantities_by_name(physical_quantity)
