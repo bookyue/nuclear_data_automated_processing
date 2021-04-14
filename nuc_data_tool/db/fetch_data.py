@@ -20,7 +20,7 @@ def fetch_files_by_name(filenames='all'):
     list[File]
     """
     stmt = lambda_stmt(lambda: select(File))
-    if (filenames == 'all') or ('all' in [filenames]):
+    if (filenames == 'all') or ('all' in list(filenames)):
         pass
     else:
         if isinstance(filenames, str):
