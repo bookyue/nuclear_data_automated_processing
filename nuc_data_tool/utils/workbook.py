@@ -114,7 +114,6 @@ def save_to_excel(dict_df, file_name, dir_path):
     dir_path = Path(dir_path)
     dir_path.mkdir(parents=True, exist_ok=True)
     file_path = dir_path.joinpath(file_name)
-    file_path.unlink(missing_ok=True)
 
     for key in dict_df:
         append_df_to_excel(file_path,

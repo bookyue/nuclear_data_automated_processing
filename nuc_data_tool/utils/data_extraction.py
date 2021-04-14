@@ -82,6 +82,12 @@ def save_extracted_data_to_exel(nuc_data_id, filenames=None, physical_quantities
         physical_quantities = fetch_physical_quantities_by_name(physical_quantities)
 
     file_name = 'final.xlsx'
+    if merge:
+        Path(result_path).joinpath(file_name).unlink(missing_ok=True)
+    else:
+        for filename in filenames:
+            Path(result_path).joinpath(f'{filename.name}.xlsx').unlink(missing_ok=True)
+        del filename
 
     physical_quantity: PhysicalQuantity
     for physical_quantity in physical_quantities:
