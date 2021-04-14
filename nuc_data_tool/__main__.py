@@ -176,7 +176,7 @@ def extract(filenames,
               type=click.Choice(all_physical_quantity_list,
                                 case_sensitive=False),
               multiple=True,
-              help='物理量，默认为全部物理量')
+              help='物理量，默认为 isotope')
 @click.option('--nuclide', '-n',
               'nuclide_list',
               default='fission_light',
