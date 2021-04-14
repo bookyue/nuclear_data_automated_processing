@@ -66,7 +66,7 @@ def save_extracted_data_to_exel(nuc_data_id, filenames=None, physical_quantities
         也可以是list[PhysicalQuantity]或PhysicalQuantity
     is_all_step : bool, default = False
         是否读取全部中间结果数据列，默认只读取最终结果列
-    result_path : Path
+    result_path : Path or str
     merge : bool, default = True
         是否将结果合并输出至一个文件，否则单独输出至每个文件
 
