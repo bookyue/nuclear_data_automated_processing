@@ -4,12 +4,12 @@ from itertools import combinations
 import numpy as np
 import pandas as pd
 
-from nuclear_data_automated_processing.db.db_model import PhysicalQuantity, File
-from nuclear_data_automated_processing.db.fetch_data import (fetch_extracted_data_by_filename_and_physical_quantity,
-                                                             fetch_files_by_name,
-                                                             fetch_physical_quantities_by_name)
-from nuclear_data_automated_processing.utils.formatter import type_checker
-from nuclear_data_automated_processing.utils.workbook import save_to_excel
+from nuc_data_tool.db.db_model import PhysicalQuantity, File
+from nuc_data_tool.db.fetch_data import (fetch_extracted_data_by_filename_and_physical_quantity,
+                                         fetch_files_by_name,
+                                         fetch_physical_quantities_by_name)
+from nuc_data_tool.utils.formatter import type_checker
+from nuc_data_tool.utils.workbook import save_to_excel
 
 
 def _complement_columns(df_reference,

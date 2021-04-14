@@ -2,7 +2,7 @@ from sqlalchemy import insert, delete
 from sqlalchemy.dialects.mysql import insert as mysql_insert
 from sqlalchemy.dialects.postgresql import insert as postgres_insert
 
-from nuclear_data_automated_processing.db.base import Session, Base
+from nuc_data_tool.db.base import Session, Base
 
 
 def init_db():

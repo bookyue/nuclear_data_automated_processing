@@ -1,10 +1,10 @@
 import pandas as pd
 from sqlalchemy import select
 
-from nuclear_data_automated_processing.db.base import Session
-from nuclear_data_automated_processing.db.db_model import Nuc, NucData, File, PhysicalQuantity
-from nuclear_data_automated_processing.db.db_utils import upsert
-from nuclear_data_automated_processing.utils.middle_steps import middle_steps_line_serialization
+from nuc_data_tool.db.base import Session
+from nuc_data_tool.db.db_model import Nuc, NucData, File, PhysicalQuantity
+from nuc_data_tool.db.db_utils import upsert
+from nuc_data_tool.utils.middle_steps import middle_steps_line_serialization
 
 
 def populate_database(xml_file):

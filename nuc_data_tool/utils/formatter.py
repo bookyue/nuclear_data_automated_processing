@@ -1,7 +1,7 @@
 from typing import Iterable
 
-from nuclear_data_automated_processing.db.db_model import PhysicalQuantity, File
-from nuclear_data_automated_processing.utils.configlib import config
+from nuc_data_tool.db.db_model import PhysicalQuantity, File
+from nuc_data_tool.utils.configlib import config
 
 
 def _get_physical_quantity_list_by_conf_file():

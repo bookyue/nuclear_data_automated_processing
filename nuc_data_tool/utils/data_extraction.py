@@ -2,12 +2,12 @@ from pathlib import Path
 
 import pandas as pd
 
-from nuclear_data_automated_processing.db.db_model import File, PhysicalQuantity
-from nuclear_data_automated_processing.db.fetch_data import (fetch_data_by_filename_and_nuclide_list, fetch_files_by_name,
-                                                             fetch_extracted_data_by_filename_and_physical_quantity,
-                                                             fetch_physical_quantities_by_name)
-from nuclear_data_automated_processing.utils.formatter import type_checker
-from nuclear_data_automated_processing.utils.workbook import save_to_excel
+from nuc_data_tool.db.db_model import File, PhysicalQuantity
+from nuc_data_tool.db.fetch_data import (fetch_data_by_filename_and_nuclide_list, fetch_files_by_name,
+                                         fetch_extracted_data_by_filename_and_physical_quantity,
+                                         fetch_physical_quantities_by_name)
+from nuc_data_tool.utils.formatter import type_checker
+from nuc_data_tool.utils.workbook import save_to_excel
 
 
 def filter_data(filename, physical_quantity_name, nuclide_list, is_all_step):

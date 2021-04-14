@@ -1,10 +1,10 @@
 import pandas as pd
 from sqlalchemy import select, lambda_stmt, or_
 
-from nuclear_data_automated_processing.db.base import Session
-from nuclear_data_automated_processing.db.db_model import File, NucData, Nuc, PhysicalQuantity
-from nuclear_data_automated_processing.utils.formatter import physical_quantity_list_generator, type_checker
-from nuclear_data_automated_processing.utils.middle_steps import middle_steps_line_parsing
+from nuc_data_tool.db.base import Session
+from nuc_data_tool.db.db_model import File, NucData, Nuc, PhysicalQuantity
+from nuc_data_tool.utils.formatter import physical_quantity_list_generator, type_checker
+from nuc_data_tool.utils.middle_steps import middle_steps_line_parsing
 
 
 def fetch_files_by_name(filenames='all'):

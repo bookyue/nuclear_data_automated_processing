@@ -2,7 +2,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import registry
 from sqlalchemy.orm import sessionmaker
 
-from nuclear_data_automated_processing.utils.configlib import config
+from nuc_data_tool.utils.configlib import config
 
 
 def _choose_db(db_type, debug=False):

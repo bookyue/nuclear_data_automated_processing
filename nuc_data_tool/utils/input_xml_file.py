@@ -1,8 +1,8 @@
 import linecache
 from pathlib import Path
 
-from nuclear_data_automated_processing.utils.configlib import config
-from nuclear_data_automated_processing.utils.formatter import physical_quantity_list_generator
+from nuc_data_tool.utils.configlib import config
+from nuc_data_tool.utils.formatter import physical_quantity_list_generator
 
 
 class InputXmlFileReader:
