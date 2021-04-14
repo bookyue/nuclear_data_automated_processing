@@ -30,7 +30,7 @@ Database model
 from sqlalchemy import Column, Integer, Numeric, String, LargeBinary, ForeignKey, Table
 from sqlalchemy.orm import relationship
 
-from db.base import Base
+from nuclear_data_automated_processing.db.base import Base
 
 files_physical_quantities_association = Table('files_physical_quantities_association', Base.metadata,
                                               Column('file_id', Integer, ForeignKey('files.id')),

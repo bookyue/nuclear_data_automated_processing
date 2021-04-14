@@ -1,14 +1,14 @@
 import click
 from click import UsageError
 
-from utils.data_extraction import save_extracted_data_to_exel
-from db.db_utils import init_db
-from db.fetch_data import fetch_extracted_data_id, fetch_physical_quantities_by_name, fetch_files_by_name
-from utils.fill_db import populate_database
-from utils.relative_error_calculation import save_comparative_result_to_excel
-from utils.configlib import config
-from utils.formatter import all_physical_quantity_list, physical_quantity_list_generator
-from utils.input_xml_file import InputXmlFileReader
+from nuclear_data_automated_processing.utils.data_extraction import save_extracted_data_to_exel
+from nuclear_data_automated_processing.db.db_utils import init_db
+from nuclear_data_automated_processing.db.fetch_data import fetch_extracted_data_id, fetch_physical_quantities_by_name, fetch_files_by_name
+from nuclear_data_automated_processing.utils.fill_db import populate_database
+from nuclear_data_automated_processing.utils.relative_error_calculation import save_comparative_result_to_excel
+from nuclear_data_automated_processing.utils.configlib import config
+from nuclear_data_automated_processing.utils.formatter import all_physical_quantity_list, physical_quantity_list_generator
+from nuclear_data_automated_processing.utils.input_xml_file import InputXmlFileReader
 
 
 class PythonLiteralOption(click.Option):
@@ -264,7 +264,7 @@ def fetch(files,
 
 
 def main():
-    main_cli()
+    main_cli(prog_name='python -m nuclear_data_automated_processing')
 
 
 main()

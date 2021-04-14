@@ -113,4 +113,3 @@ class Config:
 
 CONFIG_FILE_PATH = Path(__file__).parent.parent.joinpath('config.toml')
 config = Config(CONFIG_FILE_PATH)
-
