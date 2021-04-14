@@ -283,6 +283,7 @@ def save_comparative_result_to_excel(nuc_data_id,
         if is_all_step:
             file_name = f'all_step_{file_name}'
 
+        result_path.joinpath('comparative_result').joinpath(file_name).unlink(missing_ok=True)
         save_to_excel(dict_df_all,
                       file_name,
                       result_path.joinpath('comparative_result'))
