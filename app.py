@@ -1,4 +1,5 @@
 import click
+from click import UsageError
 
 from utils.data_extraction import save_extracted_data_to_exel
 from db.db_utils import init_db
@@ -16,15 +17,44 @@ class PythonLiteralOption(click.Option):
         return list(map(str.strip, value.strip('][').replace('"', '').split(',')))
 
 
+class MutuallyExclusiveOption(click.Option):
+    def __init__(self, *args, **kwargs):
+        self.mutually_exclusive = set(kwargs.pop('mutually_exclusive', []))
+        help_args = kwargs.get('help', '')
+        if self.mutually_exclusive:
+            ex_str = ', '.join(self.mutually_exclusive)
+            kwargs['help'] = help_args + (
+                    ' NOTE: This argument is mutually exclusive with '
+                    ' arguments: [' + ex_str + '].'
+            )
+        super(MutuallyExclusiveOption, self).__init__(*args, **kwargs)
+
+    def handle_parse_result(self, ctx, opts, args):
+        if self.mutually_exclusive.intersection(opts) and self.name in opts:
+            raise UsageError(
+                "Illegal usage: `{}` is mutually exclusive with "
+                "arguments `{}`.".format(
+                    self.name,
+                    ', '.join(self.mutually_exclusive)
+                )
+            )
+
+        return super(MutuallyExclusiveOption, self).handle_parse_result(
+            ctx,
+            opts,
+            args
+        )
+
+
 @click.group()
-def cli():
+def main_cli():
     """
     app 命令行
     """
     pass
 
 
-@cli.command()
+@main_cli.command()
 @click.option('--path', '-p',
               'path',
               default=config.get_file_path('test_file_path'),
@@ -63,8 +93,8 @@ def pop(path,
             populate_database(xml_file)
 
 
-@cli.command()
-@click.option('--file', '-f',
+@main_cli.command()
+@click.option('--files', '-f',
               'filenames',
               default='all',
               cls=PythonLiteralOption,
@@ -122,8 +152,8 @@ def extract(filenames,
                                 merge=merge)
 
 
-@cli.command()
-@click.option('--file', '-f',
+@main_cli.command()
+@click.option('--files', '-f',
               'filenames',
               default='all',
               cls=PythonLiteralOption,
@@ -189,8 +219,52 @@ def compare(filenames,
                                      is_all_step=is_all_step)
 
 
+@main_cli.command()
+@click.option('--file', '-f',
+              'files',
+              cls=MutuallyExclusiveOption,
+              is_flag=True,
+              default=False,
+              mutually_exclusive=['physical_quantity'],
+              help='显示文件信息')
+@click.option('--physical_quantity', '-p',
+              'physical_quantities',
+              cls=MutuallyExclusiveOption,
+              is_flag=True,
+              default=False,
+              mutually_exclusive=['files'],
+              help='显示物理量信息')
+@click.option('--list', '-l',
+              'is_list',
+              is_flag=True,
+              default=False,
+              help='以数组形式输出')
+def fetch(files,
+          physical_quantities,
+          is_list):
+    """
+    获取 文件、物理量信息
+    """
+
+    if files is True:
+        file_list = fetch_files_by_name('all')
+        if is_list is False:
+            for file in file_list:
+                print(f'Name: {file.name}')
+        else:
+            print([file.name for file in file_list])
+
+    if physical_quantities is True:
+        physical_quantity_list = fetch_physical_quantities_by_name('all')
+        if is_list is False:
+            for physical_quantity in physical_quantity_list:
+                print(f'Name: {physical_quantity.name}')
+        else:
+            print([physical_quantity.name for physical_quantity in physical_quantity_list])
+
+
 def main():
-    cli()
+    main_cli()
 
 
 main()
