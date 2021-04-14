@@ -286,21 +286,23 @@ def fetch_extracted_data_by_filename_and_physical_quantity(nuc_data_id,
 
     if not is_all_step:
         # 不读取中间结果，所以不选择NucData.middle_steps，否则反之
-        stmt = lambda_stmt(lambda: select(Nuc.nuc_ix, Nuc.name,
+        stmt = lambda_stmt(lambda: select(Nuc.nuc_ix,
+                                          Nuc.name,
                                           NucData.last_step).
                            where(NucData.id.in_(nuc_data_id)))
     else:
-        stmt = lambda_stmt(lambda: select(Nuc.nuc_ix, Nuc.name,
+        stmt = lambda_stmt(lambda: select(Nuc.nuc_ix,
+                                          Nuc.name,
                                           NucData.last_step,
                                           NucData.middle_steps).
                            where(NucData.id.in_(nuc_data_id)))
 
-        stmt += lambda s: s.join(Nuc,
-                                 Nuc.id == NucData.nuc_id)
-        stmt += lambda s: s.join(PhysicalQuantity,
-                                 PhysicalQuantity.id == NucData.physical_quantity_id)
-        stmt += lambda s: s.where(NucData.file_id == file_id,
-                                  PhysicalQuantity.id == physical_quantity_id)
+    stmt += lambda s: s.join(Nuc,
+                             Nuc.id == NucData.nuc_id)
+    stmt += lambda s: s.join(PhysicalQuantity,
+                             PhysicalQuantity.id == NucData.physical_quantity_id)
+    stmt += lambda s: s.where(NucData.file_id == file_id,
+                              PhysicalQuantity.id == physical_quantity_id)
 
     with Session() as session:
         if not is_all_step:
@@ -312,18 +314,18 @@ def fetch_extracted_data_by_filename_and_physical_quantity(nuc_data_id,
             df_right = pd.DataFrame(data=session.execute(stmt).all(),
                                     columns=column_names)
 
-        exclude_middle_steps = df_right.drop(columns='middle_steps', axis=1)
-        del column_names[-1]
-        exclude_middle_steps.columns = column_names
+            exclude_middle_steps = df_right.drop(columns='middle_steps', axis=1)
+            del column_names[-1]
+            exclude_middle_steps.columns = column_names
 
-        middle_steps = pd.DataFrame([middle_steps_line_parsing(middle_steps)
-                                     for middle_steps in df_right['middle_steps']
-                                     if middle_steps is not None])
-        middle_step_column_names = [f'{filename.name}_{name}'
-                                    for name in middle_steps.columns.values.tolist()]
-        middle_steps.columns = middle_step_column_names
+            middle_steps = pd.DataFrame([middle_steps_line_parsing(middle_steps)
+                                         for middle_steps in df_right['middle_steps']
+                                         if middle_steps is not None])
+            middle_step_column_names = [f'{filename.name}_{name}'
+                                        for name in middle_steps.columns.values.tolist()]
+            middle_steps.columns = middle_step_column_names
 
-        df_right = pd.concat([exclude_middle_steps, middle_steps], axis=1, copy=False)
+            df_right = pd.concat([exclude_middle_steps, middle_steps], axis=1, copy=False)
 
     if not df_right.empty:
         df_left = pd.merge(df_left, df_right, how='outer', on=['nuc_ix', 'name'])
