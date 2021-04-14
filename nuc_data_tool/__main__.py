@@ -90,7 +90,7 @@ def pop(path,
     for file_name in file_names:
         with InputXmlFileReader(file_name, physical_quantities) as xml_file:
             print(f'{xml_file.name}:')
-            print(f'found:     {xml_file.chosen_physical_quantity}')
+            print(f'found:     {xml_file.fetched_physical_quantity}')
             print(f'not found: {xml_file.unfetched_physical_quantity}')
             print()
             populate_database(xml_file)
