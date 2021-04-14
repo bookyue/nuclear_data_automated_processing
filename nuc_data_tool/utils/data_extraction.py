@@ -82,11 +82,18 @@ def save_extracted_data_to_exel(nuc_data_id, filenames=None, physical_quantities
         physical_quantities = fetch_physical_quantities_by_name(physical_quantities)
 
     file_name = 'final.xlsx'
+
+    if is_all_step:
+        file_name = f'all_steps_{file_name}'
+
     if merge:
         Path(result_path).joinpath(file_name).unlink(missing_ok=True)
     else:
         for filename in filenames:
-            Path(result_path).joinpath(f'{filename.name}.xlsx').unlink(missing_ok=True)
+            if is_all_step:
+                Path(result_path).joinpath(f'all_steps_{filename.name}.xlsx').unlink(missing_ok=True)
+            else:
+                Path(result_path).joinpath(f'{filename.name}.xlsx').unlink(missing_ok=True)
         del filename
 
     physical_quantity: PhysicalQuantity
@@ -97,6 +104,8 @@ def save_extracted_data_to_exel(nuc_data_id, filenames=None, physical_quantities
         for filename in filenames:
 
             files_name = f'{filename.name}.xlsx'
+            if is_all_step:
+                files_name = f'all_steps_{filename.name}.xlsx'
 
             df_right = fetch_extracted_data_by_filename_and_physical_quantity(nuc_data_id,
                                                                               filename,
