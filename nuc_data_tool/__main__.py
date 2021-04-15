@@ -1,14 +1,20 @@
+from pathlib import Path
+
 import click
 from click import UsageError
 
-from utils.data_extraction import save_extracted_data_to_exel
-from db.db_utils import init_db
-from db.fetch_data import fetch_extracted_data_id, fetch_physical_quantities_by_name, fetch_files_by_name
-from utils.fill_db import populate_database
-from utils.relative_error_calculation import save_comparative_result_to_excel
-from utils.configlib import config
-from utils.formatter import all_physical_quantity_list, physical_quantity_list_generator
-from utils.input_xml_file import InputXmlFileReader
+from nuc_data_tool import __version__
+from nuc_data_tool.db.db_utils import init_db
+from nuc_data_tool.db.fetch_data import (fetch_extracted_data_id,
+                                         fetch_physical_quantities_by_name,
+                                         fetch_files_by_name)
+from nuc_data_tool.utils.configlib import config
+from nuc_data_tool.utils.data_extraction import save_extracted_data_to_exel
+from nuc_data_tool.utils.fill_db import populate_database
+from nuc_data_tool.utils.formatter import (all_physical_quantity_list,
+                                           physical_quantity_list_generator)
+from nuc_data_tool.utils.input_xml_file import InputXmlFileReader
+from nuc_data_tool.utils.relative_error_calculation import save_comparative_result_to_excel
 
 
 class PythonLiteralOption(click.Option):
@@ -47,6 +53,7 @@ class MutuallyExclusiveOption(click.Option):
 
 
 @click.group()
+@click.version_option(__version__)
 def main_cli():
     """
     app 命令行
@@ -83,11 +90,12 @@ def pop(path,
         init_db()
 
     physical_quantities = physical_quantity_list_generator(physical_quantities)
-    file_names = sorted(path.glob('*.out'))
+
+    file_names = sorted(Path(path).glob('*.out'))
     for file_name in file_names:
         with InputXmlFileReader(file_name, physical_quantities) as xml_file:
             print(f'{xml_file.name}:')
-            print(f'found:     {xml_file.chosen_physical_quantity}')
+            print(f'found:     {xml_file.fetched_physical_quantity}')
             print(f'not found: {xml_file.unfetched_physical_quantity}')
             print()
             populate_database(xml_file)
@@ -170,7 +178,7 @@ def extract(filenames,
               type=click.Choice(all_physical_quantity_list,
                                 case_sensitive=False),
               multiple=True,
-              help='物理量，默认为全部物理量')
+              help='物理量，默认为 isotope')
 @click.option('--nuclide', '-n',
               'nuclide_list',
               default='fission_light',
@@ -264,7 +272,7 @@ def fetch(files,
 
 
 def main():
-    main_cli()
+    main_cli(prog_name='python -m nuc_data_tool')
 
 
 main()

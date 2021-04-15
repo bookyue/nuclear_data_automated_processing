@@ -2,12 +2,12 @@ from pathlib import Path
 
 import pandas as pd
 
-from db.db_model import File, PhysicalQuantity
-from db.fetch_data import (fetch_data_by_filename_and_nuclide_list, fetch_files_by_name,
-                           fetch_extracted_data_by_filename_and_physical_quantity,
-                           fetch_physical_quantities_by_name)
-from utils.formatter import type_checker
-from utils.workbook import save_to_excel
+from nuc_data_tool.db.db_model import File, PhysicalQuantity
+from nuc_data_tool.db.fetch_data import (fetch_data_by_filename_and_nuclide_list, fetch_files_by_name,
+                                         fetch_extracted_data_by_filename_and_physical_quantity,
+                                         fetch_physical_quantities_by_name)
+from nuc_data_tool.utils.formatter import type_checker
+from nuc_data_tool.utils.workbook import save_to_excel
 
 
 def filter_data(filename, physical_quantity_name, nuclide_list, is_all_step):
@@ -51,7 +51,7 @@ def filter_data(filename, physical_quantity_name, nuclide_list, is_all_step):
 
 
 def save_extracted_data_to_exel(nuc_data_id, filenames=None, physical_quantities=None, is_all_step=False,
-                                result_path=Path('.'), merge=True):
+                                result_path=Path(''), merge=True):
     """
     将数据存入到exel文件
     将传入的File list中包含的文件的数据存到exel文件
@@ -66,7 +66,7 @@ def save_extracted_data_to_exel(nuc_data_id, filenames=None, physical_quantities
         也可以是list[PhysicalQuantity]或PhysicalQuantity
     is_all_step : bool, default = False
         是否读取全部中间结果数据列，默认只读取最终结果列
-    result_path : Path
+    result_path : Path or str
     merge : bool, default = True
         是否将结果合并输出至一个文件，否则单独输出至每个文件
 
@@ -83,6 +83,19 @@ def save_extracted_data_to_exel(nuc_data_id, filenames=None, physical_quantities
 
     file_name = 'final.xlsx'
 
+    if is_all_step:
+        file_name = f'all_steps_{file_name}'
+
+    if merge:
+        Path(result_path).joinpath(file_name).unlink(missing_ok=True)
+    else:
+        for filename in filenames:
+            if is_all_step:
+                Path(result_path).joinpath(f'all_steps_{filename.name}.xlsx').unlink(missing_ok=True)
+            else:
+                Path(result_path).joinpath(f'{filename.name}.xlsx').unlink(missing_ok=True)
+        del filename
+
     physical_quantity: PhysicalQuantity
     for physical_quantity in physical_quantities:
         df_left = pd.DataFrame(data=None, columns=['nuc_ix', 'name'])
@@ -91,6 +104,8 @@ def save_extracted_data_to_exel(nuc_data_id, filenames=None, physical_quantities
         for filename in filenames:
 
             files_name = f'{filename.name}.xlsx'
+            if is_all_step:
+                files_name = f'all_steps_{filename.name}.xlsx'
 
             df_right = fetch_extracted_data_by_filename_and_physical_quantity(nuc_data_id,
                                                                               filename,

@@ -1,6 +1,6 @@
 from decimal import Decimal
 
-from utils.middle_steps_pb2 import MiddleStep, MiddleSteps
+from nuc_data_tool.utils.middle_steps_pb2 import MiddleStep, MiddleSteps
 
 
 def serialization(middle_steps_list):

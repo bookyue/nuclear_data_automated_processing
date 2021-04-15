@@ -105,15 +105,15 @@ def save_to_excel(dict_df, file_name, dir_path):
     ----------
     dict_df : dict[str, pd.DataFrame]
     file_name : str
-    dir_path : Path
+    dir_path : Path or str
 
     Returns
     -------
     """
 
+    dir_path = Path(dir_path)
     dir_path.mkdir(parents=True, exist_ok=True)
     file_path = dir_path.joinpath(file_name)
-    file_path.unlink(missing_ok=True)
 
     for key in dict_df:
         append_df_to_excel(file_path,
