@@ -1,8 +1,8 @@
 import linecache
 from pathlib import Path
 
-from utils.configlib import config
-from utils.formatter import physical_quantity_list_generator
+from nuc_data_tool.utils.configlib import config
+from nuc_data_tool.utils.formatter import physical_quantity_list_generator
 
 
 class InputXmlFileReader:
@@ -38,6 +38,7 @@ class InputXmlFileReader:
         self.chosen_physical_quantity = physical_quantity_list_generator(physical_quantities)
         self.length_of_physical_quantity = self.get_length_of_physical_quantity(self.chosen_physical_quantity)
         self.unfetched_physical_quantity = self.get_unfetched_physical_quantity()
+        self.fetched_physical_quantity = self.get_fetched_physical_quantity()
         self.table_of_physical_quantity = self.get_table_of_physical_quantity()
 
     def __enter__(self):
@@ -133,6 +134,18 @@ class InputXmlFileReader:
         unfetched_physical_quantity = [name for name in self.chosen_physical_quantity
                                        if not self.length_of_physical_quantity.get(name)]
         return unfetched_physical_quantity
+
+    def get_fetched_physical_quantity(self):
+        """
+        获取在选取范围内成功获取的物理量
+
+        Returns
+        -------
+        list
+        """
+        fetched_physical_quantity = [name for name in self.chosen_physical_quantity
+                                       if self.length_of_physical_quantity.get(name)]
+        return fetched_physical_quantity
 
     def get_table_of_physical_quantity(self):
         """

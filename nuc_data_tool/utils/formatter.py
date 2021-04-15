@@ -1,7 +1,7 @@
 from typing import Iterable
 
-from db.db_model import PhysicalQuantity, File
-from utils.configlib import config
+from nuc_data_tool.db.db_model import PhysicalQuantity, File
+from nuc_data_tool.utils.configlib import config
 
 
 def _get_physical_quantity_list_by_conf_file():
@@ -48,8 +48,7 @@ def physical_quantity_list_generator(physical_quantities):
     # 则先用set()去掉重复物理量名，然后再return 物理量list
     return all_physical_quantity_list \
         if physical_quantities == 'all' \
-        else \
-        list(set(physical_quantities))
+        else list(dict.fromkeys(physical_quantities).keys())
 
 
 def type_checker(object_or_list, expected_type):

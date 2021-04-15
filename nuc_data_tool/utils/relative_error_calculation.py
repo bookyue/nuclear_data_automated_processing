@@ -4,12 +4,12 @@ from itertools import combinations
 import numpy as np
 import pandas as pd
 
-from db.db_model import PhysicalQuantity, File
-from db.fetch_data import (fetch_extracted_data_by_filename_and_physical_quantity,
-                           fetch_files_by_name,
-                           fetch_physical_quantities_by_name)
-from utils.formatter import type_checker
-from utils.workbook import save_to_excel
+from nuc_data_tool.db.db_model import PhysicalQuantity, File
+from nuc_data_tool.db.fetch_data import (fetch_extracted_data_by_filename_and_physical_quantity,
+                                         fetch_files_by_name,
+                                         fetch_physical_quantities_by_name)
+from nuc_data_tool.utils.formatter import type_checker
+from nuc_data_tool.utils.workbook import save_to_excel
 
 
 def _complement_columns(df_reference,
@@ -283,6 +283,7 @@ def save_comparative_result_to_excel(nuc_data_id,
         if is_all_step:
             file_name = f'all_step_{file_name}'
 
+        result_path.joinpath('comparative_result').joinpath(file_name).unlink(missing_ok=True)
         save_to_excel(dict_df_all,
                       file_name,
                       result_path.joinpath('comparative_result'))
