@@ -111,5 +111,8 @@ class Config:
         return self.conf.get("nuclide_list").get("short_lives")
 
 
-CONFIG_FILE_PATH = Path(__file__).parent.parent.joinpath('config.toml')
+CONFIG_FILE_PATH = Path.cwd().joinpath('config.toml')
+if not CONFIG_FILE_PATH.exists():
+    CONFIG_FILE_PATH = Path(__file__).parent.parent.joinpath('config.toml')
+
 config = Config(CONFIG_FILE_PATH)
