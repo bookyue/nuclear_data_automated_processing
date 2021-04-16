@@ -1,0 +1,2 @@
+[mysqld]
+skip-character-set-client-handshake
