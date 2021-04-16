@@ -9,10 +9,6 @@ fission = ["Fission", "Total  "]
 decay_heat = ["Decay Heat", "Total  "]
 gamma_spectra = ["Gamma-ray", "Total  "]
 
-[data_extraction.keys_of_column]
-id = "NucId"
-name = "Nuc_Name"
-
 
 [file_path]
 test_file_path = "./test"
