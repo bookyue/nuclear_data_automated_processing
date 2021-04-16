@@ -9,10 +9,6 @@ fission = ["Fission", "Total  "]
 decay_heat = ["Decay Heat", "Total  "]
 gamma_spectra = ["Gamma-ray", "Total  "]
 
-[data_extraction.keys_of_column]
-id = "NucId"
-name = "Nuc_Name"
-
 
 [file_path]
 test_file_path = "./test"
@@ -21,6 +17,8 @@ burnup_time_file_path = "./burnup time"
 
 
 [database]
+# 选择数据库（目前支持 mysql, postgresql, sqlite）
+chosen_db = "postgresql"
 
 [database.sqlite]
 path = "./data.sqlite"
