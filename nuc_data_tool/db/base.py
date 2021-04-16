@@ -5,7 +5,7 @@ from sqlalchemy.orm import sessionmaker
 from nuc_data_tool.utils.configlib import config
 
 
-def _choose_db(db_type, debug=False):
+def _chosen_db(db_type=None, debug=False):
     """
     选择数据库（目前支持 Mysql, Postgresql, sqlite），生成对应的Session和engine
 
@@ -22,8 +22,12 @@ def _choose_db(db_type, debug=False):
     """
     db_config = config.get_database_config()
 
-    if db_type not in db_config:
+    if db_type is None:
+        db_type = db_config['chosen_db']
+    elif db_type not in db_config:
         db_type = 'sqlite'
+    pass
+
     user = db_config[db_type].get('user')
     password = db_config[db_type].get('password')
     url = db_config[db_type].get('url')
@@ -55,4 +59,4 @@ def _choose_db(db_type, debug=False):
 
 mapper_registry = registry()
 Base = mapper_registry.generate_base()
-engine, Session = _choose_db('postgresql', debug=False)
+engine, Session = _chosen_db(debug=False)

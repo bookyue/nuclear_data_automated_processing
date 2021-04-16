@@ -21,6 +21,8 @@ burnup_time_file_path = "./burnup time"
 
 
 [database]
+# 选择数据库（目前支持 mysql, postgresql, sqlite）
+chosen_db = "postgresql"
 
 [database.sqlite]
 path = "./data.sqlite"
