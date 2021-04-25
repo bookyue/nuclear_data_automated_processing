@@ -61,7 +61,7 @@ Commands:
   compare  对文件列表进行两两组合，进行对比，计算并输出对比结果至工作簿(xlsx文件)
   extract  从数据库导出选中的文件的数据到工作簿(xlsx文件)
   fetch    获取 文件、物理量信息
-  pop      将输入文件(*.xml.out) 的内容填充进数据库
+  pop      将输出文件(*.xml.out) 的内容填充进数据库
 ```
 
 ### Populate database
@@ -69,10 +69,10 @@ Commands:
 > nuctool pop --help
 Usage: python -m nuc_data_tool pop [OPTIONS]
 
-  将输入文件(*.xml.out) 的内容填充进数据库
+  将输出文件(*.xml.out) 的内容填充进数据库
 
 Options:
-  -p, --path PATH                 输入文件路径，默认读取配置文件中的路径
+  -p, --path PATH                 输出文件路径，默认读取配置文件中的路径
   -pq, --physical_quantities [isotope|radioactivity|absorption|fission|decay_heat|gamma_spectra]
                                   物理量，默认为全部物理量
   -init, --initiation             初始化数据库
