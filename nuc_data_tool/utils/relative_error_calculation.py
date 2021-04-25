@@ -1,5 +1,4 @@
 from decimal import localcontext, Decimal, InvalidOperation
-from itertools import combinations
 from pathlib import Path
 
 import numpy as np
@@ -232,21 +231,24 @@ def calculate_comparative_result(nuc_data_id,
     return dict_df_all
 
 
-def save_comparative_result_to_excel(nuc_data_id,
-                                     files,
-                                     result_path,
-                                     physical_quantities='isotope',
-                                     deviation_mode='relative',
-                                     threshold=Decimal('1.0E-12'),
-                                     is_all_step=False):
+def save_comparison_result_to_excel(nuc_data_id,
+                                    reference_file,
+                                    comparison_files,
+                                    result_path,
+                                    physical_quantities='isotope',
+                                    deviation_mode='relative',
+                                    threshold=Decimal('1.0E-12'),
+                                    is_all_step=False):
     """
-    对文件列表进行两两组合，进行对比，计算并输出对比结果至工作簿(xlsx文件)
+    选定一个基准文件，使其与对比文件列表中的文件一一对比，计算并输出对比结果至工作簿(xlsx文件)
 
     Parameters
     ----------
     nuc_data_id : list[int]
-    files : list[str or File]or File or str
-        文件列表
+    reference_file : File or str
+        基准文件
+    comparison_files : list[str or File]or File or str
+        对比文件列表
     result_path : Path or str
     physical_quantities : list[str or PhysicalQuantity] or str or PhysicalQuantity, default = 'isotope'
         对比用物理量，可以是物理量名的list[str]或str，
@@ -265,10 +267,13 @@ def save_comparative_result_to_excel(nuc_data_id,
     -------
     """
 
-    if type_checker(files, File) == 'str':
-        files = fetch_files_by_name(files)
+    if type_checker(reference_file, File) == 'str':
+        reference_file = fetch_files_by_name(reference_file)
 
-    for reference_file, comparison_file in combinations(files, 2):
+    if type_checker(comparison_files, File) == 'str':
+        comparison_files = fetch_files_by_name(comparison_files)
+
+    for comparison_file in comparison_files:
         print((reference_file.name, comparison_file.name))
 
         dict_df_all = calculate_comparative_result(nuc_data_id=nuc_data_id,

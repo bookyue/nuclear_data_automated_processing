@@ -14,7 +14,7 @@ from nuc_data_tool.utils.fill_db import populate_database
 from nuc_data_tool.utils.formatter import (all_physical_quantity_list,
                                            physical_quantity_list_generator)
 from nuc_data_tool.utils.input_xml_file import InputXmlFileReader
-from nuc_data_tool.utils.relative_error_calculation import save_comparative_result_to_excel
+from nuc_data_tool.utils.relative_error_calculation import save_comparison_result_to_excel
 
 
 class PythonLiteralOption(click.Option):
@@ -161,12 +161,10 @@ def extract(filenames,
 
 
 @main_cli.command()
-@click.option('--files', '-f',
-              'filenames',
-              default='all',
-              cls=PythonLiteralOption,
-              help="""文件名(列表)(没有后缀) 例如：001.xml.out -> 001，默认为所有文件
-                   例子： 003  001,002,003  '[001,004,003]'""")
+@click.argument('reference_file',
+                nargs=1)
+@click.argument('comparison_files',
+                nargs=-1)
 @click.option('--result_path', '-p',
               'result_path',
               default=config.get_file_path('result_file_path'),
@@ -201,7 +199,8 @@ def extract(filenames,
               is_flag=True,
               default=False,
               help='提取中间步骤')
-def compare(filenames,
+def compare(reference_file,
+            comparison_files,
             result_path,
             physical_quantities,
             nuclide_list,
@@ -209,22 +208,40 @@ def compare(filenames,
             threshold,
             is_all_step):
     """
+    \b
     对文件列表进行两两组合，进行对比，计算并输出对比结果至工作簿(xlsx文件)
+    第一个参数为基准文件，第二个参数为文件列表(默认为除基准文件以外的所有文件)
+    \b
+    nuc_data_tool compare 'homo-case001-006' 'homo-case007-012' 'homo-case013-018'
+    nuc_data_tool compare 'homo-case001-006'
+    \b
+    文件名(没有后缀) 例如：001.xml.out -> 001
+    文件名列表 例如： 003  001,002,003  '[001,004,003]'
     """
 
-    filenames = fetch_files_by_name(filenames)
+    reference_file = fetch_files_by_name(reference_file).pop()
+
+    if comparison_files:
+        comparison_files = fetch_files_by_name(comparison_files)
+    else:
+        comparison_files = fetch_files_by_name('all')
+
+    comparison_files = [comparison_file for comparison_file in comparison_files
+                        if comparison_file.id != reference_file.id]
+
     physical_quantities = fetch_physical_quantities_by_name(physical_quantities)
-    nuc_data_id = fetch_extracted_data_id(filenames,
+    nuc_data_id = fetch_extracted_data_id([reference_file, *comparison_files],
                                           physical_quantities,
                                           config.get_nuclide_list(nuclide_list))
 
-    save_comparative_result_to_excel(nuc_data_id=nuc_data_id,
-                                     files=filenames,
-                                     result_path=result_path,
-                                     physical_quantities=physical_quantities,
-                                     deviation_mode=deviation_mode,
-                                     threshold=threshold,
-                                     is_all_step=is_all_step)
+    save_comparison_result_to_excel(nuc_data_id=nuc_data_id,
+                                    reference_file=reference_file,
+                                    comparison_files=comparison_files,
+                                    result_path=result_path,
+                                    physical_quantities=physical_quantities,
+                                    deviation_mode=deviation_mode,
+                                    threshold=threshold,
+                                    is_all_step=is_all_step)
 
 
 @main_cli.command()
