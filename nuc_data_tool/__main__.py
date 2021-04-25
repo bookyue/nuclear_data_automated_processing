@@ -66,7 +66,7 @@ def main_cli():
               'path',
               default=config.get_file_path('test_file_path'),
               type=click.Path(),
-              help='输入文件路径，默认读取配置文件中的路径')
+              help='输出文件路径，默认读取配置文件中的路径')
 @click.option('--physical_quantities', '-pq',
               'physical_quantities',
               default=all_physical_quantity_list,
@@ -83,7 +83,7 @@ def pop(path,
         physical_quantities,
         initiation):
     """
-    将输入文件(*.xml.out) 的内容填充进数据库
+    将输出文件(*.xml.out) 的内容填充进数据库
     """
 
     if initiation is True:
