@@ -102,12 +102,8 @@ def pop(path,
 
 
 @main_cli.command()
-@click.option('--files', '-f',
-              'filenames',
-              default='all',
-              cls=PythonLiteralOption,
-              help="""文件名(列表)(没有后缀) 例如：001.xml.out -> 001，默认为所有文件
-                   例子： 003  001,002  '[001,003]'""")
+@click.argument('filenames',
+                nargs=-1)
 @click.option('--result_path', '-p',
               'result_path',
               default=config.get_file_path('result_file_path'),
@@ -144,6 +140,15 @@ def extract(filenames,
             merge):
     """
     从数据库导出选中的文件的数据到工作簿(xlsx文件)
+
+    参数为文件列表(默认为所有文件)
+
+    \b
+    nuc_data_tool extract 'homo-case001-006' 'homo-case007-012' 'homo-case013-018'
+    nuc_data_tool extract 'homo-case001-006'
+    \b
+    文件名(没有后缀) 例如：001.xml.out -> 001
+    文件名列表 例如： 001 002 003
     """
 
     filenames = fetch_files_by_name(filenames)
@@ -216,7 +221,7 @@ def compare(reference_file,
     nuc_data_tool compare 'homo-case001-006'
     \b
     文件名(没有后缀) 例如：001.xml.out -> 001
-    文件名列表 例如： 003  001,002,003  '[001,004,003]'
+    文件名列表 例如： 001 002 003
     """
 
     reference_file = fetch_files_by_name(reference_file).pop()
