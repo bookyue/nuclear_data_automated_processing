@@ -151,7 +151,11 @@ def extract(filenames,
     文件名列表 例如： 001 002 003
     """
 
-    filenames = fetch_files_by_name(filenames)
+    if filenames:
+        filenames = fetch_files_by_name(filenames)
+    else:
+        filenames = fetch_files_by_name('all')
+
     physical_quantities = fetch_physical_quantities_by_name(physical_quantities)
     nuc_data_id = fetch_extracted_data_id(filenames,
                                           physical_quantities,
