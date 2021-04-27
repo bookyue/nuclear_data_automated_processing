@@ -51,7 +51,7 @@ jobs:
         run: cp nuc_data_tool/config.toml dist/
 
       - name: Package
-        run: tar -zcvf NUCtool-CLI-${{ steps.tag.outputs.tag }}-${{ runner.os }}-amd64.tar.gz dist/*
+        run: tar -zcvf NUCtool-CLI-${{ steps.tag.outputs.tag }}-${{ runner.os }}-amd64.tar.gz -C dist/ .
 
       - name: Upload build artifact
         uses: actions/upload-artifact@v2
