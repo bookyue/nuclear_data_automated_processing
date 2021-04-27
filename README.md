@@ -9,7 +9,7 @@ An automated processing tool for specific nuclear data.
 ### Dependencies
 nuc_tool requires:
 
-* SQLAlchemy (>= 1.4.7)  
+* SQLAlchemy (>= 1.4.11)  
 * pandas (>= 1.2.4)  
 * toml (>= 0.10.2)  
 * protobuf (>= 3.15.8)  
@@ -48,7 +48,7 @@ it will overide the default configration.
 The Nuclear Data Automated Processing tool is a command line application, named `nuctool`
 
 ```bash
-❯ python -m nuc_data_tool
+> nuctool --help
 Usage: python -m nuc_data_tool [OPTIONS] COMMAND [ARGS]...
 
   app 命令行
@@ -58,8 +58,8 @@ Options:
   --help     Show this message and exit.
 
 Commands:
-  compare  对文件列表进行两两组合，进行对比，计算并输出对比结果至工作簿(xlsx文件)
-  extract  从数据库导出选中的文件的数据到工作簿(xlsx文件)
+  compare  对文件列表进行两两组合，进行对比，计算并输出对比结果至工作簿(xlsx文件)...
+  extract  从数据库导出选中的文件的数据到工作簿(xlsx文件) 参数为文件列表(默认为所有文件) nuc_data_tool...
   fetch    获取 文件、物理量信息
   pop      将输出文件(*.xml.out) 的内容填充进数据库
 ```
@@ -144,14 +144,19 @@ Name: gamma_spectra
 ### Filter and extract data
 ```bash
 > nuctool extract --help
-Usage: python -m nuc_data_tool extract [OPTIONS]
+Usage: python -m nuc_data_tool extract [OPTIONS] [FILENAMES]...
 
   从数据库导出选中的文件的数据到工作簿(xlsx文件)
 
-Options:
-  -f, --files TEXT                文件名(列表)(没有后缀) 例如：001.xml.out -> 001，默认为所有文件
-                                  例子： 003  001,002  '[001,003]'
+  参数为文件列表(默认为所有文件)
 
+  nuc_data_tool extract 'homo-case001-006' 'homo-case007-012' 'homo-case013-018'
+  nuc_data_tool extract 'homo-case001-006'
+
+  文件名(没有后缀) 例如：001.xml.out -> 001
+  文件名列表 例如： 001 002 003
+
+Options:
   -p, --result_path PATH          输出文件路径，默认读取配置文件中的路径
   -pq, --physical_quantities [isotope|radioactivity|absorption|fission|decay_heat|gamma_spectra]
                                   物理量，默认为全部物理量
@@ -164,12 +169,17 @@ Options:
   --help                          Show this message and exit.
 ```
 
+First, let's talk about the optional argument - `FILENAMES`.  
+This argument can accept as many as possible file names.  
+If you need all of the files, you can simply ignore the argument.  
+It will make all file names as its own arguments, which is the default behavior.  
+
 We can specify the exported file location with option `-p, --result_path`.  
 The option `-pq, --physical_quantities` can be input multiple times. So we could focus on the physical quantities we interest in.  
 Only those physical quantities will be extracted with data.
 
 ```
-> nuctool extract -f homo-case097-102,homo-case139-144 -p result
+> nuctool extract 'homo-case097-102' 'homo-case139-144' -p result
 
 > ls result
 homo-case097-102.xlsx  homo-case139-144.xlsx
@@ -180,7 +190,7 @@ We filter data by nuclide list with `-n, --nuclide` option. You can find these d
 Extracting all steps by using `-all, --all_step ` option, if not, it just extracts the first step and the last step.
 
 ```bash
-> nuctool extract -f homo-case097-102,homo-case139-144 -p result -all
+> nuctool extract 'homo-case097-102' 'homo-case139-144' -p result -all
 
 > ls result
 all_steps_homo-case097-102.xlsx  all_steps_homo-case139-144.xlsx
@@ -189,8 +199,8 @@ all_steps_homo-case097-102.xlsx  all_steps_homo-case139-144.xlsx
 Appending the `-m, --merge` option, the extracted data will merge into a single file, instead of one by one file.
 
 ```bash
-> nuctool extract -f homo-case097-102,homo-case139-144 -p result -m
-> nuctool extract -f homo-case097-102,homo-case139-144 -p result -all -m
+> nuctool extract 'homo-case097-102' 'homo-case139-144' -p result -m
+> nuctool extract 'homo-case097-102' 'homo-case139-144' -p result -all -m
 > ls result
 all_steps_final.xlsx  final.xlsx
 ```
@@ -198,14 +208,19 @@ all_steps_final.xlsx  final.xlsx
 ### Compare and extract data
 ```bash
 > nuctool compare --help
-Usage: python -m nuc_data_tool compare [OPTIONS]
+Usage: python -m nuc_data_tool compare [OPTIONS] REFERENCE_FILE
+                                       [COMPARISON_FILES]...
 
   对文件列表进行两两组合，进行对比，计算并输出对比结果至工作簿(xlsx文件)
+  第一个参数为基准文件，第二个参数为文件列表(默认为除基准文件以外的所有文件)
+
+  nuc_data_tool compare 'homo-case001-006' 'homo-case007-012' 'homo-case013-018'
+  nuc_data_tool compare 'homo-case001-006'
+
+  文件名(没有后缀) 例如：001.xml.out -> 001
+  文件名列表 例如： 001 002 003
 
 Options:
-  -f, --files TEXT                文件名(列表)(没有后缀) 例如：001.xml.out -> 001，默认为所有文件
-                                  例子： 003  001,002,003  '[001,004,003]'
-
   -p, --result_path PATH          输出文件路径，默认读取配置文件中的路径
   -pq, --physical_quantities [isotope|radioactivity|absorption|fission|decay_heat|gamma_spectra]
                                   物理量，默认为 isotope
@@ -220,18 +235,22 @@ Options:
 
 The last but not least command, we used to compare and extract data.  
 
+Like the former command, arguments first.  
+There are two arguments.  
+One, `REFERENCE_FILE` the first argument, is a required argument,  
+and the other one, `COMPARISON_FILES` the rest of arguments, is a variadic argument - more specifically, it can accept an unlimited number of arguments.  
+
+A little bit difference with `FILENAMES` argument, the default value of `COMPARISON_FILES` argument is all of file names, except `REFERENCE_FILE` argument's value.  
+
+You can set one file name as the `REFERENCE_FILE`, and skip the `COMPARISON_FILES`.  
+The nuctool program will compare all rest of the files with the reference file one by one.  
+
 We can specify the exported file location with option `-p, --result_path`.  
 The option `-pq, --physical_quantities` can be input multiple times. So we could focus on the physical quantities we interest in.  
 Only those physical quantities will be campared and extracted.  
 
-The `-f, --files` option has a little complex.  
-Let's talk about a few details here.  
-This option takes array-like input, e.g. 001,002,003  '[001,004,003]'.  
-Then it generates all possible combinations of length 2 from the input.  
-Finally, compare these combinations one by one.  
-
 ```bash
-> nuctool compare -f 'UO2Flux_CRAM_1ton_50steps','homo-case007-012','homo-case013-018' -p result
+> nuctool compare 'UO2Flux_CRAM_1ton_50steps' 'homo-case007-012' 'homo-case013-018' -p result
 ('UO2Flux_CRAM_1ton_50steps', 'homo-case007-012')
 ('UO2Flux_CRAM_1ton_50steps', 'homo-case013-018')
 ('homo-case007-012', 'homo-case013-018')
@@ -247,7 +266,7 @@ Like the former one, we filter data by nuclide list with `-n, --nuclide` option.
 Same, extracting all steps by using `-all, --all_step ` option, if not, it just extracts the first step and the last step.
 
 ```bash
-> nuctool compare -f 'UO2Flux_CRAM_1ton_50steps','homo-case007-012','homo-case013-018' -p result -all
+> nuctool compare 'UO2Flux_CRAM_1ton_50steps' 'homo-case007-012' 'homo-case013-018' -p result -all
 ('UO2Flux_CRAM_1ton_50steps', 'homo-case007-012')
 ('UO2Flux_CRAM_1ton_50steps', 'homo-case013-018')
 ('homo-case007-012', 'homo-case013-018')
@@ -262,7 +281,7 @@ There are two deviation mode of calculation. The one is relative mode, the other
 We use `-dm, --deviation_mode` option to choose one of them.  
 
 ```bash
-> nuctool compare -f 'UO2Flux_CRAM_1ton_50steps','homo-case007-012','homo-case013-018' -p result -dm absolute
+> nuctool compare 'UO2Flux_CRAM_1ton_50steps' 'homo-case007-012' 'homo-case013-018' -p result -dm absolute
 ('UO2Flux_CRAM_1ton_50steps', 'homo-case007-012')
 ('UO2Flux_CRAM_1ton_50steps', 'homo-case013-018')
 ('homo-case007-012', 'homo-case013-018')
@@ -277,7 +296,7 @@ The `-t, --threshold` option defines the threshold value of calculation.
 The default value is `1.0E-12`. I think maybe not touching it is a good idea.
 
 ```bash
-> nuctool compare -f 'UO2Flux_CRAM_1ton_50steps','homo-case007-012','homo-case013-018' -p result -dm absolute -t 1.0E-10
+> nuctool compare 'UO2Flux_CRAM_1ton_50steps' 'homo-case007-012' 'homo-case013-018' -p result -dm absolute -t 1.0E-10
 ('UO2Flux_CRAM_1ton_50steps', 'homo-case007-012')
 ('UO2Flux_CRAM_1ton_50steps', 'homo-case013-018')
 ('homo-case007-012', 'homo-case013-018')
