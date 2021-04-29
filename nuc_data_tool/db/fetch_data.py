@@ -103,6 +103,7 @@ def fetch_data_by_filename(filename, physical_quantities):
                                                   for column in list(stmt.selected_columns))
                                     )
 
+            nuc_data.sort_values(by=['nuc_ix'], inplace=True)
             dict_df_data[physical_quantity.name] = nuc_data
 
     return dict_df_data
@@ -178,6 +179,7 @@ def fetch_data_by_filename_and_nuclide_list(filename, physical_quantities, nucli
                 nuc_data = pd.concat([nuc_data_exclude_middle_steps, middle_steps],
                                      axis=1, copy=False)
 
+            nuc_data.sort_values(by=['nuc_ix'], inplace=True)
             dict_df_data[physical_quantity.name] = nuc_data
 
     return dict_df_data
@@ -329,5 +331,7 @@ def fetch_extracted_data_by_filename_and_physical_quantity(nuc_data_id,
 
     if not df_right.empty:
         df_left = pd.merge(df_left, df_right, how='outer', on=['nuc_ix', 'name'])
+
+    df_left.sort_values(by=['nuc_ix'], inplace=True)
 
     return df_left
