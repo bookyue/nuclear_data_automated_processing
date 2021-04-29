@@ -13,7 +13,6 @@ gamma_spectra = ["Gamma-ray", "Total  "]
 [file_path]
 test_file_path = "./test"
 result_file_path = "./result"
-burnup_time_file_path = "./burnup time"
 
 
 [database]
