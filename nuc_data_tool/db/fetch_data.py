@@ -66,7 +66,7 @@ def fetch_physical_quantities_by_name(physical_quantities):
     return physical_quantities
 
 
-def fetch_data_by_filename(filename, physical_quantities):
+def fetch_data_by_filename(filename, physical_quantities, is_all_step=False):
     """
     根据输入的File和physical quantities从Nuc， NucData，PhysicalQuantity table获取数据
 
@@ -77,6 +77,8 @@ def fetch_data_by_filename(filename, physical_quantities):
     physical_quantities : list[str] or str or list[PhysicalQuantity] or PhysicalQuantity
         物理量，可以是物理量名的list[str]或str，
         也可以是PhysicalQuantity list也可以是list[PhysicalQuantity]或PhysicalQuantity
+    is_all_step : bool, default false
+        是否读取全部中间结果数据列，默认只读取最终结果列
     Returns
     -------
     dict[str, pd.DataFrame]
@@ -91,17 +93,39 @@ def fetch_data_by_filename(filename, physical_quantities):
 
         physical_quantity: PhysicalQuantity
         for physical_quantity in physical_quantities:
-            stmt = (select(Nuc.nuc_ix, Nuc.name, NucData.first_step, NucData.last_step)
-                    .join(Nuc, Nuc.id == NucData.nuc_id)
-                    .join(PhysicalQuantity, PhysicalQuantity.id == NucData.physical_quantity_id)
-                    .where(NucData.file_id == filename.id)
-                    .where(PhysicalQuantity.id == physical_quantity.id)
-                    )
+            file_id = filename.id
+            physical_quantity_id = physical_quantity.id
+
+            if not is_all_step:
+                # 不读取中间结果，所以不选择NucData.middle_steps，否则反之
+                stmt = lambda_stmt(lambda: select(Nuc.nuc_ix, Nuc.name,
+                                                  NucData.first_step, NucData.last_step))
+            else:
+                stmt = lambda_stmt(lambda: select(Nuc.nuc_ix, Nuc.name,
+                                                  NucData.first_step, NucData.last_step,
+                                                  NucData.middle_steps))
+
+            stmt += lambda s: s.join(Nuc,
+                                     Nuc.id == NucData.nuc_id)
+            stmt += lambda s: s.join(PhysicalQuantity,
+                                     PhysicalQuantity.id == NucData.physical_quantity_id)
+            stmt += lambda s: s.where(NucData.file_id == file_id,
+                                      PhysicalQuantity.id == physical_quantity_id)
 
             nuc_data = pd.DataFrame(data=session.execute(stmt).all(),
                                     columns=tuple(column.name
                                                   for column in list(stmt.selected_columns))
                                     )
+
+            if is_all_step:
+                nuc_data_exclude_middle_steps = nuc_data.drop(columns='middle_steps', axis=1)
+                middle_steps = pd.DataFrame([middle_steps_line_parsing(middle_steps)
+                                             for middle_steps in nuc_data['middle_steps']
+                                             if middle_steps is not None])
+
+                del nuc_data
+                nuc_data = pd.concat([nuc_data_exclude_middle_steps, middle_steps],
+                                     axis=1, copy=False)
 
             nuc_data.sort_values(by=['nuc_ix'], inplace=True)
             dict_df_data[physical_quantity.name] = nuc_data
