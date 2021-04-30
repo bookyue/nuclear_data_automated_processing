@@ -66,7 +66,7 @@ def fetch_physical_quantities_by_name(physical_quantities):
     return physical_quantities
 
 
-def fetch_data_by_filename(filename, physical_quantities, is_all_step=False):
+def fetch_data_by_filename_and_physical_quantities(filename, physical_quantities, is_all_step=False):
     """
     根据输入的File和physical quantities从Nuc， NucData，PhysicalQuantity table获取数据
 
@@ -86,51 +86,88 @@ def fetch_data_by_filename(filename, physical_quantities, is_all_step=False):
     """
     dict_df_data = {}
 
+    if type_checker(filename, File) == 'str':
+        filename = fetch_files_by_name(filename).pop()
+
     if type_checker(physical_quantities, PhysicalQuantity) == 'str':
         physical_quantities = fetch_physical_quantities_by_name(physical_quantities)
+
+    physical_quantity: PhysicalQuantity
+    for physical_quantity in physical_quantities:
+
+        nuc_data = fetch_data_by_filename_and_physical_quantity(filename,
+                                                                physical_quantity,
+                                                                is_all_step)
+        dict_df_data[physical_quantity.name] = nuc_data
+
+    return dict_df_data
+
+
+def fetch_data_by_filename_and_physical_quantity(filename, physical_quantity, is_all_step=False):
+    """
+    根据输入的 File 和 physical quantity 从 Nuc， NucData，PhysicalQuantity table获取数据
+
+    Parameters
+    ----------
+    filename : File
+        File object
+    physical_quantity : str or PhysicalQuantity
+        物理量，可以是物理量的 str，PhysicalQuantity
+    is_all_step : bool, default false
+        是否读取全部中间结果数据列，默认只读取最终结果列
+
+    Returns
+    -------
+    pd.DataFrame
+    """
+
+    if type_checker(filename, File) == 'str':
+        filename = fetch_files_by_name(filename).pop()
+
+    if type_checker(physical_quantity, PhysicalQuantity) == 'str':
+        physical_quantity = fetch_physical_quantities_by_name(physical_quantity).pop()
 
     with Session() as session:
 
         physical_quantity: PhysicalQuantity
-        for physical_quantity in physical_quantities:
-            file_id = filename.id
-            physical_quantity_id = physical_quantity.id
 
-            if not is_all_step:
-                # 不读取中间结果，所以不选择NucData.middle_steps，否则反之
-                stmt = lambda_stmt(lambda: select(Nuc.nuc_ix, Nuc.name,
-                                                  NucData.first_step, NucData.last_step))
-            else:
-                stmt = lambda_stmt(lambda: select(Nuc.nuc_ix, Nuc.name,
-                                                  NucData.first_step, NucData.last_step,
-                                                  NucData.middle_steps))
+        file_id = filename.id
+        physical_quantity_id = physical_quantity.id
 
-            stmt += lambda s: s.join(Nuc,
-                                     Nuc.id == NucData.nuc_id)
-            stmt += lambda s: s.join(PhysicalQuantity,
-                                     PhysicalQuantity.id == NucData.physical_quantity_id)
-            stmt += lambda s: s.where(NucData.file_id == file_id,
-                                      PhysicalQuantity.id == physical_quantity_id)
+        if not is_all_step:
+            # 不读取中间结果，所以不选择NucData.middle_steps，否则反之
+            stmt = lambda_stmt(lambda: select(Nuc.nuc_ix, Nuc.name,
+                                              NucData.first_step, NucData.last_step))
+        else:
+            stmt = lambda_stmt(lambda: select(Nuc.nuc_ix, Nuc.name,
+                                              NucData.first_step, NucData.last_step,
+                                              NucData.middle_steps))
 
-            nuc_data = pd.DataFrame(data=session.execute(stmt).all(),
-                                    columns=tuple(column.name
-                                                  for column in list(stmt.selected_columns))
-                                    )
+        stmt += lambda s: s.join(Nuc,
+                                 Nuc.id == NucData.nuc_id)
+        stmt += lambda s: s.join(PhysicalQuantity,
+                                 PhysicalQuantity.id == NucData.physical_quantity_id)
+        stmt += lambda s: s.where(NucData.file_id == file_id,
+                                  PhysicalQuantity.id == physical_quantity_id)
 
-            if is_all_step:
-                nuc_data_exclude_middle_steps = nuc_data.drop(columns='middle_steps', axis=1)
-                middle_steps = pd.DataFrame([middle_steps_line_parsing(middle_steps)
-                                             for middle_steps in nuc_data['middle_steps']
-                                             if middle_steps is not None])
+        nuc_data = pd.DataFrame(data=session.execute(stmt).all(),
+                                columns=tuple(column.name
+                                              for column in list(stmt.selected_columns))
+                                )
 
-                del nuc_data
-                nuc_data = pd.concat([nuc_data_exclude_middle_steps, middle_steps],
-                                     axis=1, copy=False)
+        if is_all_step:
+            nuc_data_exclude_middle_steps = nuc_data.drop(columns='middle_steps', axis=1)
+            middle_steps = pd.DataFrame([middle_steps_line_parsing(middle_steps)
+                                         for middle_steps in nuc_data['middle_steps']
+                                         if middle_steps is not None])
 
-            nuc_data.sort_values(by=['nuc_ix'], inplace=True)
-            dict_df_data[physical_quantity.name] = nuc_data
+            del nuc_data
+            nuc_data = pd.concat([nuc_data_exclude_middle_steps, middle_steps],
+                                 axis=1, copy=False)
 
-    return dict_df_data
+        nuc_data.sort_values(by=['nuc_ix'], inplace=True)
+
+    return nuc_data
 
 
 def fetch_data_by_filename_and_nuclide_list(filename, physical_quantities, nuclide_list, is_all_step=False):
@@ -301,7 +338,7 @@ def fetch_extracted_data_by_filename_and_physical_quantity(nuc_data_id,
         filename = fetch_files_by_name(filename).pop()
 
     if type_checker(physical_quantity, PhysicalQuantity) == 'str':
-        physical_quantity = fetch_physical_quantities_by_name(physical_quantity)
+        physical_quantity = fetch_physical_quantities_by_name(physical_quantity).pop()
 
     df_left = pd.DataFrame(data=None, columns=['nuc_ix', 'name'])
 
