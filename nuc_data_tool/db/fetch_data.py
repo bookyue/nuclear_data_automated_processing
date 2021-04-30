@@ -79,6 +79,7 @@ def fetch_data_by_filename_and_physical_quantities(filename, physical_quantities
         也可以是PhysicalQuantity list也可以是list[PhysicalQuantity]或PhysicalQuantity
     is_all_step : bool, default false
         是否读取全部中间结果数据列，默认只读取最终结果列
+
     Returns
     -------
     dict[str, pd.DataFrame]
@@ -186,6 +187,7 @@ def fetch_data_by_filename_and_nuclide_list(filename, physical_quantities, nucli
         核素list
     is_all_step : bool, default false
         是否读取全部中间结果数据列，默认只读取最终结果列
+
     Returns
     -------
     dict[str, pd.DataFrame]
