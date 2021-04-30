@@ -50,8 +50,12 @@ def filter_data(filename, physical_quantity_name, nuclide_list, is_all_step):
     return dict_df_data
 
 
-def save_extracted_data_to_exel(nuc_data_id, filenames=None, physical_quantities=None, is_all_step=False,
-                                result_path=Path(''), merge=True):
+def save_extracted_data_to_exel(nuc_data_id,
+                                filenames=None,
+                                physical_quantities=None,
+                                is_all_step=False,
+                                result_path=Path('.'),
+                                merge=True):
     """
     将数据存入到exel文件
     将传入的File list中包含的文件的数据存到exel文件
@@ -60,7 +64,7 @@ def save_extracted_data_to_exel(nuc_data_id, filenames=None, physical_quantities
     Parameters
     ----------
     nuc_data_id : list[int]
-    filenames : comparison_files : list[File or str] or File or str
+    filenames : list[File or str] or File or str
     physical_quantities : list[str or PhysicalQuantity] or str or PhysicalQuantity
         物理量，可以是物理量名的list[str]或str，
         也可以是list[PhysicalQuantity]或PhysicalQuantity
