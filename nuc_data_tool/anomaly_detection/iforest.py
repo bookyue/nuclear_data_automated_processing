@@ -124,6 +124,8 @@ def save_prediction_to_exel(filenames,
 
     model = load_model(model_name)
 
+    result_path = Path(result_path).joinpath('anomaly_detection_result')
+
     prefix = 'iforest'
 
     file_name = 'final.xlsx'
