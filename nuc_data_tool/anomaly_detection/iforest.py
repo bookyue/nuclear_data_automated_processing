@@ -166,11 +166,11 @@ def save_prediction_to_exel(filenames,
                 df_right.drop(columns='Anomaly', inplace=True)
                 df_right.rename(columns={'first_step': f'{filename.name}_first_step',
                                          'last_step': f'{filename.name}_last_step',
-                                         'Score': f'{filename.name}_score'},
+                                         'Anomaly_Score': f'{filename.name}_Anomaly_Score'},
                                 inplace=True)
                 columns = {col: f'{filename.name}_{col}'
                            for col in df_right.columns.values.tolist()
-                           if col == 'middle_steps'}
+                           if 'middle_step' in col}
 
                 df_right.rename(columns=columns, inplace=True)
 
