@@ -137,6 +137,7 @@ def _merge_reference_comparison_and_deviation(df_reference,
     reserved_index : pd.Series
     reserved_na : bool, default = False
         如果reserved_na为False,则drop columns with all NaN's，否则反之
+
     Returns
     -------
     pd.DataFrame
@@ -161,7 +162,7 @@ def calculate_comparative_result(nuc_data_id,
                                  threshold=Decimal('1.0E-12'),
                                  is_all_step=False):
     """
-    选定一个基准文件，一个对比文件，与其进行对比，计算并输出对比结果至工作簿(xlsx文件)
+    选定一个基准文件，一个对比文件，与其进行对比，计算并返回对比结果
 
     Parameters
     ----------

@@ -60,6 +60,18 @@ class Config:
         """
         return Path(self.conf.get("file_path").get(properties))
 
+    def get_anomaly_detection_config(self, properties):
+        """
+        获取异常检测的配置
+        Returns
+        -------
+
+        """
+        if isinstance(self.conf.get("anomaly_detection").get(properties), str):
+            return Path(self.conf.get("anomaly_detection").get(properties))
+        else:
+            return self.conf.get("anomaly_detection").get(properties)
+
     def get_database_config(self):
         """
         获取database下的配置
@@ -82,33 +94,6 @@ class Config:
         list[str]
         """
         return self.conf.get("nuclide_list").get(nuclide_name, None)
-
-    def get_decay_nuclide_list(self):
-        """
-        获取decay核素列表
-        Returns
-        -------
-
-        """
-        return self.conf.get("nuclide_list").get("decay")
-
-    def get_fission_light_nuclide_list(self):
-        """
-        获取fission_light核素列表
-        Returns
-        -------
-
-        """
-        return self.conf.get("nuclide_list").get("fission_light")
-
-    def get_short_lives_nuclide_list(self):
-        """
-        获取short_lives核素列表
-        Returns
-        -------
-
-        """
-        return self.conf.get("nuclide_list").get("short_lives")
 
 
 CONFIG_FILE_PATH = Path.cwd().joinpath('config.toml')

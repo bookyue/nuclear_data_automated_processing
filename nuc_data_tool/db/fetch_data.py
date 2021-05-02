@@ -66,7 +66,7 @@ def fetch_physical_quantities_by_name(physical_quantities):
     return physical_quantities
 
 
-def fetch_data_by_filename(filename, physical_quantities):
+def fetch_data_by_filename_and_physical_quantities(filename, physical_quantities, is_all_step=False):
     """
     根据输入的File和physical quantities从Nuc， NucData，PhysicalQuantity table获取数据
 
@@ -77,6 +77,9 @@ def fetch_data_by_filename(filename, physical_quantities):
     physical_quantities : list[str] or str or list[PhysicalQuantity] or PhysicalQuantity
         物理量，可以是物理量名的list[str]或str，
         也可以是PhysicalQuantity list也可以是list[PhysicalQuantity]或PhysicalQuantity
+    is_all_step : bool, default false
+        是否读取全部中间结果数据列，默认只读取最终结果列
+
     Returns
     -------
     dict[str, pd.DataFrame]
@@ -84,28 +87,89 @@ def fetch_data_by_filename(filename, physical_quantities):
     """
     dict_df_data = {}
 
+    if type_checker(filename, File) == 'str':
+        filename = fetch_files_by_name(filename).pop()
+
     if type_checker(physical_quantities, PhysicalQuantity) == 'str':
         physical_quantities = fetch_physical_quantities_by_name(physical_quantities)
 
-    with Session() as session:
-
-        physical_quantity: PhysicalQuantity
-        for physical_quantity in physical_quantities:
-            stmt = (select(Nuc.nuc_ix, Nuc.name, NucData.first_step, NucData.last_step)
-                    .join(Nuc, Nuc.id == NucData.nuc_id)
-                    .join(PhysicalQuantity, PhysicalQuantity.id == NucData.physical_quantity_id)
-                    .where(NucData.file_id == filename.id)
-                    .where(PhysicalQuantity.id == physical_quantity.id)
-                    )
-
-            nuc_data = pd.DataFrame(data=session.execute(stmt).all(),
-                                    columns=tuple(column.name
-                                                  for column in list(stmt.selected_columns))
-                                    )
-
-            dict_df_data[physical_quantity.name] = nuc_data
+    physical_quantity: PhysicalQuantity
+    for physical_quantity in physical_quantities:
+        nuc_data = fetch_data_by_filename_and_physical_quantity(filename,
+                                                                physical_quantity,
+                                                                is_all_step)
+        dict_df_data[physical_quantity.name] = nuc_data
 
     return dict_df_data
+
+
+def fetch_data_by_filename_and_physical_quantity(filename, physical_quantity, is_all_step=False):
+    """
+    根据输入的 File 和 physical quantity 从 Nuc， NucData，PhysicalQuantity table获取数据
+
+    Parameters
+    ----------
+    filename : File
+        File object
+    physical_quantity : str or PhysicalQuantity
+        物理量，可以是物理量的 str，PhysicalQuantity
+    is_all_step : bool, default false
+        是否读取全部中间结果数据列，默认只读取最终结果列
+
+    Returns
+    -------
+    pd.DataFrame
+    """
+
+    if type_checker(filename, File) == 'str':
+        filename = fetch_files_by_name(filename).pop()
+
+    if type_checker(physical_quantity, PhysicalQuantity) == 'str':
+        physical_quantity = fetch_physical_quantities_by_name(physical_quantity).pop()
+
+    df_left = pd.DataFrame(data=None, columns=['nuc_ix', 'name'])
+
+    file_id = filename.id
+    physical_quantity_id = physical_quantity.id
+
+    if not is_all_step:
+        # 不读取中间结果，所以不选择NucData.middle_steps，否则反之
+        stmt = lambda_stmt(lambda: select(Nuc.nuc_ix, Nuc.name,
+                                          NucData.first_step, NucData.last_step))
+    else:
+        stmt = lambda_stmt(lambda: select(Nuc.nuc_ix, Nuc.name,
+                                          NucData.first_step, NucData.last_step,
+                                          NucData.middle_steps))
+
+    stmt += lambda s: s.join(Nuc,
+                             Nuc.id == NucData.nuc_id)
+    stmt += lambda s: s.join(PhysicalQuantity,
+                             PhysicalQuantity.id == NucData.physical_quantity_id)
+    stmt += lambda s: s.where(NucData.file_id == file_id,
+                              PhysicalQuantity.id == physical_quantity_id)
+
+    with Session() as session:
+        column_names = [column.name for
+                        column in list(stmt.selected_columns)]
+        df_right = pd.DataFrame(data=session.execute(stmt).all(),
+                                columns=column_names)
+        if is_all_step:
+            exclude_middle_steps = df_right.drop(columns='middle_steps', axis=1)
+            del column_names[-1]
+            exclude_middle_steps.columns = column_names
+
+            middle_steps = pd.DataFrame([middle_steps_line_parsing(middle_steps)
+                                         for middle_steps in df_right['middle_steps']
+                                         if middle_steps is not None])
+
+            df_right = pd.concat([exclude_middle_steps, middle_steps], axis=1, copy=False)
+
+    if not df_right.empty:
+        df_left = pd.merge(df_left, df_right, how='outer', on=['nuc_ix', 'name'])
+
+    df_left.sort_values(by=['nuc_ix'], inplace=True)
+
+    return df_left
 
 
 def fetch_data_by_filename_and_nuclide_list(filename, physical_quantities, nuclide_list, is_all_step=False):
@@ -124,6 +188,7 @@ def fetch_data_by_filename_and_nuclide_list(filename, physical_quantities, nucli
         核素list
     is_all_step : bool, default false
         是否读取全部中间结果数据列，默认只读取最终结果列
+
     Returns
     -------
     dict[str, pd.DataFrame]
@@ -178,6 +243,7 @@ def fetch_data_by_filename_and_nuclide_list(filename, physical_quantities, nucli
                 nuc_data = pd.concat([nuc_data_exclude_middle_steps, middle_steps],
                                      axis=1, copy=False)
 
+            nuc_data.sort_values(by=['nuc_ix'], inplace=True)
             dict_df_data[physical_quantity.name] = nuc_data
 
     return dict_df_data
@@ -275,7 +341,7 @@ def fetch_extracted_data_by_filename_and_physical_quantity(nuc_data_id,
         filename = fetch_files_by_name(filename).pop()
 
     if type_checker(physical_quantity, PhysicalQuantity) == 'str':
-        physical_quantity = fetch_physical_quantities_by_name(physical_quantity)
+        physical_quantity = fetch_physical_quantities_by_name(physical_quantity).pop()
 
     df_left = pd.DataFrame(data=None, columns=['nuc_ix', 'name'])
 
@@ -330,4 +396,37 @@ def fetch_extracted_data_by_filename_and_physical_quantity(nuc_data_id,
     if not df_right.empty:
         df_left = pd.merge(df_left, df_right, how='outer', on=['nuc_ix', 'name'])
 
+    df_left.sort_values(by=['nuc_ix'], inplace=True)
+
     return df_left
+
+
+def fetch_max_num_of_middle_steps(physical_quantity='isotope'):
+    """
+    获取选定物理量中所有文件 middle_step 的最大值
+
+    Parameters
+    ----------
+    physical_quantity : str or PhysicalQuantity, default = 'isotope'
+        物理量，可以是物理量名的list[str]或str，
+        默认为核素密度
+
+    Returns
+    -------
+    int
+    """
+    files = fetch_files_by_name(filenames='all')
+
+    if type_checker(physical_quantity, PhysicalQuantity) == 'str':
+        physical_quantity = fetch_physical_quantities_by_name(physical_quantity).pop()
+
+    max_num = 0
+    for file in files:
+        nuc_data = fetch_data_by_filename_and_physical_quantity(file,
+                                                                physical_quantity,
+                                                                True)
+        cur_num = len(nuc_data.columns)
+        if max_num < cur_num:
+            max_num = cur_num
+
+    return max_num - 4

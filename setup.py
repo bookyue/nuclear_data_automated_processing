@@ -31,9 +31,9 @@ setup(
 
     include_package_data=True,
 
-    install_requires=["SQLAlchemy >= 1.4.11", "pandas >= 1.2.4", "toml >= 0.10.2",
-                      "protobuf >= 3.15.8", "openpyxl >= 3.0.7", "click >= 7.1.2",
-                      "psycopg2 >= 2.8.6", "mysql-connector-python >= 8.0.23"],
+    install_requires=["SQLAlchemy >= 1.4.0", "pandas", "toml",
+                      "protobuf", "openpyxl", "click",
+                      "psycopg2", "mysql-connector-python", "pycaret >= 2.3.0"],
     python_requires=">=3.8",
 
     entry_points={

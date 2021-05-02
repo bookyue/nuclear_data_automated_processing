@@ -30,6 +30,9 @@ def populate_database(xml_file):
         # 如果数据库不存在对应的File records则插入
         file_tmp = File(name=xml_file.name)
         session.add(file_tmp)
+    else:
+        session.close()
+        return
 
     for key in xml_file.table_of_physical_quantity:
 
