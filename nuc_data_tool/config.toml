@@ -11,9 +11,13 @@ gamma_spectra = ["Gamma-ray", "Total  "]
 
 
 [file_path]
-test_file_path = "./test"
+test_file_path = "./output_files"
 result_file_path = "./result"
 
+
+[anomaly_detection]
+model_path = "./model/nuc_all_steps_isotope_model.pkl"
+max_middle_steps_num = 191
 
 [database]
 # 选择数据库（目前支持 mysql, postgresql, sqlite）

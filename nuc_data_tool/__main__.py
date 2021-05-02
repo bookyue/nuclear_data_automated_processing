@@ -4,6 +4,7 @@ import click
 from click import UsageError
 
 from nuc_data_tool import __version__
+from nuc_data_tool.anomaly_detection.iforest import save_prediction_to_exel
 from nuc_data_tool.db.db_utils import init_db
 from nuc_data_tool.db.fetch_data import (fetch_extracted_data_id,
                                          fetch_physical_quantities_by_name,
@@ -251,6 +252,72 @@ def compare(reference_file,
                                     deviation_mode=deviation_mode,
                                     threshold=threshold,
                                     is_all_step=is_all_step)
+
+
+@main_cli.command()
+@click.argument('filenames',
+                nargs=-1)
+@click.option('--result_path', '-rp',
+              'result_path',
+              default=config.get_file_path('result_file_path'),
+              type=click.Path(),
+              help='输出文件路径，默认读取配置文件中的路径')
+@click.option('--model_path', '-mp',
+              'model_path',
+              default=config.get_anomaly_detection_config('model_path'),
+              type=click.Path(),
+              help='模型文件路径，默认读取配置文件中的路径')
+@click.option('--physical_quantities', '-pq',
+              'physical_quantities',
+              default=['isotope'],
+              type=click.Choice(all_physical_quantity_list,
+                                case_sensitive=False),
+              multiple=True,
+              help='物理量，默认为 isotope')
+@click.option('--max_steps_num', '-num',
+              'max_middle_steps_num',
+              default=config.get_anomaly_detection_config('max_middle_steps_num'),
+              type=click.INT,
+              help='最大 middle_steps 长度值，默认读取配置文件中的值\n'
+                   '为None则自动读取数据库进行计算（注意：耗时极长）')
+@click.option('--all_step', '-all',
+              'is_all_step',
+              is_flag=True,
+              default=False,
+              help='提取中间步骤')
+@click.option('--merge', '-m',
+              'merge',
+              is_flag=True,
+              default=False,
+              help='将结果合并输出至一个文件')
+def detect(filenames,
+           result_path,
+           model_path,
+           physical_quantities,
+           max_middle_steps_num,
+           is_all_step,
+           merge):
+    """
+    使用 iforest 对数据进行异常检测，并导出异常的数据至工作簿(xlsx文件)
+
+    参数为文件列表(默认为所有文件)
+    """
+
+    if filenames:
+        filenames = fetch_files_by_name(filenames)
+    else:
+        filenames = fetch_files_by_name('all')
+
+    physical_quantities = fetch_physical_quantities_by_name(physical_quantities)
+    model_name = str(Path(model_path).parent.joinpath(Path(model_path).stem))
+
+    save_prediction_to_exel(filenames=filenames,
+                            result_path=result_path,
+                            model_name=model_name,
+                            physical_quantities=physical_quantities,
+                            max_middle_steps_num=max_middle_steps_num,
+                            is_all_step=is_all_step,
+                            merge=merge)
 
 
 @main_cli.command()
