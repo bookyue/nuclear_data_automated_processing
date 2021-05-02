@@ -96,9 +96,9 @@ def save_prediction_to_exel(filenames,
     else:
         for filename in filenames:
             if is_all_step:
-                Path(result_path).joinpath(f'all_steps_{filename.name}.xlsx').unlink(missing_ok=True)
+                Path(result_path).joinpath(f'{prefix}_all_steps_{filename.name}.xlsx').unlink(missing_ok=True)
             else:
-                Path(result_path).joinpath(f'{filename.name}.xlsx').unlink(missing_ok=True)
+                Path(result_path).joinpath(f'{prefix}_{filename.name}.xlsx').unlink(missing_ok=True)
         del filename
 
     for physical_quantity in physical_quantities:
@@ -121,6 +121,11 @@ def save_prediction_to_exel(filenames,
                                          'last_step': f'{filename.name}_last_step',
                                          'Score': f'{filename.name}_score'},
                                 inplace=True)
+                columns = {col: f'{filename.name}_{col}'
+                           for col in df_right.columns.values.tolist()
+                           if col == 'middle_steps'}
+
+                df_right.rename(columns=columns, inplace=True)
 
                 df_left = pd.merge(df_left, df_right, how='outer', on=['nuc_ix', 'name'])
 
@@ -137,7 +142,7 @@ def save_prediction_to_exel(filenames,
 
 
 def main():
-    save_prediction_to_exel('all', 'all', False, merge=False)
+    save_prediction_to_exel('all', 'isotope', True, merge=False)
 
 
 main()
