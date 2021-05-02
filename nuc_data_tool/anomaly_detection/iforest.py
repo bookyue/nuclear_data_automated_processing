@@ -87,12 +87,12 @@ def iforest_prediction(filename,
 
 
 def save_prediction_to_exel(filenames,
+                            result_path,
+                            model_name='nuc_all_steps_isotope_model',
                             physical_quantities='isotope',
-                            is_all_step=False,
-                            result_path=Path('.'),
-                            merge=True,
                             max_middle_steps_num=None,
-                            model_name='NUC IForest Model'):
+                            is_all_step=False,
+                            merge=True):
     """
 
     Parameters
@@ -190,14 +190,3 @@ def save_prediction_to_exel(filenames,
             save_to_excel({physical_quantity.name: df_left},
                           file_name,
                           result_path)
-
-
-def main():
-    save_prediction_to_exel('all', 'isotope',
-                            is_all_step=True,
-                            model_name='nuc_all_steps_isotope_model',
-                            max_middle_steps_num=191,
-                            merge=False)
-
-
-main()
