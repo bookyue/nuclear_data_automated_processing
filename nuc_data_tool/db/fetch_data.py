@@ -399,3 +399,34 @@ def fetch_extracted_data_by_filename_and_physical_quantity(nuc_data_id,
     df_left.sort_values(by=['nuc_ix'], inplace=True)
 
     return df_left
+
+
+def fetch_max_num_of_middle_steps(physical_quantity='isotope'):
+    """
+    获取选定物理量中所有文件 middle_step 的最大值
+
+    Parameters
+    ----------
+    physical_quantity : str or PhysicalQuantity, default = 'isotope'
+        物理量，可以是物理量名的list[str]或str，
+        默认为核素密度
+
+    Returns
+    -------
+    int
+    """
+    files = fetch_files_by_name(filenames='all')
+
+    if type_checker(physical_quantity, PhysicalQuantity) == 'str':
+        physical_quantity = fetch_physical_quantities_by_name(physical_quantity).pop()
+
+    max_num = 0
+    for file in files:
+        nuc_data = fetch_data_by_filename_and_physical_quantity(file,
+                                                                physical_quantity,
+                                                                True)
+        cur_num = len(nuc_data.columns)
+        if max_num < cur_num:
+            max_num = cur_num
+
+    return max_num - 4
