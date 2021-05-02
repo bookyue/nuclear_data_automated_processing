@@ -14,7 +14,7 @@ from nuc_data_tool.utils.workbook import save_to_excel
 def iforest_prediction(filename,
                        physical_quantity='isotope',
                        is_all_step=False,
-                       model='NUC IForest Model'):
+                       model=None):
     """
 
     Parameters
@@ -25,7 +25,7 @@ def iforest_prediction(filename,
         默认为核素密度
     is_all_step : bool, default = False
         是否读取全部中间结果数据列，默认只读取最终结果列
-    model : str
+    model
 
     Returns
     -------
@@ -38,14 +38,12 @@ def iforest_prediction(filename,
     if type_checker(physical_quantity, PhysicalQuantity) == 'str':
         physical_quantity = fetch_physical_quantities_by_name(physical_quantity).pop()
 
-    saved_iforest = load_model(model)
-
     nuc_data = fetch_data_by_filename_and_physical_quantity(filename, physical_quantity, is_all_step)
 
     if nuc_data.empty:
         return nuc_data
 
-    prediction = predict_model(saved_iforest, data=nuc_data)
+    prediction = predict_model(model, data=nuc_data)
 
     return prediction[prediction['Label'] == 1]
 
@@ -55,7 +53,7 @@ def save_prediction_to_exel(filenames,
                             is_all_step=False,
                             result_path=Path('.'),
                             merge=True,
-                            model='NUC IForest Model'):
+                            model_name='NUC IForest Model'):
     """
 
     Parameters
@@ -69,7 +67,7 @@ def save_prediction_to_exel(filenames,
     result_path : Path or str
     merge : bool, default = True
         是否将结果合并输出至一个文件，否则单独输出至每个文件
-    model : str
+    model_name : str
 
     Returns
     -------
@@ -81,6 +79,8 @@ def save_prediction_to_exel(filenames,
 
     if type_checker(physical_quantities, PhysicalQuantity) == 'str':
         physical_quantities = fetch_physical_quantities_by_name(physical_quantities)
+
+    model = load_model(model_name)
 
     prefix = 'iforest'
 
@@ -142,7 +142,10 @@ def save_prediction_to_exel(filenames,
 
 
 def main():
-    save_prediction_to_exel('all', 'isotope', True, merge=False)
+    save_prediction_to_exel('all', 'isotope',
+                            is_all_step=False,
+                            model_name='nuc_isotope_model',
+                            merge=True)
 
 
 main()
