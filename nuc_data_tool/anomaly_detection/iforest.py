@@ -83,7 +83,7 @@ def iforest_prediction(filename,
 
     prediction = predict_model(model, data=nuc_data)
 
-    return prediction[prediction['Label'] == 1]
+    return prediction[prediction['Anomaly'] == 1]
 
 
 def save_prediction_to_exel(filenames,
@@ -163,7 +163,7 @@ def save_prediction_to_exel(filenames,
                                           model)
 
             if not df_right.empty:
-                df_right.drop(columns='Label', inplace=True)
+                df_right.drop(columns='Anomaly', inplace=True)
                 df_right.rename(columns={'first_step': f'{filename.name}_first_step',
                                          'last_step': f'{filename.name}_last_step',
                                          'Score': f'{filename.name}_score'},
@@ -193,9 +193,9 @@ def save_prediction_to_exel(filenames,
 def main():
     save_prediction_to_exel('all', 'isotope',
                             is_all_step=True,
-                            model_name='nuc_isotope_model',
+                            model_name='nuc_all_steps_isotope_model',
                             max_middle_steps_num=191,
-                            merge=True)
+                            merge=False)
 
 
 main()
