@@ -365,7 +365,7 @@ def fetch(files,
 
 
 def main():
-    main_cli(prog_name='python -m nuc_data_tool')
+    main_cli(prog_name='nuctool')
 
 
 main()
