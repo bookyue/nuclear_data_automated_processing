@@ -26,7 +26,6 @@ def _chosen_db(db_type=None, debug=False):
         db_type = db_config['chosen_db']
     elif db_type not in db_config:
         db_type = 'sqlite'
-    pass
 
     user = db_config[db_type].get('user')
     password = db_config[db_type].get('password')

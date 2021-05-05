@@ -281,7 +281,6 @@ def fetch_extracted_data_id(filenames=None, physical_quantities='all', nuclide_l
 
     with Session() as session:
         for filename in filenames:
-            physical_quantities: list[PhysicalQuantity]
             physical_quantities_id = [physical_quantity.id
                                       for physical_quantity in physical_quantities]
             file_id = filename.id
