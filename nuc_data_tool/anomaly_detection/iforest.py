@@ -90,7 +90,7 @@ def save_prediction_to_exel(filenames,
                             result_path,
                             model_name='nuc_all_steps_isotope_model',
                             physical_quantities='isotope',
-                            max_middle_steps_num=None,
+                            max_middle_steps_num=-1,
                             is_all_step=False,
                             merge=True):
     """
@@ -106,9 +106,9 @@ def save_prediction_to_exel(filenames,
     result_path : Path or str
     merge : bool, default = True
         是否将结果合并输出至一个文件，否则单独输出至每个文件
-    max_middle_steps_num : int, default = None
-        最大 middle_steps 长度值，默认为 None
-        为 None 自动从数据库获取（注意：耗时极长）
+    max_middle_steps_num : int, default = -1
+        最大 middle_steps 长度值，默认为 -1
+        为 -1 自动从数据库获取（注意：耗时极长）
     model_name : str
 
     Returns
@@ -148,9 +148,8 @@ def save_prediction_to_exel(filenames,
     for physical_quantity in physical_quantities:
         df_left = pd.DataFrame(data=None, columns=['nuc_ix', 'name'])
 
-        if is_all_step:
-            if max_middle_steps_num is None:
-                max_middle_steps_num = fetch_max_num_of_middle_steps(physical_quantity)
+        if is_all_step and (max_middle_steps_num == -1):
+            max_middle_steps_num = fetch_max_num_of_middle_steps(physical_quantity)
 
         for filename in filenames:
 

@@ -278,7 +278,7 @@ def compare(reference_file,
               default=config.get_anomaly_detection_config('max_middle_steps_num'),
               type=click.INT,
               help='最大 middle_steps 长度值，默认读取配置文件中的值\n'
-                   '为None则自动读取数据库进行计算（注意：耗时极长）')
+                   '为-1则自动读取数据库进行计算（注意：耗时极长）')
 @click.option('--all_step', '-all',
               'is_all_step',
               is_flag=True,
