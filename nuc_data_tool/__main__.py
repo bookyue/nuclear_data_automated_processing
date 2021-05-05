@@ -1,7 +1,6 @@
 from pathlib import Path
 
 import click
-from click import UsageError
 
 from nuc_data_tool import __version__
 from nuc_data_tool.anomaly_detection.iforest import save_prediction_to_exel
@@ -38,7 +37,7 @@ class MutuallyExclusiveOption(click.Option):
 
     def handle_parse_result(self, ctx, opts, args):
         if self.mutually_exclusive.intersection(opts) and self.name in opts:
-            raise UsageError(
+            raise click.UsageError(
                 "Illegal usage: `{}` is mutually exclusive with "
                 "arguments `{}`.".format(
                     self.name,
