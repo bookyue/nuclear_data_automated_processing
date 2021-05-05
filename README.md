@@ -22,6 +22,7 @@ nuc_tool requires:
 * protobuf (>= 3.15.8)  
 * openpyxl (>= 3.0.7)  
 * click (>= 7.1.2)  
+* pycaret (>=2.3.1)
 * psycopg2 (>= 2.8.6)  
 * mysql-connector-python (>= 8.0.23)  
 
