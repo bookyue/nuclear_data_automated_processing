@@ -1,6 +1,13 @@
 # Nuclear Data Automated Processing
+[![Code Quality Score](https://www.code-inspector.com/project/22276/score/svg)](https://frontend.code-inspector.com/public/project/22276/nuclear_data_automated_processing/dashboard)
+[![Code Quality Grade](https://www.code-inspector.com/project/22276/status/svg)](https://frontend.code-inspector.com/public/project/22276/nuclear_data_automated_processing/dashboard)
+[![LGTM Grade](https://img.shields.io/lgtm/grade/python/github/bookyue/nuclear_data_automated_processing)](https://lgtm.com/projects/g/bookyue/nuclear_data_automated_processing)
+[![GitHub version](https://badge.fury.io/gh/bookyue%2Fnuclear_data_automated_processing.svg)](https://badge.fury.io/gh/bookyue%2Fnuclear_data_automated_processing)
+[![PyPI version](https://badge.fury.io/py/nuc-data-tool.svg)](https://badge.fury.io/py/nuc-data-tool)
+![example workflow](https://github.com/bookyue/nuclear_data_automated_processing/actions/workflows/build_and_release.yml/badge.svg)
+[![GitHub license](https://img.shields.io/github/license/bookyue/nuclear_data_automated_processing)](https://github.com/bookyue/nuclear_data_automated_processing/blob/main/LICENSE)
 
-An automated processing tool for specific nuclear data.
+An automated processing tool for specific nuclear data.  
 
 ## Demo
 [![asciicast](https://asciinema.org/a/NgX9tzRrKbCgTe8XDmYE6xG8N.svg)](https://asciinema.org/a/NgX9tzRrKbCgTe8XDmYE6xG8N)
@@ -15,6 +22,7 @@ nuc_tool requires:
 * protobuf (>= 3.15.8)  
 * openpyxl (>= 3.0.7)  
 * click (>= 7.1.2)  
+* pycaret (>=2.3.1)
 * psycopg2 (>= 2.8.6)  
 * mysql-connector-python (>= 8.0.23)  
 
