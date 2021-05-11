@@ -273,12 +273,6 @@ def compare(reference_file,
                                 case_sensitive=False),
               multiple=True,
               help='物理量，默认为 isotope')
-@click.option('--max_steps_num', '-num',
-              'max_middle_steps_num',
-              default=config.get_anomaly_detection_config('max_middle_steps_num'),
-              type=click.INT,
-              help='最大 middle_steps 长度值，默认读取配置文件中的值\n'
-                   '为-1则自动读取数据库进行计算（注意：耗时极长）')
 @click.option('--all_step', '-all',
               'is_all_step',
               is_flag=True,
@@ -293,7 +287,6 @@ def detect(filenames,
            result_path,
            model_path,
            physical_quantities,
-           max_middle_steps_num,
            is_all_step,
            merge):
     """
@@ -314,7 +307,6 @@ def detect(filenames,
                             result_path=result_path,
                             model_name=model_name,
                             physical_quantities=physical_quantities,
-                            max_middle_steps_num=max_middle_steps_num,
                             is_all_step=is_all_step,
                             merge=merge)
 
