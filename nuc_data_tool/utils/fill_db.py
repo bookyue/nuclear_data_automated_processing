@@ -69,7 +69,7 @@ def populate_database(xml_file):
         # upsert into db
         stmt = upsert(Nuc,
                       df_nuc_tmp.to_dict(orient='records'),
-                      update_field=df_nuc_tmp.columns.values.tolist(),
+                      update_field=df_nuc_tmp.columns.tolist(),
                       engine=session.bind)
 
         session.execute(stmt)

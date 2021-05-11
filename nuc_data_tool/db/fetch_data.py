@@ -387,7 +387,7 @@ def fetch_extracted_data_by_filename_and_physical_quantity(nuc_data_id,
                                          for middle_steps in df_right['middle_steps']
                                          if middle_steps is not None])
             middle_step_column_names = [f'{filename.name}_{name}'
-                                        for name in middle_steps.columns.values.tolist()]
+                                        for name in middle_steps.columns.tolist()]
             middle_steps.columns = middle_step_column_names
 
             df_right = pd.concat([exclude_middle_steps, middle_steps], axis=1, copy=False)
