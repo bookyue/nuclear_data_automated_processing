@@ -27,23 +27,23 @@ Database model
 
 """
 
-from sqlalchemy import Column, Integer, Numeric, String, LargeBinary, ForeignKey, Table
+from sqlalchemy import Column, Integer, Numeric, String, LargeBinary, Interval, Boolean, ForeignKey, Table
 from sqlalchemy.orm import relationship
 
 from nuc_data_tool.db.base import Base
 
 files_physical_quantities_association = Table('files_physical_quantities_association', Base.metadata,
-                                              Column('file_id', Integer, ForeignKey('files.id')),
+                                              Column('file_id', Integer, ForeignKey('files.id'), nullable=False),
                                               Column('physical_quantity_id', Integer,
-                                                     ForeignKey('physical_quantities.id'))
+                                                     ForeignKey('physical_quantities.id'), nullable=False)
                                               )
 
 
 class Nuc(Base):
     __tablename__ = 'nuc'
     id = Column(Integer, primary_key=True)
-    nuc_ix = Column(Integer, unique=True, autoincrement=True)
-    name = Column(String(32))
+    nuc_ix = Column(Integer, unique=True, autoincrement=True, nullable=False)
+    name = Column(String(32), nullable=False)
 
     data = relationship('NucData', back_populates='nuc')
 
@@ -51,11 +51,11 @@ class Nuc(Base):
 class NucData(Base):
     __tablename__ = 'nuc_data'
     id = Column(Integer, primary_key=True)
-    nuc_id = Column(Integer, ForeignKey('nuc.id'))
-    file_id = Column(Integer, ForeignKey('files.id'))
-    physical_quantity_id = Column(Integer, ForeignKey('physical_quantities.id'))
-    first_step = Column(Numeric(25))
-    last_step = Column(Numeric(25))
+    nuc_id = Column(Integer, ForeignKey('nuc.id'), nullable=False)
+    file_id = Column(Integer, ForeignKey('files.id'), nullable=False)
+    physical_quantity_id = Column(Integer, ForeignKey('physical_quantities.id'), nullable=False)
+    first_step = Column(Numeric(25), nullable=False)
+    last_step = Column(Numeric(25), nullable=False)
     middle_steps = Column(LargeBinary)
 
     nuc = relationship('Nuc', back_populates='data')
@@ -66,7 +66,10 @@ class NucData(Base):
 class File(Base):
     __tablename__ = 'files'
     id = Column(Integer, primary_key=True, autoincrement=True)
-    name = Column(String(50))
+    name = Column(String(50), nullable=False)
+    time_interval = Column(Interval)
+    repeat_times = Column(Integer)
+    is_all_step = Column(Boolean)
 
     data = relationship('NucData', back_populates='file')
     physical_quantities = relationship('PhysicalQuantity',
@@ -77,7 +80,7 @@ class File(Base):
 class PhysicalQuantity(Base):
     __tablename__ = 'physical_quantities'
     id = Column(Integer, primary_key=True, autoincrement=True)
-    name = Column(String(16))
+    name = Column(String(16), nullable=False)
 
     data = relationship('NucData', back_populates='physical_quantity')
     files = relationship('File', secondary=files_physical_quantities_association,

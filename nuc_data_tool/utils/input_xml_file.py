@@ -1,5 +1,7 @@
 import linecache
+from datetime import timedelta
 from pathlib import Path
+from xml.etree.ElementTree import parse
 
 from nuc_data_tool.utils.configlib import config
 from nuc_data_tool.utils.formatter import physical_quantity_list_generator
@@ -11,7 +13,7 @@ class InputXmlFileReader:
 
     Attributes
     ----------
-    path : Path
+    out_path : Path
         xml.out文件路径
     physical_quantities : str
             核素名
@@ -20,7 +22,7 @@ class InputXmlFileReader:
     chosen_physical_quantity: list
     length_of_physical_quantity: dict
 
-    def __init__(self, file_path, physical_quantities='all'):
+    def __init__(self, out_path, physical_quantities='all'):
         """
         可以根据输入的文件路径和物理量
         自动计算得出选择的物理量chosen_physical_quantity和
@@ -28,18 +30,25 @@ class InputXmlFileReader:
 
         Parameters
         ----------
-        file_path : Path or str
+        out_path : Path or str
             xml.out文件路径
         physical_quantities : str or list[str]
             核素名
         """
-        self.path = Path(file_path)
-        self.name = Path(file_path).name.split('.')[0]
+        self.time_interval = None
+        self.repeat_times = None
+        self.is_all_step = None
+        self.parent_path = Path(out_path).parent
+        self.xml_name = Path(out_path).stem
+        self.xml_path = self.parent_path.joinpath(self.xml_name)
+        self.out_name = self.xml_path.stem
+        self.out_path = Path(out_path)
         self.chosen_physical_quantity = physical_quantity_list_generator(physical_quantities)
         self.length_of_physical_quantity = self.get_length_of_physical_quantity(self.chosen_physical_quantity)
         self.unfetched_physical_quantity = self.get_unfetched_physical_quantity()
         self.fetched_physical_quantity = self.get_fetched_physical_quantity()
         self.table_of_physical_quantity = self.get_table_of_physical_quantity()
+        self.set_file_info(self.xml_path)
 
     def __enter__(self):
         """
@@ -48,7 +57,7 @@ class InputXmlFileReader:
         -------
         InputXmlFileReader
         """
-        self.file_object = self.path.open(mode='r', encoding='UTF-8')
+        self.file_object = self.out_path.open(mode='r', encoding='UTF-8')
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
@@ -75,6 +84,28 @@ class InputXmlFileReader:
         self.chosen_physical_quantity = physical_quantity_list_generator(physical_quantity_name)
         self.length_of_physical_quantity = self.get_length_of_physical_quantity()
 
+    def set_file_info(self, xml_path):
+        try:
+            root = parse(xml_path)
+        except FileNotFoundError as e:
+            print(f"{self.xml_name} doesn't find")
+            print(e)
+            print()
+            return
+
+        burn = root.find('burnup/burn').attrib
+
+        if burn['unit'] == 'year':
+            self.time_interval = timedelta(days=365 * float(burn['time']))
+        elif burn['unit'] == 'day':
+            self.time_interval = timedelta(days=float(burn['time']))
+        else:
+            pass
+
+        self.repeat_times = burn['repeat']
+
+        self.is_all_step = bool(root.find('output/table').attrib['print_all_step'])
+
     def get_length_of_physical_quantity(self, physical_quantities=None):
         """
         获取对应物理量的行号范围，physical_quantity_name默认为None,设置则输出physical_quantity_name对应的行号的字典
@@ -100,10 +131,9 @@ class InputXmlFileReader:
 
         length_of_physical_quantity = {key: [] for key in physical_quantities}
 
-        is_find_start_title = True
-
         for physical_quantity in physical_quantities:
-            for row_number, line in enumerate(self.path.open(encoding='UTF-8')):
+            is_find_start_title = True
+            for row_number, line in enumerate(self.out_path.open(encoding='UTF-8')):
                 if is_find_start_title:
                     if index_start[physical_quantity] in line:
                         length_of_physical_quantity[physical_quantity].append(
@@ -119,7 +149,7 @@ class InputXmlFileReader:
                             if physical_quantity != 'gamma_spectra'
                             else
                             row_number - 2)
-                        is_find_start_title = True
+                        break
 
         return length_of_physical_quantity
 
@@ -144,7 +174,7 @@ class InputXmlFileReader:
         list
         """
         fetched_physical_quantity = [name for name in self.chosen_physical_quantity
-                                       if self.length_of_physical_quantity.get(name)]
+                                     if self.length_of_physical_quantity.get(name)]
         return fetched_physical_quantity
 
     def get_table_of_physical_quantity(self):
@@ -161,7 +191,7 @@ class InputXmlFileReader:
             if key not in self.unfetched_physical_quantity:
                 row_start = self.length_of_physical_quantity[key][0]
                 row_end = self.length_of_physical_quantity[key][1]
-                text = linecache.getlines(str(self.path))[row_start:row_end + 1]
+                text = linecache.getlines(str(self.out_path))[row_start:row_end + 1]
 
             df_data[key] = text
         return df_data
