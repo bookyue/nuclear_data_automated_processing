@@ -27,7 +27,7 @@ Database model
 
 """
 
-from sqlalchemy import Column, Integer, Numeric, String, LargeBinary, ForeignKey, Table
+from sqlalchemy import Column, Integer, Numeric, String, LargeBinary, Interval, Boolean, ForeignKey, Table
 from sqlalchemy.orm import relationship
 
 from nuc_data_tool.db.base import Base
@@ -67,6 +67,9 @@ class File(Base):
     __tablename__ = 'files'
     id = Column(Integer, primary_key=True, autoincrement=True)
     name = Column(String(50))
+    time_interval = Column(Interval)
+    repeat_times = Column(Integer)
+    is_all_step = Column(Boolean)
 
     data = relationship('NucData', back_populates='file')
     physical_quantities = relationship('PhysicalQuantity',
