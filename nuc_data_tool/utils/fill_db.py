@@ -23,12 +23,15 @@ def populate_database(xml_file):
 
     # 依据文件名获取对应的File object
     file_stmt = (select(File)
-                 .where(File.name == xml_file.name)
+                 .where(File.name == xml_file.out_name)
                  )
     file_tmp = session.execute(file_stmt).scalar_one_or_none()
     if file_tmp is None:
         # 如果数据库不存在对应的File records则插入
-        file_tmp = File(name=xml_file.name)
+        file_tmp = File(name=xml_file.out_name,
+                        time_interval=xml_file.time_interval,
+                        repeat_times=xml_file.repeat_times,
+                        is_all_step=xml_file.is_all_step)
         session.add(file_tmp)
     else:
         session.close()
