@@ -429,3 +429,91 @@ def fetch_max_num_of_middle_steps(physical_quantity='isotope'):
             max_num = cur_num
 
     return max_num - 4
+
+
+def fetch_transposed_data_by_filename_and_physical_quantity(filename,
+                                                            physical_quantity,
+                                                            is_all_step=False):
+    """
+    根据输入的 File 和 physical quantity 从 Nuc， NucData，PhysicalQuantity table获取数据
+
+    Parameters
+    ----------
+    filename : File
+        File object
+    physical_quantity : str or PhysicalQuantity
+        物理量，可以是物理量的 str，PhysicalQuantity
+    is_all_step : bool, default false
+        是否读取全部中间结果数据列，默认只读取第一步和最后一步
+
+    Returns
+    -------
+    pd.DataFrame
+    """
+
+    if type_checker(filename, File) == 'str':
+        filename = fetch_files_by_name(filename).pop()
+
+    if type_checker(physical_quantity, PhysicalQuantity) == 'str':
+        physical_quantity = fetch_physical_quantities_by_name(physical_quantity).pop()
+
+    df_left = pd.DataFrame(data=None, columns=['nuc_ix', 'name'])
+
+    file_id = filename.id
+    physical_quantity_id = physical_quantity.id
+
+    if not is_all_step:
+        # 不读取中间结果，所以不选择NucData.middle_steps，否则反之
+        stmt = lambda_stmt(lambda: select(Nuc.nuc_ix, Nuc.name,
+                                          NucData.first_step, NucData.last_step))
+    else:
+        stmt = lambda_stmt(lambda: select(Nuc.nuc_ix, Nuc.name,
+                                          NucData.first_step, NucData.last_step,
+                                          NucData.middle_steps))
+
+    stmt += lambda s: s.join(Nuc,
+                             Nuc.id == NucData.nuc_id)
+    stmt += lambda s: s.join(PhysicalQuantity,
+                             PhysicalQuantity.id == NucData.physical_quantity_id)
+    stmt += lambda s: s.where(NucData.file_id == file_id,
+                              PhysicalQuantity.id == physical_quantity_id)
+
+    with Session() as session:
+        column_names = [column.name for
+                        column in list(stmt.selected_columns)]
+        df_right = pd.DataFrame(data=session.execute(stmt).all(),
+                                columns=column_names)
+
+    if is_all_step:
+        exclude_middle_steps = df_right.drop(columns='middle_steps', axis=1)
+        del column_names[-1]
+        exclude_middle_steps.columns = column_names
+
+        middle_steps = pd.DataFrame([middle_steps_line_parsing(middle_steps)
+                                     for middle_steps in df_right['middle_steps']
+                                     if middle_steps is not None])
+
+        df_right = pd.concat([exclude_middle_steps, middle_steps], axis=1, copy=False)
+
+    if not df_right.empty:
+        df_left = pd.merge(df_left, df_right, how='outer', on=['nuc_ix', 'name'])
+
+    df_left.sort_values(by=['nuc_ix'], inplace=True)
+
+    nuc_ix = df_left.loc[:, ['nuc_ix', 'name']]
+
+    df_left = df_left.T
+    df_left.columns = df_left.loc['name']
+    df_left.drop(['nuc_ix', 'name'], inplace=True)
+    df_left = df_left.astype('float64', copy=False)
+    reindex = df_left.index.tolist()
+    reindex.append(reindex.pop(1))
+    df_left = df_left.reindex(reindex, copy=False)
+
+    time_interval = pd.Series((filename.time_interval * i for i in range(filename.repeat_times + 1)),
+                              name='time_interval', index=df_left.index)
+    time_interval = time_interval / pd.to_timedelta(1, unit='D')
+
+    df_left = pd.concat([df_left, time_interval], axis=1)
+
+    return nuc_ix, df_left
