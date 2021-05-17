@@ -85,7 +85,14 @@ class InputXmlFileReader:
         self.length_of_physical_quantity = self.get_length_of_physical_quantity()
 
     def set_file_info(self, xml_path):
-        root = parse(xml_path)
+        try:
+            root = parse(xml_path)
+        except FileNotFoundError as e:
+            print(f"{self.xml_name} doesn't find")
+            print(e)
+            print()
+            return
+
         burn = root.find('burnup/burn').attrib
 
         if burn['unit'] == 'year':
