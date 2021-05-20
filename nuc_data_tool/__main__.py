@@ -3,7 +3,7 @@ from pathlib import Path
 import click
 
 from nuc_data_tool import __version__
-from nuc_data_tool.anomaly_detection.iforest import save_prediction_to_exel
+from nuc_data_tool.anomaly_detection.train_and_detection import save_prediction_to_exel
 from nuc_data_tool.db.db_utils import init_db
 from nuc_data_tool.db.fetch_data import (fetch_extracted_data_id,
                                          fetch_physical_quantities_by_name,
