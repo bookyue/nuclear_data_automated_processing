@@ -266,8 +266,7 @@ def compare(reference_file,
               default='iforest',
               type=click.Choice(['abod', 'iforest', 'cluster',
                                  'cof', 'histogram', 'knn',
-                                 'lof', 'svm', 'pca', 'mcd',
-                                 'sod', 'sos'],
+                                 'lof', 'svm', 'pca', 'mcd', 'sos'],
                                 case_sensitive=True),
               help="""
 ‘abod’	Angle-base Outlier Detection
@@ -280,7 +279,6 @@ def compare(reference_file,
 ‘svm’	One-class SVM detector
 ‘pca’	Principal Component Analysis
 ‘mcd’	Minimum Covariance Determinant
-‘sod’	Subspace Outlier Detection
 ‘sos	Stochastic Outlier Selection
 """)
 @click.option('--fraction',
