@@ -1,7 +1,7 @@
 from pathlib import Path
 
 import pandas as pd
-from pycaret.anomaly import load_model, predict_model
+from pycaret.anomaly import setup, create_model, predict_model, load_model
 
 from nuc_data_tool.db.db_model import File, PhysicalQuantity
 from nuc_data_tool.db.fetch_data import (fetch_files_by_name,
@@ -38,10 +38,46 @@ def _complement_columns(nuc_data,
     return nuc_data
 
 
-def iforest_prediction(filenames,
-                       physical_quantity='isotope',
-                       is_all_step=False,
-                       model=None):
+def train_model(nuc_data,
+                model_type,
+                fraction):
+    """
+
+    Parameters
+    ----------
+    nuc_data : pd.DataFrame
+    model_type : str
+    fraction : float
+    Returns
+    -------
+
+    """
+    unnecessary_columns = ['nuc_ix', 'name']
+    numeric_columns = [col for col in nuc_data.columns.tolist()
+                       if col not in unnecessary_columns]
+
+    exp_ano = setup(nuc_data,
+                    normalize=True,
+                    normalize_method='robust',
+                    ignore_features=unnecessary_columns,
+                    numeric_features=numeric_columns,
+                    silent=True)
+
+    kargs = {}
+    if fraction is not None:
+        kargs['fraction'] = fraction
+
+    model = create_model(model_type, **kargs)
+
+    return model
+
+
+def prediction(filenames,
+               physical_quantity='isotope',
+               is_all_step=False,
+               model_type='iforest',
+               model=None,
+               fraction=0.01):
     """
 
     Parameters
@@ -52,7 +88,9 @@ def iforest_prediction(filenames,
         默认为核素密度
     is_all_step : bool, default = False
         是否读取全部中间结果数据列，默认只读取最终结果列
+    model_type : str
     model
+    fraction : float
 
     Returns
     -------
@@ -80,19 +118,29 @@ def iforest_prediction(filenames,
                    for col in nuc_data_right.columns.tolist()
                    if 'middle_step' in col}
         nuc_data_right.rename(columns=columns, inplace=True)
+
+        numeric_columns = [col for col in nuc_data_right.columns.tolist()
+                           if col not in ['nuc_ix', 'name']]
+        nuc_data_right[numeric_columns] = nuc_data_right[numeric_columns].astype('float64', copy=False)
+
         nuc_data_left = pd.merge(nuc_data_left, nuc_data_right, how='outer', on=['nuc_ix', 'name'])
 
-    prediction = predict_model(model, data=nuc_data_left)
+    if model_type is not None:
+        model = train_model(nuc_data=nuc_data_left, model_type=model_type, fraction=fraction)
 
-    return prediction[prediction['Anomaly'] == 1]
+    result_prediction = predict_model(model, data=nuc_data_left)
+
+    return result_prediction[result_prediction['Anomaly'] == 1]
 
 
 def save_prediction_to_exel(filenames,
                             result_path,
-                            model_name='nuc_all_steps_isotope_model',
                             physical_quantities='isotope',
                             is_all_step=False,
-                            merge=True):
+                            merge=True,
+                            model_type=None,
+                            model_name=None,
+                            fraction=0.001):
     """
 
     Parameters
@@ -106,8 +154,9 @@ def save_prediction_to_exel(filenames,
     result_path : Path or str
     merge : bool, default = True
         是否将结果合并输出至一个文件，否则单独输出至每个文件
+    model_type : str
     model_name : str
-
+    fraction
     Returns
     -------
 
@@ -119,11 +168,14 @@ def save_prediction_to_exel(filenames,
     if type_checker(physical_quantities, PhysicalQuantity) == 'str':
         physical_quantities = fetch_physical_quantities_by_name(physical_quantities)
 
-    model = load_model(model_name)
+    if model_type is None:
+        model = load_model(model_name)
+    else:
+        model = None
 
     result_path = Path(result_path).joinpath('anomaly_detection_result')
 
-    prefix = 'iforest'
+    prefix = model_type
 
     file_name = 'final.xlsx'
 
@@ -145,10 +197,14 @@ def save_prediction_to_exel(filenames,
     for physical_quantity in physical_quantities:
 
         if merge:
-            df_result = iforest_prediction(filenames,
-                                           physical_quantity,
-                                           is_all_step,
-                                           model)
+            df_result = prediction(filenames=filenames,
+                                   physical_quantity=physical_quantity,
+                                   is_all_step=is_all_step,
+                                   model_type=model_type,
+                                   model=model,
+                                   fraction=fraction)
+
+            df_result.dropna(axis=1, how='all', inplace=True)
             save_to_excel({physical_quantity.name: df_result},
                           file_name,
                           result_path)
@@ -161,22 +217,18 @@ def save_prediction_to_exel(filenames,
                 if is_all_step:
                     files_name = f'{prefix}_all_steps_{filename.name}.xlsx'
 
-                df_right = iforest_prediction(filename,
-                                              physical_quantity,
-                                              is_all_step,
-                                              model)
+                df_right = prediction(filenames=filenames,
+                                      physical_quantity=physical_quantity,
+                                      is_all_step=is_all_step,
+                                      model_type=model_type,
+                                      model=model,
+                                      fraction=fraction)
 
                 if not df_right.empty:
                     df_right.drop(columns='Anomaly', inplace=True)
-                    df_right.rename(columns={'first_step': f'{filename.name}_first_step',
-                                             'last_step': f'{filename.name}_last_step',
-                                             'Anomaly_Score': f'{filename.name}_Anomaly_Score'},
+                    df_right.rename(columns={'Anomaly_Score': f'{filename.name}_Anomaly_Score'},
                                     inplace=True)
-                    columns = {col: f'{filename.name}_{col}'
-                               for col in df_right.columns.tolist()
-                               if 'middle_step' in col}
 
-                    df_right.rename(columns=columns, inplace=True)
                     df_right.dropna(axis=1, how='all', inplace=True)
                     df_left = pd.merge(df_left, df_right, how='outer', on=['nuc_ix', 'name'])
 
@@ -184,3 +236,18 @@ def save_prediction_to_exel(filenames,
                               files_name,
                               result_path)
                 df_left = pd.DataFrame(data=None, columns=['nuc_ix', 'name'])
+
+
+# def main():
+#     """"""
+#     from nuc_data_tool.db.fetch_data import fetch_files_by_name
+#     files = fetch_files_by_name()
+#
+#     print(prediction(filenames=files,
+#                      is_all_step=True,
+#                      model_type='lof',
+#                      fraction=0.01
+#                      ))
+#
+#
+# main()

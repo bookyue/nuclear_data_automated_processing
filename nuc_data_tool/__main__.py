@@ -261,6 +261,34 @@ def compare(reference_file,
               default=config.get_file_path('result_file_path'),
               type=click.Path(),
               help='输出文件路径，默认读取配置文件中的路径')
+@click.option('--model_type', '-mt',
+              'model_type',
+              default='iforest',
+              type=click.Choice(['abod', 'iforest', 'cluster',
+                                 'cof', 'histogram', 'knn',
+                                 'lof', 'svm', 'pca', 'mcd',
+                                 'sod', 'sos'],
+                                case_sensitive=True),
+              help="""
+‘abod’	Angle-base Outlier Detection
+‘iforest’	Isolation Forest
+‘cluster’	Clustering-Based Local Outlier
+‘cof’	Connectivity-Based Outlier Factor
+‘histogram’	Histogram-based Outlier Detection
+‘knn’	k-Nearest Neighbors Detector
+‘lof’	Local Outlier Factor
+‘svm’	One-class SVM detector
+‘pca’	Principal Component Analysis
+‘mcd’	Minimum Covariance Determinant
+‘sod’	Subspace Outlier Detection
+‘sos	Stochastic Outlier Selection
+""")
+@click.option('--fraction',
+              '-fra',
+              'fraction',
+              type=click.FLOAT,
+              default=0.01,
+              help='异常占数据集的比例，默认0.01')
 @click.option('--model_path', '-mp',
               'model_path',
               default=config.get_anomaly_detection_config('model_path'),
@@ -285,7 +313,9 @@ def compare(reference_file,
               help='将结果合并输出至一个文件')
 def detect(filenames,
            result_path,
+           model_type,
            model_path,
+           fraction,
            physical_quantities,
            is_all_step,
            merge):
@@ -305,6 +335,8 @@ def detect(filenames,
 
     save_prediction_to_exel(filenames=filenames,
                             result_path=result_path,
+                            model_type=model_type,
+                            fraction=fraction,
                             model_name=model_name,
                             physical_quantities=physical_quantities,
                             is_all_step=is_all_step,
