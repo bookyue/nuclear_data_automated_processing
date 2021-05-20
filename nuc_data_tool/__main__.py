@@ -320,7 +320,9 @@ def detect(filenames,
            is_all_step,
            merge):
     """
-    使用 iforest 对数据进行异常检测，并导出异常的数据至工作簿(xlsx文件)
+    对数据进行异常检测，并导出异常的数据至工作簿(xlsx文件)
+    如果未输入model_type，model_path已输入，
+    则会使用选择的预训练模型进行检测（请务必清楚自己正在干什么）
 
     参数为文件列表(默认为所有文件)
     """
