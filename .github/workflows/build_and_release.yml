@@ -66,11 +66,11 @@ jobs:
 
       - name: Build
         if: startsWith(runner.os, 'macOS') || startsWith(runner.os, 'Linux')
-        run: pyinstaller app.py --name nuctool --onefile --add-data ./html.tpl:pandas/io/formats/templates
+        run: pyinstaller app.py --name nuctool --onefile --add-data ./html.tpl:pandas/io/formats/templates --exclude-module mlflow
 
       - name: Build on win
         if: startsWith(runner.os, 'Windows')
-        run: pyinstaller app.py --name nuctool --onefile --add-data .\html.tpl';pandas\io\formats\templates'
+        run: pyinstaller app.py --name nuctool --onefile --add-data .\html.tpl';pandas\io\formats\templates' --exclude-module mlflow
 
       - name: Copy config file to dist folder
         run: cp nuc_data_tool/config.toml dist/
