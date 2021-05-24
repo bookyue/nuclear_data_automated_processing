@@ -130,7 +130,7 @@ def prediction(filenames,
 
     result_prediction = predict_model(model, data=nuc_data_left)
 
-    return result_prediction[result_prediction['Anomaly'] == 1]
+    return result_prediction[result_prediction['Anomaly'] == 1].drop(columns='Anomaly')
 
 
 def save_prediction_to_exel(filenames,
@@ -225,7 +225,6 @@ def save_prediction_to_exel(filenames,
                                       fraction=fraction)
 
                 if not df_right.empty:
-                    df_right.drop(columns='Anomaly', inplace=True)
                     df_right.rename(columns={'Anomaly_Score': f'{filename.name}_Anomaly_Score'},
                                     inplace=True)
 

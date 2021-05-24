@@ -78,11 +78,12 @@ def _calculate_deviation(df_reference,
     tuple[pd.DataFrame, pd.Series]
     """
 
+    i = 0
+
     df_deviation = pd.DataFrame()
     for reference_column, \
         comparison_column in zip(df_reference.columns.values.tolist()[2:],
                                  df_comparison.columns.values.tolist()[2:]):
-        i = 0
         if deviation_mode == 'relative':
             # abs(X - Y) / 1 + min(abs(X), abs(Y))
             """NaN is classified as unordered.
@@ -107,11 +108,12 @@ def _calculate_deviation(df_reference,
             raise Exception("wrong deviation mode")
 
         if not deviation.isnull().values.all():
-            df_deviation[f'relative_deviation_middle_step_{i}'] = deviation
+            df_deviation[f'{deviation_mode}_deviation_middle_step_{i}'] = deviation
 
         i += 1
 
-    df_deviation.rename(columns={'relative_deviation_middle_step_0': 'relative_deviation_last_step'}, inplace=True)
+    df_deviation.rename(columns={f'{deviation_mode}_deviation_middle_step_0': f'{deviation_mode}_deviation_last_step'},
+                        inplace=True)
 
     reserved_index = (df_deviation.T > threshold).any()
     df_deviation = df_deviation.loc[reserved_index].reset_index(drop=True)
