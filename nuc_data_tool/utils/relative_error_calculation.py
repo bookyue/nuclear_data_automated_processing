@@ -78,11 +78,12 @@ def _calculate_deviation(df_reference,
     tuple[pd.DataFrame, pd.Series]
     """
 
+    i = 0
+
     df_deviation = pd.DataFrame()
     for reference_column, \
         comparison_column in zip(df_reference.columns.values.tolist()[2:],
                                  df_comparison.columns.values.tolist()[2:]):
-        i = 0
         if deviation_mode == 'relative':
             # abs(X - Y) / 1 + min(abs(X), abs(Y))
             """NaN is classified as unordered.
