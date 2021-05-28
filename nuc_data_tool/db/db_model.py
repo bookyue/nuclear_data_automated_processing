@@ -64,7 +64,7 @@ class NucData(Base):
 
 
 class File(Base):
-    __tablename__ = 'files'
+    __tablename__ = 'file'
     id = Column(Integer, primary_key=True, autoincrement=True)
     name = Column(String(50), nullable=False)
     time_interval = Column(Interval)
