@@ -33,7 +33,7 @@ from sqlalchemy.orm import relationship
 from nuc_data_tool.db.base import Base
 
 file_physical_quantity_association = Table('file_physical_quantity_association', Base.metadata,
-                                              Column('file_id', Integer, ForeignKey('files.id'), nullable=False),
+                                              Column('file_id', Integer, ForeignKey('file.id'), nullable=False),
                                               Column('physical_quantity_id', Integer,
                                                      ForeignKey('physical_quantity.id'), nullable=False)
                                               )
@@ -52,7 +52,7 @@ class NucData(Base):
     __tablename__ = 'nuc_data'
     id = Column(Integer, primary_key=True)
     nuc_id = Column(Integer, ForeignKey('nuc.id'), nullable=False)
-    file_id = Column(Integer, ForeignKey('files.id'), nullable=False)
+    file_id = Column(Integer, ForeignKey('file.id'), nullable=False)
     physical_quantity_id = Column(Integer, ForeignKey('physical_quantity.id'), nullable=False)
     first_step = Column(Numeric(25), nullable=False)
     last_step = Column(Numeric(25), nullable=False)
@@ -72,7 +72,7 @@ class File(Base):
     is_all_step = Column(Boolean)
 
     data = relationship('NucData', back_populates='file')
-    physical_quantity = relationship('PhysicalQuantity',
+    physical_quantities = relationship('PhysicalQuantity',
                                        secondary=file_physical_quantity_association,
                                        back_populates='files')
 
@@ -84,4 +84,4 @@ class PhysicalQuantity(Base):
 
     data = relationship('NucData', back_populates='physical_quantity')
     files = relationship('File', secondary=file_physical_quantity_association,
-                         back_populates='physical_quantity')
+                         back_populates='physical_quantities')
