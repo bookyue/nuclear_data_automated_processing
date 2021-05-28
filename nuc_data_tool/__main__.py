@@ -280,7 +280,6 @@ def compare(reference_file,
 'svm'       One-class SVM detector
 'pca'       Principal Component Analysis
 'mcd'       Minimum Covariance Determinant
-'sos'       Stochastic Outlier Selection
 """)
 @click.option('--fraction',
               '-fra',
