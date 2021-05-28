@@ -54,7 +54,7 @@ def populate_database(xml_file):
             session.add(physical_quantity_tmp)
 
         # 关系插入
-        file_tmp.physical_quantities.append(physical_quantity_tmp)
+        file_tmp.physical_quantity.append(physical_quantity_tmp)
         physical_quantity_tmp.files.append(file_tmp)
 
         # 将序列化的middle_steps_line和其他数据存入DataFrame

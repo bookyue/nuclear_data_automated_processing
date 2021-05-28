@@ -269,17 +269,17 @@ def compare(reference_file,
                                  'lof', 'svm', 'pca', 'mcd', 'sos'],
                                 case_sensitive=True),
               help="""
-'abod'	    Angle-base Outlier Detection
-'iforest'	Isolation Forest
-'cluster'	Clustering-Based Local Outlier
-'cof'	    Connectivity-Based Outlier Factor
-'histogram'	Histogram-based Outlier Detection
-'knn'	    k-Nearest Neighbors Detector
-'lof'	    Local Outlier Factor
-'svm'	    One-class SVM detector
-'pca'	    Principal Component Analysis
-'mcd'	    Minimum Covariance Determinant
-'sos'	    Stochastic Outlier Selection
+\b
+'abod'      Angle-base Outlier Detection
+'iforest'   Isolation Forest
+'cluster'   Clustering-Based Local Outlier
+'cof'       Connectivity-Based Outlier Factor
+'histogram' Histogram-based Outlier Detection
+'knn'       k-Nearest Neighbors Detector
+'lof'       Local Outlier Factor
+'svm'       One-class SVM detector
+'pca'       Principal Component Analysis
+'mcd'       Minimum Covariance Determinant
 """)
 @click.option('--fraction',
               '-fra',
