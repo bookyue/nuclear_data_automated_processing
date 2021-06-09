@@ -157,6 +157,9 @@ def extract(filenames,
     else:
         filenames = fetch_files_by_name('all')
 
+    if nuclide_list == 'None':
+        nuclide_list = None
+
     physical_quantities = fetch_physical_quantities_by_name(physical_quantities)
     nuc_data_id = fetch_extracted_data_id(filenames,
                                           physical_quantities,
@@ -236,6 +239,9 @@ def compare(reference_file,
         comparison_files = fetch_files_by_name(comparison_files)
     else:
         comparison_files = fetch_files_by_name('all')
+
+    if nuclide_list == 'None':
+        nuclide_list = None
 
     comparison_files = [comparison_file for comparison_file in comparison_files
                         if comparison_file.id != reference_file.id]
