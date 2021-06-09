@@ -292,6 +292,10 @@ def fetch_extracted_data_id(filenames=None, physical_quantities='all', nuclide_l
                               NucData.physical_quantity_id.in_(physical_quantities_id)).
                         where(or_(NucData.first_step != 0, NucData.last_step != 0))
                         )
+            elif nuclide_list == 'all':
+                stmt = (select(NucData.id).
+                        where(NucData.file_id == file_id,
+                              NucData.physical_quantity_id.in_(physical_quantities_id)))
             else:
                 # 核素不为gamma时，依照核素列表过滤records，否则反之
                 for physical_quantity in physical_quantities:
