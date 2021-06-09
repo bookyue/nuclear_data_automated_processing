@@ -118,10 +118,11 @@ def pop(path,
               help='物理量，默认为全部物理量')
 @click.option('--nuclide', '-n',
               'nuclide_list',
-              default='fission_light',
+              default=next(iter(config.get_conf('nuclide_list').keys())),
               type=click.Choice(config.get_conf('nuclide_list').keys(),
                                 case_sensitive=False),
-              help='核素列表，从配置文件 nuclide_list 项下读取，默认 fission_light')
+              help=f"核素列表，从配置文件 nuclide_list 项下读取，"
+                   f"默认 {next(iter(config.get_conf('nuclide_list').keys()))}")
 @click.option('--all_step', '-all',
               'is_all_step',
               is_flag=True,
@@ -181,17 +182,18 @@ def extract(filenames,
               help='输出文件路径，默认读取配置文件中的路径')
 @click.option('--physical_quantities', '-pq',
               'physical_quantities',
-              default=['isotope'],
+              default=[all_physical_quantity_list[0]],
               type=click.Choice(all_physical_quantity_list,
                                 case_sensitive=False),
               multiple=True,
-              help='物理量，默认为 isotope')
+              help=f'物理量，默认为 {all_physical_quantity_list[0]}')
 @click.option('--nuclide', '-n',
               'nuclide_list',
-              default='fission_light',
+              default=next(iter(config.get_conf('nuclide_list').keys())),
               type=click.Choice(config.get_conf('nuclide_list').keys(),
                                 case_sensitive=False),
-              help='核素列表，从配置文件 nuclide_list 项下读取')
+              help=f"核素列表，从配置文件 nuclide_list 项下读取，"
+                   f"默认 {next(iter(config.get_conf('nuclide_list').keys()))}")
 @click.option('--deviation_mode',
               '-dm',
               'deviation_mode',
