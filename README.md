@@ -1,6 +1,6 @@
 # Nuclear Data Automated Processing
-[![Code Quality Score](https://www.code-inspector.com/project/22276/score/svg)](https://frontend.code-inspector.com/public/project/22276/nuclear_data_automated_processing/dashboard)
-[![Code Quality Grade](https://www.code-inspector.com/project/22276/status/svg)](https://frontend.code-inspector.com/public/project/22276/nuclear_data_automated_processing/dashboard)
+[![Code Quality Score](https://api.codiga.io/project/22276/score/svg)](https://app.codiga.io/public/project/22276/nuclear_data_automated_processing/dashboard)
+[![Code Quality Grade](https://api.codiga.io/project/22276/status/svg)](https://app.codiga.io/public/project/22276/nuclear_data_automated_processing/dashboard)
 [![LGTM Grade](https://img.shields.io/lgtm/grade/python/github/bookyue/nuclear_data_automated_processing)](https://lgtm.com/projects/g/bookyue/nuclear_data_automated_processing)
 [![GitHub version](https://badge.fury.io/gh/bookyue%2Fnuclear_data_automated_processing.svg)](https://badge.fury.io/gh/bookyue%2Fnuclear_data_automated_processing)
 [![PyPI version](https://badge.fury.io/py/nuc-data-tool.svg)](https://badge.fury.io/py/nuc-data-tool)
